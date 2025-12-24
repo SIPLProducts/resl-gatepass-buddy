@@ -160,7 +160,7 @@ export default function InwardPOReference() {
 
       {/* PO Reference Section */}
       <FormSection title="PO Reference">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <SelectField
             label="Plant"
             value={headerData.plant}
@@ -189,6 +189,16 @@ export default function InwardPOReference() {
               Fetch PO Data
             </Button>
           </div>
+          <TextField
+            label="Vendor Number"
+            value={headerData.vendorNumber}
+            readOnly
+          />
+          <TextField
+            label="Vendor Name"
+            value={headerData.vendorName}
+            readOnly
+          />
         </div>
       </FormSection>
 
@@ -277,42 +287,6 @@ export default function InwardPOReference() {
             value={headerData.grLrNumber}
             onChange={(value) => setHeaderData({ ...headerData, grLrNumber: value })}
             placeholder="Enter GR/LR number"
-          />
-        </div>
-      </FormSection>
-
-      {/* Vendor Information */}
-      <FormSection title="Vendor Information">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <TextField
-            label="Vendor Number"
-            value={headerData.vendorNumber}
-            readOnly
-          />
-          <TextField
-            label="Vendor Name"
-            value={headerData.vendorName}
-            readOnly
-          />
-          <TextField
-            label="Vendor Address"
-            value={headerData.vendorAddress}
-            readOnly
-          />
-          <TextField
-            label="City / State"
-            value={headerData.vendorCity}
-            readOnly
-          />
-          <TextField
-            label="Vendor Contact"
-            value={headerData.vendorContact}
-            readOnly
-          />
-          <TextField
-            label="GST Number"
-            value={headerData.vendorGSTNo}
-            readOnly
           />
         </div>
       </FormSection>
