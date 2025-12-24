@@ -429,7 +429,7 @@ export default function Settings() {
           <DialogHeader>
             <DialogTitle>{editingUser ? 'Edit User' : 'Add New User'}</DialogTitle>
           </DialogHeader>
-          <ScrollArea className="flex-1 pr-4">
+          <ScrollArea className="max-h-[60vh] pr-4">
             <div className="space-y-4 py-4">
               <SelectField
                 label="Plant"
@@ -494,7 +494,7 @@ export default function Settings() {
           <DialogHeader>
             <DialogTitle>{editingRole ? 'Edit Role' : 'Add New Role'}</DialogTitle>
           </DialogHeader>
-          <ScrollArea className="flex-1 pr-4">
+          <ScrollArea className="max-h-[60vh] pr-4">
             <div className="space-y-6 py-4">
               <TextField
                 label="Role Name"
@@ -573,7 +573,7 @@ export default function Settings() {
               Screen Permissions - {selectedRoleForPermissions?.roleName}
             </DialogTitle>
           </DialogHeader>
-          <ScrollArea className="flex-1 pr-4">
+          <ScrollArea className="max-h-[60vh] pr-4">
             <div className="py-4">
               <p className="text-sm text-muted-foreground mb-4">
                 Assign or unassign screen access for this role. Toggle each screen to enable or disable access.
