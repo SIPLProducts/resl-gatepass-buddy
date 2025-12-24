@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Save, RotateCcw, Plus, Trash2 } from 'lucide-react';
+import { Save, RotateCcw, Plus, Trash2, FileSpreadsheet } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { FormSection } from '@/components/shared/FormSection';
 import { TextField, SelectField } from '@/components/shared/FormField';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import { exportToExcel, transporterOptions } from '@/lib/exportToExcel';
 
 interface ItemRow {
   materialDescription: string;
@@ -14,7 +15,7 @@ interface ItemRow {
 }
 
 const emptyItem: ItemRow = { materialDescription: '', quantity: '', unit: '' };
-const ITEMS_PER_PAGE = 5;
+const ITEMS_PER_PAGE = 10;
 
 export default function OutwardNonReturnable() {
   const [headerData, setHeaderData] = useState({
@@ -79,6 +80,21 @@ export default function OutwardNonReturnable() {
     setCurrentPage(1);
   };
 
+  const handleExport = () => {
+    const filledItems = items.filter(item => item.materialDescription);
+    if (filledItems.length === 0) {
+      toast.error('No items to export');
+      return;
+    }
+    const exportColumns = [
+      { key: 'materialDescription', header: 'Material Description' },
+      { key: 'quantity', header: 'Quantity' },
+      { key: 'unit', header: 'Unit' },
+    ];
+    exportToExcel(filledItems, exportColumns, `Outward_NonReturnable_${headerData.gatePassNo || 'New'}`);
+    toast.success('Exported to Excel successfully');
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -112,54 +128,67 @@ export default function OutwardNonReturnable() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <TextField label="Vehicle No" value={headerData.vehicleNo} onChange={(value) => setHeaderData({ ...headerData, vehicleNo: value })} placeholder="MH-12-AB-1234" required />
           <TextField label="Driver Name" value={headerData.driverName} onChange={(value) => setHeaderData({ ...headerData, driverName: value })} placeholder="Enter driver name" />
-          <TextField label="Transporter Name" value={headerData.transporterName} onChange={(value) => setHeaderData({ ...headerData, transporterName: value })} placeholder="Enter transporter" />
+          <SelectField
+            label="Transporter Name"
+            value={headerData.transporterName}
+            onChange={(value) => setHeaderData({ ...headerData, transporterName: value })}
+            options={transporterOptions}
+          />
         </div>
       </FormSection>
 
       <FormSection title="Item Details">
+        <div className="flex justify-end mb-3">
+          <Button variant="outline" onClick={handleExport} className="gap-2">
+            <FileSpreadsheet className="w-4 h-4" />
+            Export to Excel
+          </Button>
+        </div>
         <div className="data-grid">
-          <table className="w-full">
-            <thead>
-              <tr>
-                <th className="w-12 text-center">#</th>
-                <th>Material Description</th>
-                <th className="w-32">Quantity</th>
-                <th className="w-32">Unit</th>
-                <th className="w-20 text-center">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedItems.map((item, pageIndex) => {
-                const actualIndex = startIndex + pageIndex;
-                return (
-                  <tr key={actualIndex} className="group">
-                    <td className="text-center font-medium text-muted-foreground">{actualIndex + 1}</td>
-                    <td>
-                      <Input value={item.materialDescription} onChange={(e) => handleItemChange(pageIndex, 'materialDescription', e.target.value)} className="h-8" placeholder="Enter material description" />
-                    </td>
-                    <td>
-                      <Input type="number" value={item.quantity} onChange={(e) => handleItemChange(pageIndex, 'quantity', e.target.value)} className="h-8" placeholder="Qty" />
-                    </td>
-                    <td>
-                      <Input value={item.unit} onChange={(e) => handleItemChange(pageIndex, 'unit', e.target.value)} className="h-8" placeholder="Unit" />
-                    </td>
-                    <td className="text-center">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDeleteRow(pageIndex)}
-                        disabled={items.length <= 1}
-                        className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                        title="Delete row"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <div className="overflow-auto scrollbar-thin" style={{ maxHeight: '400px' }}>
+            <table className="w-full">
+              <thead>
+                <tr>
+                  <th className="w-12 text-center">#</th>
+                  <th>Material Description</th>
+                  <th className="w-40">Quantity</th>
+                  <th className="w-32">Unit</th>
+                  <th className="w-20 text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedItems.map((item, pageIndex) => {
+                  const actualIndex = startIndex + pageIndex;
+                  return (
+                    <tr key={actualIndex} className="group">
+                      <td className="text-center font-medium text-muted-foreground">{actualIndex + 1}</td>
+                      <td>
+                        <Input value={item.materialDescription} onChange={(e) => handleItemChange(pageIndex, 'materialDescription', e.target.value)} className="h-8" placeholder="Enter material description" />
+                      </td>
+                      <td>
+                        <Input type="number" value={item.quantity} onChange={(e) => handleItemChange(pageIndex, 'quantity', e.target.value)} className="h-8" placeholder="Qty" />
+                      </td>
+                      <td>
+                        <Input value={item.unit} onChange={(e) => handleItemChange(pageIndex, 'unit', e.target.value)} className="h-8" placeholder="Unit" />
+                      </td>
+                      <td className="text-center">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteRow(pageIndex)}
+                          disabled={items.length <= 1}
+                          className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          title="Delete row"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* Pagination */}

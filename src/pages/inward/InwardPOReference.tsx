@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Save, RotateCcw, FileDown } from 'lucide-react';
+import { Search, Save, RotateCcw, FileDown, FileSpreadsheet } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { FormSection } from '@/components/shared/FormSection';
 import { TextField, SelectField } from '@/components/shared/FormField';
@@ -7,12 +7,14 @@ import { DataGrid } from '@/components/shared/DataGrid';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import { exportToExcel, transporterOptions, generateTestItems } from '@/lib/exportToExcel';
 
 interface ItemRow {
   materialCode: string;
   materialDescription: string;
   poQty: string;
   poUnit: string;
+  balanceQty: string;
   gateEntryQty: string;
   unit: string;
   packingCondition: string;
@@ -58,7 +60,7 @@ export default function InwardPOReference() {
     }
 
     setIsLoading(true);
-    // Simulate SAP fetch
+    // Simulate SAP fetch with 35 items
     setTimeout(() => {
       setHeaderData(prev => ({
         ...prev,
@@ -69,13 +71,9 @@ export default function InwardPOReference() {
         vendorContact: '+91 22 2345 6789',
         vendorGSTNo: '27AABCU9603R1ZM',
       }));
-      setItems([
-        { materialCode: 'MAT001', materialDescription: 'Steel Plate 10mm', poQty: '100', poUnit: 'KG', gateEntryQty: '', unit: 'KG', packingCondition: '' },
-        { materialCode: 'MAT002', materialDescription: 'Copper Wire 2.5mm', poQty: '500', poUnit: 'MTR', gateEntryQty: '', unit: 'MTR', packingCondition: '' },
-        { materialCode: 'MAT003', materialDescription: 'Aluminium Rod 8mm', poQty: '200', poUnit: 'NOS', gateEntryQty: '', unit: 'NOS', packingCondition: '' },
-      ]);
+      setItems(generateTestItems('inward') as ItemRow[]);
       setIsLoading(false);
-      toast.success('PO data fetched successfully');
+      toast.success('PO data fetched successfully - 35 items loaded');
     }, 1000);
   };
 
@@ -115,15 +113,35 @@ export default function InwardPOReference() {
     setItems([]);
   };
 
+  const handleExport = () => {
+    if (items.length === 0) {
+      toast.error('No items to export');
+      return;
+    }
+    const exportColumns = [
+      { key: 'materialCode', header: 'Material Code' },
+      { key: 'materialDescription', header: 'Material Description' },
+      { key: 'poQty', header: 'PO Qty' },
+      { key: 'poUnit', header: 'PO Unit' },
+      { key: 'balanceQty', header: 'Balance Qty' },
+      { key: 'gateEntryQty', header: 'Gate Entry Qty' },
+      { key: 'unit', header: 'Unit' },
+      { key: 'packingCondition', header: 'Packing Condition' },
+    ];
+    exportToExcel(items, exportColumns, `Inward_PO_${headerData.poNumber}`);
+    toast.success('Exported to Excel successfully');
+  };
+
   const columns = [
     { key: 'materialCode', header: 'Material Code', width: '120px' },
     { key: 'materialDescription', header: 'Material Description', width: '200px' },
     { key: 'poQty', header: 'PO Qty', width: '80px' },
-    { key: 'poUnit', header: 'PO Unit', width: '80px' },
+    { key: 'poUnit', header: 'PO Unit', width: '70px' },
+    { key: 'balanceQty', header: 'Balance Qty', width: '100px' },
     {
       key: 'gateEntryQty',
       header: 'Gate Entry Qty',
-      width: '120px',
+      width: '150px',
       render: (value: string, _row: ItemRow, index: number) => (
         <Input
           type="number"
@@ -134,7 +152,7 @@ export default function InwardPOReference() {
         />
       ),
     },
-    { key: 'unit', header: 'Unit', width: '80px' },
+    { key: 'unit', header: 'Unit', width: '70px' },
     {
       key: 'packingCondition',
       header: 'Packing Condition',
@@ -276,11 +294,11 @@ export default function InwardPOReference() {
             onChange={(value) => setHeaderData({ ...headerData, driverContact: value })}
             placeholder="+91 98765 43210"
           />
-          <TextField
+          <SelectField
             label="Transporter Name"
             value={headerData.transporterName}
             onChange={(value) => setHeaderData({ ...headerData, transporterName: value })}
-            placeholder="Enter transporter name"
+            options={transporterOptions}
           />
           <TextField
             label="GR/LR Number"
@@ -300,13 +318,20 @@ export default function InwardPOReference() {
           </div>
         ) : (
           <>
+            <div className="flex justify-end mb-3">
+              <Button variant="outline" onClick={handleExport} className="gap-2">
+                <FileSpreadsheet className="w-4 h-4" />
+                Export to Excel
+              </Button>
+            </div>
             <DataGrid 
               columns={columns} 
               data={items} 
               editable={true}
               onRowDelete={handleDeleteRow}
               minRows={1}
-              itemsPerPage={5}
+              itemsPerPage={10}
+              maxHeight="400px"
             />
             <div className="flex justify-end gap-2 mt-4 pt-4 border-t">
               <Button variant="outline" onClick={handleReset} className="gap-2">

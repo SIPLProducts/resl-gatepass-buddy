@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Save, RotateCcw, FileDown } from 'lucide-react';
+import { Search, Save, RotateCcw, FileDown, FileSpreadsheet } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { FormSection } from '@/components/shared/FormSection';
 import { TextField, SelectField } from '@/components/shared/FormField';
@@ -7,10 +7,14 @@ import { DataGrid } from '@/components/shared/DataGrid';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import { exportToExcel, transporterOptions, generateTestItems } from '@/lib/exportToExcel';
 
 interface ItemRow {
   materialCode: string;
   materialDescription: string;
+  poQty: string;
+  poUnit: string;
+  balanceQty: string;
   quantity: string;
   unit: string;
   packingCondition: string;
@@ -47,8 +51,8 @@ export default function InwardSubcontracting() {
   };
 
   const handleFetchPO = () => {
-    if (!headerData.subcontractPONo || !headerData.plant) {
-      toast.error('Please enter Subcontract PO Number and Plant');
+    if (!headerData.plant) {
+      toast.error('Please select Plant');
       return;
     }
 
@@ -63,12 +67,9 @@ export default function InwardSubcontracting() {
         vendorContact: '+91 20 2567 8901',
         vendorGSTNo: '27AABCU9603R1ZP',
       }));
-      setItems([
-        { materialCode: 'SC001', materialDescription: 'Machined Part A', quantity: '', unit: 'NOS', packingCondition: '' },
-        { materialCode: 'SC002', materialDescription: 'Assembly Component B', quantity: '', unit: 'NOS', packingCondition: '' },
-      ]);
+      setItems(generateTestItems('subcontract') as ItemRow[]);
       setIsLoading(false);
-      toast.success('Subcontract PO data fetched successfully');
+      toast.success('Subcontract PO data fetched successfully - 35 items loaded');
     }, 1000);
   };
 
@@ -105,13 +106,35 @@ export default function InwardSubcontracting() {
     setItems([]);
   };
 
+  const handleExport = () => {
+    if (items.length === 0) {
+      toast.error('No items to export');
+      return;
+    }
+    const exportColumns = [
+      { key: 'materialCode', header: 'Material Code' },
+      { key: 'materialDescription', header: 'Material Description' },
+      { key: 'poQty', header: 'PO Qty' },
+      { key: 'poUnit', header: 'PO Unit' },
+      { key: 'balanceQty', header: 'Balance Qty' },
+      { key: 'quantity', header: 'Gate Entry Qty' },
+      { key: 'unit', header: 'Unit' },
+      { key: 'packingCondition', header: 'Packing Condition' },
+    ];
+    exportToExcel(items, exportColumns, `Inward_Subcontract_${headerData.subcontractPONo}`);
+    toast.success('Exported to Excel successfully');
+  };
+
   const columns = [
     { key: 'materialCode', header: 'Material Code', width: '120px' },
-    { key: 'materialDescription', header: 'Material Description', width: '250px' },
+    { key: 'materialDescription', header: 'Material Description', width: '200px' },
+    { key: 'poQty', header: 'PO Qty', width: '80px' },
+    { key: 'poUnit', header: 'PO Unit', width: '70px' },
+    { key: 'balanceQty', header: 'Balance Qty', width: '100px' },
     {
       key: 'quantity',
-      header: 'Quantity',
-      width: '120px',
+      header: 'Gate Entry Qty',
+      width: '150px',
       render: (value: string, _row: ItemRow, index: number) => (
         <Input
           type="number"
@@ -122,7 +145,7 @@ export default function InwardSubcontracting() {
         />
       ),
     },
-    { key: 'unit', header: 'Unit', width: '80px' },
+    { key: 'unit', header: 'Unit', width: '70px' },
     {
       key: 'packingCondition',
       header: 'Packing Condition',
@@ -195,7 +218,12 @@ export default function InwardSubcontracting() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <TextField label="Vehicle No" value={headerData.vehicleNo} onChange={(value) => setHeaderData({ ...headerData, vehicleNo: value })} placeholder="MH-12-AB-1234" required />
           <TextField label="Driver Name" value={headerData.driverName} onChange={(value) => setHeaderData({ ...headerData, driverName: value })} placeholder="Enter driver name" />
-          <TextField label="Transporter Name" value={headerData.transporterName} onChange={(value) => setHeaderData({ ...headerData, transporterName: value })} placeholder="Enter transporter" />
+          <SelectField
+            label="Transporter Name"
+            value={headerData.transporterName}
+            onChange={(value) => setHeaderData({ ...headerData, transporterName: value })}
+            options={transporterOptions}
+          />
         </div>
       </FormSection>
 
@@ -203,17 +231,24 @@ export default function InwardSubcontracting() {
         {items.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
             <FileDown className="w-12 h-12 mx-auto mb-3 opacity-50" />
-            <p>No items loaded. Enter Subcontract PO and click "Fetch Data" to load items.</p>
+            <p>No items loaded. Select Plant and click "Fetch Data" to load items.</p>
           </div>
         ) : (
           <>
+            <div className="flex justify-end mb-3">
+              <Button variant="outline" onClick={handleExport} className="gap-2">
+                <FileSpreadsheet className="w-4 h-4" />
+                Export to Excel
+              </Button>
+            </div>
             <DataGrid 
               columns={columns} 
               data={items} 
               editable={true}
               onRowDelete={handleDeleteRow}
               minRows={1}
-              itemsPerPage={5}
+              itemsPerPage={10}
+              maxHeight="400px"
             />
             <div className="flex justify-end gap-2 mt-4 pt-4 border-t">
               <Button variant="outline" onClick={handleReset} className="gap-2">
