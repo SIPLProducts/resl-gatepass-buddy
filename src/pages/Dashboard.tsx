@@ -69,44 +69,12 @@ const modules = [
     shortcut: '2',
   },
   {
-    title: 'Change Entry',
-    description: 'Modify existing gate entry records',
-    icon: FileEdit,
-    path: '/change',
-    color: 'primary' as const,
-    shortcut: '3',
-  },
-  {
-    title: 'Display Entry',
-    description: 'View detailed gate entry information',
-    icon: Eye,
-    path: '/display',
-    color: 'success' as const,
-    shortcut: '4',
-  },
-  {
-    title: 'Vehicle Exit',
-    description: 'Record vehicle departure time and details',
-    icon: DoorOpen,
-    path: '/vehicle-exit',
-    color: 'warning' as const,
-    shortcut: '5',
-  },
-  {
-    title: 'Cancel Entry',
-    description: 'Cancel gate entries with proper authorization',
-    icon: XCircle,
-    path: '/cancel',
-    color: 'warning' as const,
-    shortcut: '6',
-  },
-  {
     title: 'Print Entry',
     description: 'Generate and print gate entry documents',
     icon: Printer,
     path: '/print',
     color: 'primary' as const,
-    shortcut: '7',
+    shortcut: '3',
   },
   {
     title: 'Reports',
@@ -114,7 +82,7 @@ const modules = [
     icon: BarChart3,
     path: '/reports',
     color: 'info' as const,
-    shortcut: '8',
+    shortcut: '4',
   },
 ];
 
@@ -289,7 +257,7 @@ export default function Dashboard() {
           <CollapsibleTrigger className="w-full p-4 flex items-center justify-between hover:bg-muted/50 transition-colors rounded-t-lg group">
             <div className="flex items-center gap-3">
               <h3 className="text-lg font-semibold text-foreground">Quick Actions</h3>
-              <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">Press 1-8 for quick access</span>
+              <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">Press 1-4 for quick access</span>
             </div>
             <ChevronDown className="w-5 h-5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
           </CollapsibleTrigger>
