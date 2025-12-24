@@ -22,7 +22,8 @@ export default function InwardPOReference() {
   const [headerData, setHeaderData] = useState({
     gateEntryNo: '',
     plant: '',
-    gateEntryType: 'Inward - PO Reference',
+    refDocType: 'PO Reference',
+    gateEntryType: 'Inward',
     vehicleDate: new Date().toISOString().split('T')[0],
     vehicleTime: new Date().toTimeString().slice(0, 5),
     vehicleNo: '',
@@ -34,6 +35,10 @@ export default function InwardPOReference() {
     poNumber: '',
     vendorNumber: '',
     vendorName: '',
+    vendorAddress: '',
+    vendorCity: '',
+    vendorContact: '',
+    vendorGSTNo: '',
     inwardedBy: 'Admin User',
   });
 
@@ -59,6 +64,10 @@ export default function InwardPOReference() {
         ...prev,
         vendorNumber: 'V1001',
         vendorName: 'ABC Suppliers Pvt. Ltd.',
+        vendorAddress: '123, Industrial Area, Sector 5',
+        vendorCity: 'Mumbai, Maharashtra - 400001',
+        vendorContact: '+91 22 2345 6789',
+        vendorGSTNo: '27AABCU9603R1ZM',
       }));
       setItems([
         { materialCode: 'MAT001', materialDescription: 'Steel Plate 10mm', poQty: '100', poUnit: 'KG', gateEntryQty: '', unit: 'KG', packingCondition: '' },
@@ -84,7 +93,8 @@ export default function InwardPOReference() {
     setHeaderData({
       gateEntryNo: '',
       plant: '',
-      gateEntryType: 'Inward - PO Reference',
+      refDocType: 'PO Reference',
+      gateEntryType: 'Inward',
       vehicleDate: new Date().toISOString().split('T')[0],
       vehicleTime: new Date().toTimeString().slice(0, 5),
       vehicleNo: '',
@@ -96,6 +106,10 @@ export default function InwardPOReference() {
       poNumber: '',
       vendorNumber: '',
       vendorName: '',
+      vendorAddress: '',
+      vendorCity: '',
+      vendorContact: '',
+      vendorGSTNo: '',
       inwardedBy: 'Admin User',
     });
     setItems([]);
@@ -142,18 +156,6 @@ export default function InwardPOReference() {
         title="Inward Gate Entry - PO Reference"
         subtitle="Create gate entry by fetching data from Purchase Order"
         breadcrumbs={[{ label: 'Inward', path: '/inward/po-reference' }, { label: 'With PO Reference' }]}
-        actions={
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handleReset} className="gap-2">
-              <RotateCcw className="w-4 h-4" />
-              Reset
-            </Button>
-            <Button onClick={handleSave} className="bg-accent text-accent-foreground hover:bg-accent/90 gap-2">
-              <Save className="w-4 h-4" />
-              Save Entry
-            </Button>
-          </div>
-        }
       />
 
       {/* PO Reference Section */}
@@ -200,8 +202,18 @@ export default function InwardPOReference() {
             readOnly
           />
           <TextField
+            label="Ref Doc Type"
+            value={headerData.refDocType}
+            readOnly
+          />
+          <TextField
             label="Gate Entry Type"
             value={headerData.gateEntryType}
+            readOnly
+          />
+          <TextField
+            label="Inwarded By"
+            value={headerData.inwardedBy}
             readOnly
           />
           <TextField
@@ -269,9 +281,9 @@ export default function InwardPOReference() {
         </div>
       </FormSection>
 
-      {/* Vendor Details */}
-      <FormSection title="Vendor Details">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Vendor Information */}
+      <FormSection title="Vendor Information">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <TextField
             label="Vendor Number"
             value={headerData.vendorNumber}
@@ -283,8 +295,23 @@ export default function InwardPOReference() {
             readOnly
           />
           <TextField
-            label="Inwarded By"
-            value={headerData.inwardedBy}
+            label="Vendor Address"
+            value={headerData.vendorAddress}
+            readOnly
+          />
+          <TextField
+            label="City / State"
+            value={headerData.vendorCity}
+            readOnly
+          />
+          <TextField
+            label="Vendor Contact"
+            value={headerData.vendorContact}
+            readOnly
+          />
+          <TextField
+            label="GST Number"
+            value={headerData.vendorGSTNo}
             readOnly
           />
         </div>
@@ -298,13 +325,26 @@ export default function InwardPOReference() {
             <p>No items loaded. Enter PO Number and click "Fetch PO Data" to load items.</p>
           </div>
         ) : (
-          <DataGrid 
-            columns={columns} 
-            data={items} 
-            editable={true}
-            onRowDelete={handleDeleteRow}
-            minRows={1}
-          />
+          <>
+            <DataGrid 
+              columns={columns} 
+              data={items} 
+              editable={true}
+              onRowDelete={handleDeleteRow}
+              minRows={1}
+              itemsPerPage={5}
+            />
+            <div className="flex justify-end gap-2 mt-4 pt-4 border-t">
+              <Button variant="outline" onClick={handleReset} className="gap-2">
+                <RotateCcw className="w-4 h-4" />
+                Reset
+              </Button>
+              <Button onClick={handleSave} className="bg-accent text-accent-foreground hover:bg-accent/90 gap-2">
+                <Save className="w-4 h-4" />
+                Save Entry
+              </Button>
+            </div>
+          </>
         )}
       </FormSection>
     </div>
