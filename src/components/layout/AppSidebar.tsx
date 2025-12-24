@@ -13,61 +13,62 @@ import {
   Settings,
   HelpCircle,
   LogOut,
-  PanelLeftClose,
   ChevronsLeft,
   ChevronsRight,
   Menu,
   X,
   Bell,
-  Shield,
   ChevronDown,
+  ChevronRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Badge } from '@/components/ui/badge';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 // Role types
 export type UserRole = 'admin' | 'security' | 'stores' | 'finance' | 'viewer';
 
-const roleConfig: Record<UserRole, { label: string; color: string; description: string }> = {
-  admin: { label: 'Administrator', color: 'bg-red-500/20 text-red-400 border-red-500/30', description: 'Full access to all modules' },
-  security: { label: 'Security', color: 'bg-blue-500/20 text-blue-400 border-blue-500/30', description: 'Gate entry & exit access' },
-  stores: { label: 'Stores', color: 'bg-green-500/20 text-green-400 border-green-500/30', description: 'Inward/Outward management' },
-  finance: { label: 'Finance', color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30', description: 'Reports & billing access' },
-  viewer: { label: 'Viewer', color: 'bg-gray-500/20 text-gray-400 border-gray-500/30', description: 'View only access' },
-};
+interface SubNavItem {
+  label: string;
+  path: string;
+}
 
 interface NavItem {
   label: string;
   icon: React.ComponentType<{ className?: string }>;
-  path: string;
-  roles: UserRole[];
+  path?: string;
+  subItems?: SubNavItem[];
 }
 
-// Define flat navigation with role-based access
-const mainNavItems: NavItem[] = [
-  { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', roles: ['admin', 'security', 'stores', 'finance', 'viewer'] },
-  { label: 'Inward Entry', icon: ArrowDownToLine, path: '/inward/po-reference', roles: ['admin', 'security', 'stores'] },
-  { label: 'Outward Entry', icon: ArrowUpFromLine, path: '/outward/billing-reference', roles: ['admin', 'security', 'stores'] },
-  { label: 'Vehicle Exit', icon: DoorOpen, path: '/vehicle-exit', roles: ['admin', 'security'] },
-  { label: 'Change Entry', icon: FileEdit, path: '/change', roles: ['admin', 'stores'] },
-  { label: 'Display Entry', icon: Eye, path: '/display', roles: ['admin', 'security', 'stores', 'finance', 'viewer'] },
-  { label: 'Cancel Entry', icon: XCircle, path: '/cancel', roles: ['admin'] },
-  { label: 'Print Entry', icon: Printer, path: '/print', roles: ['admin', 'security', 'stores', 'finance'] },
-  { label: 'Reports', icon: BarChart3, path: '/reports', roles: ['admin', 'stores', 'finance', 'viewer'] },
-  { label: 'Settings', icon: Settings, path: '/settings', roles: ['admin'] },
-];
-
-const bottomNavItems: NavItem[] = [
-  { label: 'Help & Support', icon: HelpCircle, path: '/help', roles: ['admin', 'security', 'stores', 'finance', 'viewer'] },
+// Navigation structure matching user's requirement
+const navigationItems: NavItem[] = [
+  { 
+    label: 'Inward', 
+    icon: ArrowDownToLine,
+    subItems: [
+      { label: 'With Reference PO', path: '/inward/po-reference' },
+      { label: 'Subcontracting', path: '/inward/subcontracting' },
+      { label: 'Without Reference', path: '/inward/without-reference' },
+    ]
+  },
+  { 
+    label: 'Outward', 
+    icon: ArrowUpFromLine,
+    subItems: [
+      { label: 'Billing Reference', path: '/outward/billing-reference' },
+      { label: 'Non-Returnable', path: '/outward/non-returnable' },
+      { label: 'Returnable', path: '/outward/returnable' },
+    ]
+  },
+  { label: 'Change', icon: FileEdit, path: '/change' },
+  { label: 'Display', icon: Eye, path: '/display' },
+  { label: 'Exit', icon: DoorOpen, path: '/vehicle-exit' },
+  { label: 'Cancel', icon: XCircle, path: '/cancel' },
+  { label: 'Print', icon: Printer, path: '/print' },
+  { label: 'Report', icon: BarChart3, path: '/reports' },
+  { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
+  { label: 'Settings', icon: Settings, path: '/settings' },
+  { label: 'Help & Support', icon: HelpCircle, path: '/help' },
 ];
 
 interface AppSidebarProps {
@@ -79,28 +80,64 @@ interface AppSidebarProps {
   onRoleChange: (role: UserRole) => void;
 }
 
-export function AppSidebar({ isOpen, onToggle, isCollapsed, onCollapse, currentRole, onRoleChange }: AppSidebarProps) {
+export function AppSidebar({ isOpen, onToggle, isCollapsed, onCollapse }: AppSidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
-
-  // Show all items without role filtering
-  const visibleMainItems = mainNavItems;
-  const visibleBottomItems = bottomNavItems;
+  const [openGroups, setOpenGroups] = useState<string[]>(['Inward', 'Outward']);
 
   const handleLogout = () => {
-    // In a real app, this would call supabase.auth.signOut()
     navigate('/');
+  };
+
+  const toggleGroup = (label: string) => {
+    setOpenGroups(prev => 
+      prev.includes(label) 
+        ? prev.filter(g => g !== label)
+        : [...prev, label]
+    );
+  };
+
+  const isSubItemActive = (subItems: SubNavItem[]) => {
+    return subItems.some(item => location.pathname === item.path);
   };
 
   const renderNavItem = (item: NavItem) => {
     const Icon = item.icon;
-    
+    const hasSubItems = item.subItems && item.subItems.length > 0;
+    const isGroupOpen = openGroups.includes(item.label);
+    const isActive = item.path ? location.pathname === item.path : isSubItemActive(item.subItems || []);
+
     if (isCollapsed) {
+      if (hasSubItems) {
+        return (
+          <Tooltip key={item.label}>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => {
+                  onCollapse();
+                  setOpenGroups(prev => prev.includes(item.label) ? prev : [...prev, item.label]);
+                }}
+                className={`flex items-center justify-center w-9 h-9 rounded-lg transition-all duration-200 mx-auto
+                  ${isActive 
+                    ? 'bg-sidebar-primary text-sidebar-primary-foreground' 
+                    : 'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
+                  }`}
+              >
+                <Icon className="w-[18px] h-[18px]" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="bg-sidebar text-sidebar-foreground border-sidebar-border">
+              {item.label}
+            </TooltipContent>
+          </Tooltip>
+        );
+      }
+
       return (
         <Tooltip key={item.path}>
           <TooltipTrigger asChild>
             <NavLink
-              to={item.path}
+              to={item.path!}
               onClick={() => window.innerWidth < 1024 && onToggle()}
               className={({ isActive }) => 
                 `flex items-center justify-center w-9 h-9 rounded-lg transition-all duration-200 mx-auto
@@ -120,13 +157,59 @@ export function AppSidebar({ isOpen, onToggle, isCollapsed, onCollapse, currentR
       );
     }
 
+    // Expanded state
+    if (hasSubItems) {
+      return (
+        <Collapsible key={item.label} open={isGroupOpen} onOpenChange={() => toggleGroup(item.label)}>
+          <CollapsibleTrigger asChild>
+            <button
+              className={`flex items-center justify-between w-full px-4 py-2 rounded-lg transition-all duration-200
+                ${isActive 
+                  ? 'text-sidebar-primary' 
+                  : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/30'
+                }`}
+            >
+              <div className="flex items-center gap-3">
+                <Icon className="w-[18px] h-[18px] flex-shrink-0" />
+                <span className="text-sm font-medium">{item.label}</span>
+              </div>
+              {isGroupOpen ? (
+                <ChevronDown className="w-4 h-4" />
+              ) : (
+                <ChevronRight className="w-4 h-4" />
+              )}
+            </button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="pl-7 mt-0.5 space-y-0.5">
+            {item.subItems!.map(subItem => (
+              <NavLink
+                key={subItem.path}
+                to={subItem.path}
+                onClick={() => window.innerWidth < 1024 && onToggle()}
+                className={({ isActive }) => 
+                  `flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 text-sm
+                  ${isActive 
+                    ? 'bg-sidebar-primary text-sidebar-primary-foreground' 
+                    : 'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30'
+                  }`
+                }
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-current opacity-50" />
+                {subItem.label}
+              </NavLink>
+            ))}
+          </CollapsibleContent>
+        </Collapsible>
+      );
+    }
+
     return (
       <NavLink
         key={item.path}
-        to={item.path}
+        to={item.path!}
         onClick={() => window.innerWidth < 1024 && onToggle()}
         className={({ isActive }) => 
-          `flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200
+          `flex items-center gap-3 px-4 py-2 rounded-lg transition-all duration-200
           ${isActive 
             ? 'bg-sidebar-primary text-sidebar-primary-foreground' 
             : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/30'
@@ -208,19 +291,16 @@ export function AppSidebar({ isOpen, onToggle, isCollapsed, onCollapse, currentR
             )}
           </div>
 
-
           {/* Main Navigation */}
-          <nav className={`flex-1 overflow-y-auto scrollbar-thin py-2 ${isCollapsed ? 'px-3' : 'px-4'}`}>
+          <nav className={`flex-1 overflow-y-auto scrollbar-thin py-2 ${isCollapsed ? 'px-3' : 'px-3'}`}>
             <div className="space-y-0.5">
-              {visibleMainItems.map(renderNavItem)}
+              {navigationItems.map(renderNavItem)}
             </div>
           </nav>
 
           {/* Bottom Section */}
-          <div className={`border-t border-sidebar-border/30 flex-shrink-0 ${isCollapsed ? 'px-3 py-2' : 'px-4 py-3'}`}>
+          <div className={`border-t border-sidebar-border/30 flex-shrink-0 ${isCollapsed ? 'px-3 py-2' : 'px-3 py-3'}`}>
             <div className="space-y-0.5">
-              {visibleBottomItems.map(renderNavItem)}
-              
               {/* Notifications */}
               {isCollapsed ? (
                 <Tooltip>
@@ -234,7 +314,7 @@ export function AppSidebar({ isOpen, onToggle, isCollapsed, onCollapse, currentR
                   </TooltipContent>
                 </Tooltip>
               ) : (
-                <button className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 transition-all w-full">
+                <button className="flex items-center gap-3 px-4 py-2 rounded-lg text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 transition-all w-full">
                   <Bell className="w-[18px] h-[18px] flex-shrink-0" />
                   <span className="text-sm font-medium">Notifications</span>
                 </button>
@@ -258,7 +338,7 @@ export function AppSidebar({ isOpen, onToggle, isCollapsed, onCollapse, currentR
               ) : (
                 <button 
                   onClick={handleLogout}
-                  className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all w-full"
+                  className="flex items-center gap-3 px-4 py-2 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all w-full"
                 >
                   <LogOut className="w-[18px] h-[18px] flex-shrink-0" />
                   <span className="text-sm font-medium">Logout</span>
@@ -286,5 +366,5 @@ export function SidebarTrigger({ onClick }: { onClick: () => void }) {
 }
 
 export function SidebarCollapseTrigger({ isCollapsed, onClick }: { isCollapsed: boolean; onClick: () => void }) {
-  return null; // Hidden for cleaner design
+  return null;
 }
