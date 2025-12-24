@@ -12,16 +12,12 @@ import {
   BarChart3,
   Settings,
   HelpCircle,
-  ChevronDown,
-  ChevronRight,
   LogOut,
-  User,
   Menu,
   X,
-  PanelLeftClose,
-  PanelLeft,
+  Bell,
   Shield,
-  ChevronUp,
+  ChevronDown,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -49,72 +45,26 @@ const roleConfig: Record<UserRole, { label: string; color: string; description: 
 interface NavItem {
   label: string;
   icon: React.ComponentType<{ className?: string }>;
-  path?: string;
-  children?: { label: string; path: string; roles?: UserRole[] }[];
-  roles?: UserRole[];
+  path: string;
+  roles: UserRole[];
 }
 
-interface NavGroup {
-  title: string;
-  items: NavItem[];
-}
+// Define flat navigation with role-based access
+const mainNavItems: NavItem[] = [
+  { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', roles: ['admin', 'security', 'stores', 'finance', 'viewer'] },
+  { label: 'Inward Entry', icon: ArrowDownToLine, path: '/inward/po-reference', roles: ['admin', 'security', 'stores'] },
+  { label: 'Outward Entry', icon: ArrowUpFromLine, path: '/outward/billing-reference', roles: ['admin', 'security', 'stores'] },
+  { label: 'Vehicle Exit', icon: DoorOpen, path: '/vehicle-exit', roles: ['admin', 'security'] },
+  { label: 'Change Entry', icon: FileEdit, path: '/change', roles: ['admin', 'stores'] },
+  { label: 'Display Entry', icon: Eye, path: '/display', roles: ['admin', 'security', 'stores', 'finance', 'viewer'] },
+  { label: 'Cancel Entry', icon: XCircle, path: '/cancel', roles: ['admin'] },
+  { label: 'Print Entry', icon: Printer, path: '/print', roles: ['admin', 'security', 'stores', 'finance'] },
+  { label: 'Reports', icon: BarChart3, path: '/reports', roles: ['admin', 'stores', 'finance', 'viewer'] },
+  { label: 'Settings', icon: Settings, path: '/settings', roles: ['admin'] },
+];
 
-// Define navigation with role-based access grouped
-const navGroups: NavGroup[] = [
-  {
-    title: 'Main',
-    items: [
-      { 
-        label: 'Dashboard', 
-        icon: LayoutDashboard, 
-        path: '/dashboard',
-        roles: ['admin', 'security', 'stores', 'finance', 'viewer']
-      },
-    ],
-  },
-  {
-    title: 'Gate Operations',
-    items: [
-      {
-        label: 'Inward',
-        icon: ArrowDownToLine,
-        roles: ['admin', 'security', 'stores'],
-        children: [
-          { label: 'With PO Reference', path: '/inward/po-reference', roles: ['admin', 'security', 'stores'] },
-          { label: 'Subcontracting', path: '/inward/subcontracting', roles: ['admin', 'stores'] },
-          { label: 'Without Reference', path: '/inward/without-reference', roles: ['admin', 'stores'] },
-        ],
-      },
-      {
-        label: 'Outward',
-        icon: ArrowUpFromLine,
-        roles: ['admin', 'security', 'stores'],
-        children: [
-          { label: 'Billing Reference', path: '/outward/billing-reference', roles: ['admin', 'security', 'stores'] },
-          { label: 'Non-Returnable', path: '/outward/non-returnable', roles: ['admin', 'stores'] },
-          { label: 'Returnable', path: '/outward/returnable', roles: ['admin', 'stores'] },
-        ],
-      },
-      { label: 'Vehicle Exit', icon: DoorOpen, path: '/vehicle-exit', roles: ['admin', 'security'] },
-    ],
-  },
-  {
-    title: 'Entry Management',
-    items: [
-      { label: 'Change Entry', icon: FileEdit, path: '/change', roles: ['admin', 'stores'] },
-      { label: 'Display Entry', icon: Eye, path: '/display', roles: ['admin', 'security', 'stores', 'finance', 'viewer'] },
-      { label: 'Cancel Entry', icon: XCircle, path: '/cancel', roles: ['admin'] },
-      { label: 'Print Entry', icon: Printer, path: '/print', roles: ['admin', 'security', 'stores', 'finance'] },
-    ],
-  },
-  {
-    title: 'Analytics & Config',
-    items: [
-      { label: 'Reports', icon: BarChart3, path: '/reports', roles: ['admin', 'stores', 'finance', 'viewer'] },
-      { label: 'Settings', icon: Settings, path: '/settings', roles: ['admin'] },
-      { label: 'Help & Support', icon: HelpCircle, path: '/help', roles: ['admin', 'security', 'stores', 'finance', 'viewer'] },
-    ],
-  },
+const bottomNavItems: NavItem[] = [
+  { label: 'Help & Support', icon: HelpCircle, path: '/help', roles: ['admin', 'security', 'stores', 'finance', 'viewer'] },
 ];
 
 interface AppSidebarProps {
@@ -128,118 +78,31 @@ interface AppSidebarProps {
 
 export function AppSidebar({ isOpen, onToggle, isCollapsed, onCollapse, currentRole, onRoleChange }: AppSidebarProps) {
   const location = useLocation();
-  const [expandedItems, setExpandedItems] = useState<string[]>(['Inward', 'Outward']);
 
-  const toggleExpanded = (label: string) => {
-    setExpandedItems((prev) =>
-      prev.includes(label) ? prev.filter((i) => i !== label) : [...prev, label]
-    );
-  };
+  const hasAccess = (roles: UserRole[]) => roles.includes(currentRole);
 
-  const isActive = (path?: string, children?: { path: string }[]) => {
-    if (path) return location.pathname === path;
-    if (children) return children.some((child) => location.pathname === child.path);
-    return false;
-  };
-
-  const hasAccess = (roles?: UserRole[]) => {
-    if (!roles) return true;
-    return roles.includes(currentRole);
-  };
-
-  const filterChildren = (children?: { label: string; path: string; roles?: UserRole[] }[]) => {
-    if (!children) return [];
-    return children.filter(child => hasAccess(child.roles));
-  };
-
-  const getVisibleGroups = () => {
-    return navGroups.map(group => ({
-      ...group,
-      items: group.items.filter(item => {
-        if (!hasAccess(item.roles)) return false;
-        if (item.children) {
-          const visibleChildren = filterChildren(item.children);
-          return visibleChildren.length > 0;
-        }
-        return true;
-      }),
-    })).filter(group => group.items.length > 0);
-  };
-
-  const visibleGroups = getVisibleGroups();
+  const visibleMainItems = mainNavItems.filter(item => hasAccess(item.roles));
+  const visibleBottomItems = bottomNavItems.filter(item => hasAccess(item.roles));
 
   const renderNavItem = (item: NavItem) => {
     const Icon = item.icon;
-    const hasChildren = !!item.children;
-    const isExpanded = expandedItems.includes(item.label);
-    const active = isActive(item.path, item.children);
-    const visibleChildren = filterChildren(item.children);
-
-    if (hasChildren && !isCollapsed) {
-      return (
-        <div key={item.label} className="space-y-0.5">
-          <button
-            onClick={() => toggleExpanded(item.label)}
-            className={`sidebar-nav-item w-full justify-between group ${active ? 'text-sidebar-primary bg-sidebar-accent/50' : ''}`}
-          >
-            <span className="flex items-center gap-3">
-              <Icon className="w-4 h-4 flex-shrink-0" />
-              <span>{item.label}</span>
-            </span>
-            <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? '' : '-rotate-90'}`} />
-          </button>
-          <div className={`overflow-hidden transition-all duration-200 ${isExpanded ? 'max-h-96' : 'max-h-0'}`}>
-            <div className="ml-4 pl-3 border-l border-sidebar-border/50 space-y-0.5 py-1">
-              {visibleChildren.map((child) => (
-                <NavLink
-                  key={child.path}
-                  to={child.path}
-                  onClick={() => window.innerWidth < 1024 && onToggle()}
-                  className={({ isActive }) =>
-                    `sidebar-nav-item text-[13px] py-1.5 ${isActive ? 'active' : ''}`
-                  }
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-current opacity-40" />
-                  {child.label}
-                </NavLink>
-              ))}
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    if (hasChildren && isCollapsed) {
-      return (
-        <Tooltip key={item.label}>
-          <TooltipTrigger asChild>
-            <NavLink
-              to={visibleChildren[0]?.path || '#'}
-              className={`sidebar-nav-item justify-center ${active ? 'active' : ''}`}
-            >
-              <Icon className="w-4 h-4" />
-            </NavLink>
-          </TooltipTrigger>
-          <TooltipContent side="right" className="bg-sidebar text-sidebar-foreground border-sidebar-border">
-            <div className="font-medium">{item.label}</div>
-            <div className="text-xs text-sidebar-foreground/60 mt-1">
-              {visibleChildren.map(c => c.label).join(', ')}
-            </div>
-          </TooltipContent>
-        </Tooltip>
-      );
-    }
-
+    
     if (isCollapsed) {
       return (
-        <Tooltip key={item.label}>
+        <Tooltip key={item.path}>
           <TooltipTrigger asChild>
             <NavLink
-              to={item.path!}
+              to={item.path}
               onClick={() => window.innerWidth < 1024 && onToggle()}
-              className={({ isActive }) => `sidebar-nav-item justify-center ${isActive ? 'active' : ''}`}
+              className={({ isActive }) => 
+                `flex items-center justify-center w-10 h-10 rounded-lg transition-all duration-200 mx-auto
+                ${isActive 
+                  ? 'bg-sidebar-primary text-sidebar-primary-foreground' 
+                  : 'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
+                }`
+              }
             >
-              <Icon className="w-4 h-4" />
+              <Icon className="w-5 h-5" />
             </NavLink>
           </TooltipTrigger>
           <TooltipContent side="right" className="bg-sidebar text-sidebar-foreground border-sidebar-border">
@@ -251,13 +114,19 @@ export function AppSidebar({ isOpen, onToggle, isCollapsed, onCollapse, currentR
 
     return (
       <NavLink
-        key={item.label}
-        to={item.path!}
+        key={item.path}
+        to={item.path}
         onClick={() => window.innerWidth < 1024 && onToggle()}
-        className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
+        className={({ isActive }) => 
+          `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200
+          ${isActive 
+            ? 'bg-sidebar-primary text-sidebar-primary-foreground' 
+            : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/30'
+          }`
+        }
       >
-        <Icon className="w-4 h-4 flex-shrink-0" />
-        <span>{item.label}</span>
+        <Icon className="w-5 h-5 flex-shrink-0" />
+        <span className="text-sm font-medium">{item.label}</span>
       </NavLink>
     );
   };
@@ -277,22 +146,22 @@ export function AppSidebar({ isOpen, onToggle, isCollapsed, onCollapse, currentR
         <aside 
           className={`
             fixed lg:sticky inset-y-0 left-0 top-0 z-50
-            ${isCollapsed ? 'w-16' : 'w-64'} h-screen bg-sidebar flex flex-col border-r border-sidebar-border
+            ${isCollapsed ? 'w-[72px]' : 'w-[260px]'} h-screen bg-sidebar flex flex-col
             transform transition-all duration-300 ease-in-out
             ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
           `}
         >
           {/* Logo Section */}
-          <div className={`h-16 border-b border-sidebar-border flex items-center ${isCollapsed ? 'justify-center px-2' : 'justify-between px-4'}`}>
+          <div className={`h-16 flex items-center ${isCollapsed ? 'justify-center px-3' : 'justify-between px-5'}`}>
             {!isCollapsed ? (
               <>
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-sidebar-primary to-sidebar-primary/70 flex items-center justify-center flex-shrink-0 shadow-lg shadow-sidebar-primary/20">
-                    <span className="text-sidebar-primary-foreground font-bold text-base">R</span>
+                  <div className="w-10 h-10 rounded-xl bg-sidebar-primary flex items-center justify-center flex-shrink-0">
+                    <span className="text-sidebar-primary-foreground font-bold text-lg">R</span>
                   </div>
                   <div>
-                    <h1 className="text-sidebar-foreground font-bold text-sm tracking-wide">RESL GATE</h1>
-                    <p className="text-sidebar-foreground/50 text-[10px] font-medium">Entry Management</p>
+                    <h1 className="text-sidebar-foreground font-bold text-base">RESL Gate</h1>
+                    <p className="text-sidebar-foreground/40 text-xs">Entry System</p>
                   </div>
                 </div>
                 <Button 
@@ -305,30 +174,27 @@ export function AppSidebar({ isOpen, onToggle, isCollapsed, onCollapse, currentR
                 </Button>
               </>
             ) : (
-              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-sidebar-primary to-sidebar-primary/70 flex items-center justify-center shadow-lg shadow-sidebar-primary/20">
-                <span className="text-sidebar-primary-foreground font-bold text-base">R</span>
+              <div className="w-10 h-10 rounded-xl bg-sidebar-primary flex items-center justify-center">
+                <span className="text-sidebar-primary-foreground font-bold text-lg">R</span>
               </div>
             )}
           </div>
 
-          {/* Role Switcher (Development Mode) */}
+          {/* Role Switcher */}
           {!isCollapsed && (
-            <div className="px-3 py-3 border-b border-sidebar-border/50">
+            <div className="px-4 pb-4">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-sidebar-accent/30 hover:bg-sidebar-accent/50 transition-colors group">
+                  <button className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg bg-sidebar-accent/40 hover:bg-sidebar-accent/60 transition-colors border border-sidebar-border/30">
                     <div className="flex items-center gap-2">
                       <Shield className="w-4 h-4 text-sidebar-primary" />
-                      <div className="text-left">
-                        <p className="text-[11px] text-sidebar-foreground/50 font-medium">TESTING AS</p>
-                        <p className="text-xs font-semibold text-sidebar-foreground">{roleConfig[currentRole].label}</p>
-                      </div>
+                      <span className="text-xs font-medium text-sidebar-foreground">{roleConfig[currentRole].label}</span>
                     </div>
-                    <ChevronUp className="w-4 h-4 text-sidebar-foreground/50 group-hover:text-sidebar-foreground transition-colors" />
+                    <ChevronDown className="w-4 h-4 text-sidebar-foreground/50" />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-56 bg-sidebar border-sidebar-border">
-                  <DropdownMenuLabel className="text-sidebar-foreground/70 text-xs">Switch Role (Dev Mode)</DropdownMenuLabel>
+                <DropdownMenuContent align="start" className="w-52 bg-sidebar border-sidebar-border">
+                  <DropdownMenuLabel className="text-sidebar-foreground/60 text-xs">Switch Role</DropdownMenuLabel>
                   <DropdownMenuSeparator className="bg-sidebar-border" />
                   {(Object.keys(roleConfig) as UserRole[]).map((role) => (
                     <DropdownMenuItem
@@ -336,17 +202,12 @@ export function AppSidebar({ isOpen, onToggle, isCollapsed, onCollapse, currentR
                       onClick={() => onRoleChange(role)}
                       className={`cursor-pointer ${currentRole === role ? 'bg-sidebar-accent' : ''} text-sidebar-foreground hover:bg-sidebar-accent focus:bg-sidebar-accent`}
                     >
-                      <div className="flex flex-col gap-0.5">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-sm">{roleConfig[role].label}</span>
-                          {currentRole === role && (
-                            <Badge variant="outline" className="text-[10px] h-4 px-1.5 border-sidebar-primary text-sidebar-primary">
-                              Active
-                            </Badge>
-                          )}
-                        </div>
-                        <span className="text-[11px] text-sidebar-foreground/50">{roleConfig[role].description}</span>
-                      </div>
+                      <span className="text-sm">{roleConfig[role].label}</span>
+                      {currentRole === role && (
+                        <Badge variant="outline" className="ml-auto text-[10px] h-4 px-1.5 border-sidebar-primary text-sidebar-primary">
+                          Active
+                        </Badge>
+                      )}
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>
@@ -354,97 +215,57 @@ export function AppSidebar({ isOpen, onToggle, isCollapsed, onCollapse, currentR
             </div>
           )}
 
-          {/* Navigation */}
-          <nav className="flex-1 py-4 overflow-y-auto scrollbar-thin">
-            {visibleGroups.map((group, groupIndex) => (
-              <div key={group.title} className={groupIndex > 0 ? 'mt-4' : ''}>
-                {!isCollapsed && (
-                  <div className="px-4 mb-2">
-                    <h3 className="text-[10px] font-bold uppercase tracking-wider text-sidebar-foreground/40">
-                      {group.title}
-                    </h3>
-                  </div>
-                )}
-                <div className={`space-y-0.5 ${isCollapsed ? 'px-2' : 'px-3'}`}>
-                  {group.items.map(renderNavItem)}
-                </div>
-              </div>
-            ))}
+          {/* Main Navigation */}
+          <nav className={`flex-1 overflow-y-auto scrollbar-thin ${isCollapsed ? 'px-3' : 'px-4'}`}>
+            <div className="space-y-1">
+              {visibleMainItems.map(renderNavItem)}
+            </div>
           </nav>
 
-          {/* Collapse Button */}
-          <div className="px-3 py-2 border-t border-sidebar-border/50 hidden lg:block">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onCollapse}
-              className={`w-full text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 h-8 ${isCollapsed ? 'justify-center px-0' : 'justify-start'}`}
-            >
+          {/* Bottom Section */}
+          <div className={`border-t border-sidebar-border/30 ${isCollapsed ? 'px-3 py-3' : 'px-4 py-4'}`}>
+            <div className="space-y-1">
+              {visibleBottomItems.map(renderNavItem)}
+              
+              {/* Notifications */}
               {isCollapsed ? (
-                <PanelLeft className="w-4 h-4" />
-              ) : (
-                <>
-                  <PanelLeftClose className="w-4 h-4 mr-2" />
-                  <span className="text-xs">Collapse</span>
-                </>
-              )}
-            </Button>
-          </div>
-
-          {/* User Section */}
-          <div className={`border-t border-sidebar-border ${isCollapsed ? 'p-2' : 'p-3'}`}>
-            {!isCollapsed ? (
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-sidebar-accent to-sidebar-accent/50 flex items-center justify-center flex-shrink-0">
-                  <User className="w-4 h-4 text-sidebar-foreground" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-sidebar-foreground truncate">Admin User</p>
-                  <Badge variant="outline" className={`text-[10px] h-4 px-1.5 border ${roleConfig[currentRole].color}`}>
-                    {roleConfig[currentRole].label}
-                  </Badge>
-                </div>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8 text-sidebar-foreground/60 hover:text-destructive hover:bg-destructive/10"
-                    >
-                      <LogOut className="w-4 h-4" />
-                    </Button>
+                    <button className="flex items-center justify-center w-10 h-10 rounded-lg text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all mx-auto">
+                      <Bell className="w-5 h-5" />
+                    </button>
                   </TooltipTrigger>
-                  <TooltipContent side="top" className="bg-sidebar text-sidebar-foreground border-sidebar-border">
+                  <TooltipContent side="right" className="bg-sidebar text-sidebar-foreground border-sidebar-border">
+                    Notifications
+                  </TooltipContent>
+                </Tooltip>
+              ) : (
+                <button className="flex items-center gap-3 px-4 py-3 rounded-lg text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 transition-all w-full">
+                  <Bell className="w-5 h-5 flex-shrink-0" />
+                  <span className="text-sm font-medium">Notifications</span>
+                </button>
+              )}
+
+              {/* Logout */}
+              {isCollapsed ? (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button className="flex items-center justify-center w-10 h-10 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all mx-auto">
+                      <LogOut className="w-5 h-5" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right" className="bg-sidebar text-sidebar-foreground border-sidebar-border">
                     Logout
                   </TooltipContent>
                 </Tooltip>
-              </div>
-            ) : (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="w-full h-9 text-sidebar-foreground/60 hover:text-destructive hover:bg-destructive/10"
-                  >
-                    <LogOut className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="right" className="bg-sidebar text-sidebar-foreground border-sidebar-border">
-                  Logout
-                </TooltipContent>
-              </Tooltip>
-            )}
-          </div>
-
-          {/* Footer */}
-          {!isCollapsed && (
-            <div className="px-4 py-2 border-t border-sidebar-border/50">
-              <p className="text-[9px] text-sidebar-foreground/30 text-center font-medium">
-                © Sharvi Infotech Pvt. Ltd. • v1.0.0
-              </p>
+              ) : (
+                <button className="flex items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all w-full">
+                  <LogOut className="w-5 h-5 flex-shrink-0" />
+                  <span className="text-sm font-medium">Logout</span>
+                </button>
+              )}
             </div>
-          )}
+          </div>
         </aside>
       </>
     </TooltipProvider>
@@ -465,14 +286,5 @@ export function SidebarTrigger({ onClick }: { onClick: () => void }) {
 }
 
 export function SidebarCollapseTrigger({ isCollapsed, onClick }: { isCollapsed: boolean; onClick: () => void }) {
-  return (
-    <Button 
-      variant="ghost" 
-      size="icon"
-      className="hidden lg:flex"
-      onClick={onClick}
-    >
-      {isCollapsed ? <PanelLeft className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />}
-    </Button>
-  );
+  return null; // Hidden for cleaner design
 }
