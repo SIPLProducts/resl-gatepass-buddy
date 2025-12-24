@@ -1,10 +1,9 @@
 import { useState } from 'react';
-import { Save, Plus, Trash2, Edit2, Shield, Palette, MessageSquare, Users, Check, X } from 'lucide-react';
+import { Save, Plus, Trash2, Edit2, Shield, Users, Check, X } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { FormSection } from '@/components/shared/FormSection';
 import { TextField, SelectField } from '@/components/shared/FormField';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -12,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 
 interface User {
@@ -77,15 +77,6 @@ const initialRoles: Role[] = [
 export default function Settings() {
   const [activeTab, setActiveTab] = useState('users');
   
-  // Theme Settings
-  const [theme, setTheme] = useState('light');
-  const [primaryColor, setPrimaryColor] = useState('#1e3a5f');
-  const [accentColor, setAccentColor] = useState('#14b8a6');
-  
-  // Welcome Message
-  const [welcomeTitle, setWelcomeTitle] = useState('Welcome to RESL Gate Entry System');
-  const [welcomeMessage, setWelcomeMessage] = useState('Efficiently manage all your gate operations with seamless SAP integration. Track inward and outward movements in real-time.');
-  
   // Users & Roles
   const [users, setUsers] = useState<User[]>(initialUsers);
   const [roles, setRoles] = useState<Role[]>(initialRoles);
@@ -115,19 +106,6 @@ export default function Settings() {
   const [isPermissionsDialogOpen, setIsPermissionsDialogOpen] = useState(false);
   const [selectedRoleForPermissions, setSelectedRoleForPermissions] = useState<Role | null>(null);
   const [tempPermissions, setTempPermissions] = useState<string[]>([]);
-
-  const handleSaveAppearance = () => {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    toast.success('Appearance settings saved!');
-  };
-
-  const handleSaveWelcome = () => {
-    toast.success('Welcome message updated!');
-  };
 
   // User handlers
   const openAddUserDialog = () => {
@@ -204,7 +182,7 @@ export default function Settings() {
     setRoleForm({
       roleName: role.roleName,
       roleDescription: role.roleDescription,
-      permissions: role.permissions,
+      permissions: [...role.permissions],
     });
     setIsRoleDialogOpen(true);
   };
@@ -239,6 +217,15 @@ export default function Settings() {
     toast.success('Role removed!');
   };
 
+  const toggleRoleFormPermission = (permKey: string) => {
+    setRoleForm(prev => ({
+      ...prev,
+      permissions: prev.permissions.includes(permKey) 
+        ? prev.permissions.filter(p => p !== permKey)
+        : [...prev.permissions, permKey]
+    }));
+  };
+
   // Permissions handlers
   const openPermissionsDialog = (role: Role) => {
     setSelectedRoleForPermissions(role);
@@ -270,12 +257,12 @@ export default function Settings() {
     <div className="space-y-6 max-w-7xl">
       <PageHeader 
         title="Settings" 
-        subtitle="Configure system preferences, users, and roles"
+        subtitle="Configure users and roles"
         breadcrumbs={[{ label: 'Settings' }]} 
       />
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
+        <TabsList className="grid w-full grid-cols-2 lg:w-auto lg:inline-grid max-w-md">
           <TabsTrigger value="users" className="gap-2">
             <Users className="w-4 h-4 hidden sm:block" />
             Users
@@ -283,14 +270,6 @@ export default function Settings() {
           <TabsTrigger value="roles" className="gap-2">
             <Shield className="w-4 h-4 hidden sm:block" />
             Roles
-          </TabsTrigger>
-          <TabsTrigger value="appearance" className="gap-2">
-            <Palette className="w-4 h-4 hidden sm:block" />
-            Appearance
-          </TabsTrigger>
-          <TabsTrigger value="welcome" className="gap-2">
-            <MessageSquare className="w-4 h-4 hidden sm:block" />
-            Welcome
           </TabsTrigger>
         </TabsList>
 
@@ -435,193 +414,67 @@ export default function Settings() {
             </div>
           </FormSection>
         </TabsContent>
-
-        {/* Appearance Tab */}
-        <TabsContent value="appearance" className="space-y-6">
-          <FormSection title="Theme & Colors">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="space-y-2">
-                <Label>Theme Mode</Label>
-                <div className="flex gap-3">
-                  <Button 
-                    variant={theme === 'light' ? 'default' : 'outline'}
-                    onClick={() => setTheme('light')}
-                    className="flex-1"
-                  >
-                    Light
-                  </Button>
-                  <Button 
-                    variant={theme === 'dark' ? 'default' : 'outline'}
-                    onClick={() => setTheme('dark')}
-                    className="flex-1"
-                  >
-                    Dark
-                  </Button>
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="primary-color">Primary Color</Label>
-                <div className="flex gap-2">
-                  <Input 
-                    id="primary-color"
-                    type="color" 
-                    value={primaryColor} 
-                    onChange={(e) => setPrimaryColor(e.target.value)}
-                    className="w-14 h-10 p-1 cursor-pointer"
-                  />
-                  <Input 
-                    value={primaryColor} 
-                    onChange={(e) => setPrimaryColor(e.target.value)}
-                    className="flex-1"
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="accent-color">Accent Color</Label>
-                <div className="flex gap-2">
-                  <Input 
-                    id="accent-color"
-                    type="color" 
-                    value={accentColor} 
-                    onChange={(e) => setAccentColor(e.target.value)}
-                    className="w-14 h-10 p-1 cursor-pointer"
-                  />
-                  <Input 
-                    value={accentColor} 
-                    onChange={(e) => setAccentColor(e.target.value)}
-                    className="flex-1"
-                  />
-                </div>
-              </div>
-            </div>
-          </FormSection>
-
-          <FormSection title="Branding">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label>Company Logo</Label>
-                <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
-                  <div className="w-16 h-16 mx-auto mb-3 rounded-lg bg-primary flex items-center justify-center">
-                    <span className="text-primary-foreground font-bold text-2xl">R</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-3">Current logo</p>
-                  <Button variant="outline" size="sm">Upload New Logo</Button>
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label>Login Background</Label>
-                <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
-                  <div className="w-full h-24 mb-3 rounded-lg bg-gradient-to-r from-primary to-primary/80" />
-                  <p className="text-sm text-muted-foreground mb-3">Current background</p>
-                  <Button variant="outline" size="sm">Upload New Background</Button>
-                </div>
-              </div>
-            </div>
-          </FormSection>
-
-          <Button onClick={handleSaveAppearance} className="bg-accent text-accent-foreground hover:bg-accent/90 gap-2">
-            <Save className="w-4 h-4" />
-            Save Appearance
-          </Button>
-        </TabsContent>
-
-        {/* Welcome Message Tab */}
-        <TabsContent value="welcome" className="space-y-6">
-          <FormSection title="Welcome Message Configuration">
-            <div className="space-y-4">
-              <TextField
-                label="Welcome Title"
-                value={welcomeTitle}
-                onChange={setWelcomeTitle}
-                placeholder="Enter welcome title"
-              />
-              <div className="space-y-2">
-                <Label>Welcome Message</Label>
-                <textarea
-                  value={welcomeMessage}
-                  onChange={(e) => setWelcomeMessage(e.target.value)}
-                  placeholder="Enter welcome message"
-                  rows={4}
-                  className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
-            </div>
-          </FormSection>
-
-          <FormSection title="Preview">
-            <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-primary to-primary/80 p-4 text-primary-foreground">
-              <h3 className="text-lg font-bold mb-1">{welcomeTitle || 'Welcome Title'}</h3>
-              <p className="text-primary-foreground/80 text-sm">{welcomeMessage || 'Welcome message will appear here.'}</p>
-            </div>
-          </FormSection>
-
-          <Button onClick={handleSaveWelcome} className="bg-accent text-accent-foreground hover:bg-accent/90 gap-2">
-            <Save className="w-4 h-4" />
-            Save Welcome Message
-          </Button>
-        </TabsContent>
       </Tabs>
 
       {/* Add/Edit User Dialog */}
       <Dialog open={isUserDialogOpen} onOpenChange={setIsUserDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>{editingUser ? 'Edit User' : 'Add New User'}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <SelectField
-              label="Plant"
-              value={userForm.plant}
-              onChange={(value) => setUserForm({ ...userForm, plant: value })}
-              options={plantOptions}
-              placeholder="Select plant"
-              required
-            />
-            <TextField
-              label="User ID"
-              value={userForm.userId}
-              onChange={(value) => setUserForm({ ...userForm, userId: value })}
-              placeholder="User ID"
-              disabled
-            />
-            <TextField
-              label="Full Name"
-              value={userForm.fullName}
-              onChange={(value) => setUserForm({ ...userForm, fullName: value })}
-              placeholder="Enter full name"
-              required
-            />
-            <TextField
-              label="Email ID"
-              type="email"
-              value={userForm.emailId}
-              onChange={(value) => setUserForm({ ...userForm, emailId: value })}
-              placeholder="Enter email"
-              required
-            />
-            <TextField
-              label="Contact Number"
-              value={userForm.contactNumber}
-              onChange={(value) => setUserForm({ ...userForm, contactNumber: value })}
-              placeholder="Enter contact number"
-              required
-            />
-            <SelectField
-              label="Role"
-              value={userForm.role}
-              onChange={(value) => setUserForm({ ...userForm, role: value })}
-              options={roles.map(r => ({ value: r.roleName, label: r.roleName }))}
-              required
-            />
-          </div>
-          <DialogFooter>
+          <ScrollArea className="flex-1 pr-4">
+            <div className="space-y-4 py-4">
+              <SelectField
+                label="Plant"
+                value={userForm.plant}
+                onChange={(value) => setUserForm({ ...userForm, plant: value })}
+                options={plantOptions}
+                placeholder="Select plant"
+                required
+              />
+              <TextField
+                label="User ID"
+                value={userForm.userId}
+                onChange={(value) => setUserForm({ ...userForm, userId: value })}
+                placeholder="User ID"
+                disabled
+              />
+              <TextField
+                label="Full Name"
+                value={userForm.fullName}
+                onChange={(value) => setUserForm({ ...userForm, fullName: value })}
+                placeholder="Enter full name"
+                required
+              />
+              <TextField
+                label="Email ID"
+                type="email"
+                value={userForm.emailId}
+                onChange={(value) => setUserForm({ ...userForm, emailId: value })}
+                placeholder="Enter email"
+                required
+              />
+              <TextField
+                label="Contact Number"
+                value={userForm.contactNumber}
+                onChange={(value) => setUserForm({ ...userForm, contactNumber: value })}
+                placeholder="Enter contact number"
+                required
+              />
+              <SelectField
+                label="Role"
+                value={userForm.role}
+                onChange={(value) => setUserForm({ ...userForm, role: value })}
+                options={roles.map(r => ({ value: r.roleName, label: r.roleName }))}
+                required
+              />
+            </div>
+          </ScrollArea>
+          <DialogFooter className="border-t pt-4">
             <Button variant="outline" onClick={() => setIsUserDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSaveUser} className="gap-2">
+            <Button onClick={handleSaveUser} className="gap-2 bg-primary hover:bg-primary/90">
               <Save className="w-4 h-4" />
-              {editingUser ? 'Update User' : 'Add User'}
+              Save
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -629,33 +482,75 @@ export default function Settings() {
 
       {/* Add/Edit Role Dialog */}
       <Dialog open={isRoleDialogOpen} onOpenChange={setIsRoleDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>{editingRole ? 'Edit Role' : 'Add New Role'}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <TextField
-              label="Role Name"
-              value={roleForm.roleName}
-              onChange={(value) => setRoleForm({ ...roleForm, roleName: value })}
-              placeholder="Enter role name"
-              required
-            />
-            <div className="space-y-2">
-              <Label>Role Description</Label>
-              <Textarea
-                value={roleForm.roleDescription}
-                onChange={(e) => setRoleForm({ ...roleForm, roleDescription: e.target.value })}
-                placeholder="Enter role description"
-                rows={3}
+          <ScrollArea className="flex-1 pr-4">
+            <div className="space-y-6 py-4">
+              <TextField
+                label="Role Name"
+                value={roleForm.roleName}
+                onChange={(value) => setRoleForm({ ...roleForm, roleName: value })}
+                placeholder="Enter role name"
+                required
               />
+              <div className="space-y-2">
+                <Label>Role Description</Label>
+                <Textarea
+                  value={roleForm.roleDescription}
+                  onChange={(e) => setRoleForm({ ...roleForm, roleDescription: e.target.value })}
+                  placeholder="Enter role description"
+                  rows={3}
+                />
+              </div>
+              
+              {/* Screen Permissions Assignment */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-base font-semibold">Screen Permissions</Label>
+                  <span className="text-sm text-muted-foreground">
+                    {roleForm.permissions.length} of {allScreenPermissions.length} assigned
+                  </span>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Select which screens this role can access
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
+                  {allScreenPermissions.map((screen) => {
+                    const isAssigned = roleForm.permissions.includes(screen.key);
+                    return (
+                      <div 
+                        key={screen.key}
+                        onClick={() => toggleRoleFormPermission(screen.key)}
+                        className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all duration-200 ${
+                          isAssigned 
+                            ? 'border-primary bg-primary/5 hover:bg-primary/10' 
+                            : 'border-border hover:bg-muted/50'
+                        }`}
+                      >
+                        <span className={`text-sm font-medium ${isAssigned ? 'text-primary' : 'text-foreground'}`}>
+                          {screen.label}
+                        </span>
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${
+                          isAssigned 
+                            ? 'bg-primary text-primary-foreground' 
+                            : 'bg-muted text-muted-foreground'
+                        }`}>
+                          {isAssigned ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
-          </div>
-          <DialogFooter>
+          </ScrollArea>
+          <DialogFooter className="border-t pt-4">
             <Button variant="outline" onClick={() => setIsRoleDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSaveRole} className="gap-2">
+            <Button onClick={handleSaveRole} className="gap-2 bg-primary hover:bg-primary/90">
               <Save className="w-4 h-4" />
-              {editingRole ? 'Update Role' : 'Add Role'}
+              Save
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -663,59 +558,61 @@ export default function Settings() {
 
       {/* Screen Permissions Dialog */}
       <Dialog open={isPermissionsDialogOpen} onOpenChange={setIsPermissionsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh]">
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Shield className="w-5 h-5 text-primary" />
               Screen Permissions - {selectedRoleForPermissions?.roleName}
             </DialogTitle>
           </DialogHeader>
-          <div className="py-4">
-            <p className="text-sm text-muted-foreground mb-4">
-              Assign or unassign screen access for this role. Toggle each screen to enable or disable access.
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[50vh] overflow-y-auto pr-2">
-              {allScreenPermissions.map((screen) => {
-                const isAssigned = tempPermissions.includes(screen.key);
-                return (
-                  <div 
-                    key={screen.key}
-                    onClick={() => selectedRoleForPermissions?.roleName !== 'Admin' && togglePermission(screen.key)}
-                    className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all duration-200 ${
-                      isAssigned 
-                        ? 'border-primary bg-primary/5 hover:bg-primary/10' 
-                        : 'border-border hover:bg-muted/50'
-                    } ${selectedRoleForPermissions?.roleName === 'Admin' ? 'opacity-60 cursor-not-allowed' : ''}`}
-                  >
-                    <span className={`text-sm font-medium ${isAssigned ? 'text-primary' : 'text-foreground'}`}>
-                      {screen.label}
-                    </span>
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${
-                      isAssigned 
-                        ? 'bg-primary text-primary-foreground' 
-                        : 'bg-muted text-muted-foreground'
-                    }`}>
-                      {isAssigned ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            {selectedRoleForPermissions?.roleName === 'Admin' && (
-              <p className="text-sm text-muted-foreground mt-4 p-3 bg-muted/50 rounded-lg">
-                ⚠️ Admin role has full access to all screens and cannot be modified.
+          <ScrollArea className="flex-1 pr-4">
+            <div className="py-4">
+              <p className="text-sm text-muted-foreground mb-4">
+                Assign or unassign screen access for this role. Toggle each screen to enable or disable access.
               </p>
-            )}
-          </div>
-          <DialogFooter>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {allScreenPermissions.map((screen) => {
+                  const isAssigned = tempPermissions.includes(screen.key);
+                  return (
+                    <div 
+                      key={screen.key}
+                      onClick={() => selectedRoleForPermissions?.roleName !== 'Admin' && togglePermission(screen.key)}
+                      className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all duration-200 ${
+                        isAssigned 
+                          ? 'border-primary bg-primary/5 hover:bg-primary/10' 
+                          : 'border-border hover:bg-muted/50'
+                      } ${selectedRoleForPermissions?.roleName === 'Admin' ? 'opacity-60 cursor-not-allowed' : ''}`}
+                    >
+                      <span className={`text-sm font-medium ${isAssigned ? 'text-primary' : 'text-foreground'}`}>
+                        {screen.label}
+                      </span>
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${
+                        isAssigned 
+                          ? 'bg-primary text-primary-foreground' 
+                          : 'bg-muted text-muted-foreground'
+                      }`}>
+                        {isAssigned ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              {selectedRoleForPermissions?.roleName === 'Admin' && (
+                <p className="text-sm text-muted-foreground mt-4 p-3 bg-muted/50 rounded-lg">
+                  ⚠️ Admin role has full access to all screens and cannot be modified.
+                </p>
+              )}
+            </div>
+          </ScrollArea>
+          <DialogFooter className="border-t pt-4">
             <Button variant="outline" onClick={() => setIsPermissionsDialogOpen(false)}>Cancel</Button>
             <Button 
               onClick={handleSavePermissions} 
-              className="gap-2"
+              className="gap-2 bg-primary hover:bg-primary/90"
               disabled={selectedRoleForPermissions?.roleName === 'Admin'}
             >
               <Save className="w-4 h-4" />
-              Save Permissions
+              Save
             </Button>
           </DialogFooter>
         </DialogContent>
