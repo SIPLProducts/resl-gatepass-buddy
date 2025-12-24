@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Save, Plus, Trash2, Edit2, Shield, Palette, MessageSquare, Users } from 'lucide-react';
+import { Save, Plus, Trash2, Edit2, Shield, Palette, MessageSquare, Users, Check, X } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { FormSection } from '@/components/shared/FormSection';
 import { TextField, SelectField } from '@/components/shared/FormField';
@@ -8,54 +8,74 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 
 interface User {
   id: string;
-  name: string;
-  email: string;
+  plant: string;
+  userId: string;
+  fullName: string;
+  emailId: string;
+  contactNumber: string;
   role: string;
-  status: 'active' | 'inactive';
+  status: 'Active' | 'Inactive';
 }
 
 interface Role {
   id: string;
-  name: string;
-  description: string;
+  roleName: string;
+  roleDescription: string;
   permissions: string[];
 }
 
-const initialUsers: User[] = [
-  { id: '1', name: 'Admin User', email: 'admin@resl.com', role: 'Admin', status: 'active' },
-  { id: '2', name: 'Security Guard', email: 'security@resl.com', role: 'Security', status: 'active' },
-  { id: '3', name: 'Store Manager', email: 'stores@resl.com', role: 'Stores', status: 'active' },
-  { id: '4', name: 'Finance Officer', email: 'finance@resl.com', role: 'Finance', status: 'active' },
-  { id: '5', name: 'Viewer User', email: 'viewer@resl.com', role: 'Viewer', status: 'inactive' },
-];
-
-const initialRoles: Role[] = [
-  { id: '1', name: 'Admin', description: 'Full system access', permissions: ['all'] },
-  { id: '2', name: 'Security', description: 'Gate entry and exit operations', permissions: ['inward', 'outward', 'vehicle-exit', 'display', 'print'] },
-  { id: '3', name: 'Stores', description: 'Stores management operations', permissions: ['inward', 'outward', 'change', 'display', 'reports'] },
-  { id: '4', name: 'Finance', description: 'Reports and analytics access', permissions: ['display', 'reports', 'print'] },
-  { id: '5', name: 'Viewer', description: 'Read-only access', permissions: ['display', 'reports'] },
-];
-
-const screenPermissions = [
+// All sidebar screen permissions
+const allScreenPermissions = [
   { key: 'dashboard', label: 'Dashboard' },
-  { key: 'inward', label: 'Inward Gate Entry' },
-  { key: 'outward', label: 'Outward Gate Entry' },
+  { key: 'inward-po', label: 'Inward - With Reference PO' },
+  { key: 'inward-subcontracting', label: 'Inward - Subcontracting' },
+  { key: 'inward-without-ref', label: 'Inward - Without Reference' },
+  { key: 'outward-billing', label: 'Outward - Billing Reference' },
+  { key: 'outward-non-returnable', label: 'Outward - Non-Returnable' },
+  { key: 'outward-returnable', label: 'Outward - Returnable' },
   { key: 'change', label: 'Change Entry' },
   { key: 'display', label: 'Display Entry' },
-  { key: 'vehicle-exit', label: 'Vehicle Exit' },
+  { key: 'exit', label: 'Vehicle Exit' },
   { key: 'cancel', label: 'Cancel Entry' },
   { key: 'print', label: 'Print Entry' },
   { key: 'reports', label: 'Reports' },
   { key: 'settings', label: 'Settings' },
+  { key: 'help', label: 'Help & Support' },
+];
+
+const plantOptions = [
+  { value: 'P001', label: 'P001 - Mumbai Plant' },
+  { value: 'P002', label: 'P002 - Delhi Plant' },
+  { value: 'P003', label: 'P003 - Chennai Plant' },
+  { value: 'P004', label: 'P004 - Bangalore Plant' },
+];
+
+const initialUsers: User[] = [
+  { id: '1', plant: 'P001', userId: 'USR001', fullName: 'Rajesh Kumar', emailId: 'rajesh.kumar@resl.com', contactNumber: '9876543210', role: 'Admin', status: 'Active' },
+  { id: '2', plant: 'P001', userId: 'USR002', fullName: 'Priya Sharma', emailId: 'priya.sharma@resl.com', contactNumber: '9876543211', role: 'Security', status: 'Active' },
+  { id: '3', plant: 'P002', userId: 'USR003', fullName: 'Amit Patel', emailId: 'amit.patel@resl.com', contactNumber: '9876543212', role: 'Stores', status: 'Active' },
+  { id: '4', plant: 'P002', userId: 'USR004', fullName: 'Neha Singh', emailId: 'neha.singh@resl.com', contactNumber: '9876543213', role: 'Finance', status: 'Active' },
+  { id: '5', plant: 'P003', userId: 'USR005', fullName: 'Vijay Verma', emailId: 'vijay.verma@resl.com', contactNumber: '9876543214', role: 'Viewer', status: 'Inactive' },
+];
+
+const initialRoles: Role[] = [
+  { id: '1', roleName: 'Admin', roleDescription: 'Full system access with all permissions. Can manage users, roles, and system settings.', permissions: allScreenPermissions.map(p => p.key) },
+  { id: '2', roleName: 'Security', roleDescription: 'Gate security operations for inward and outward entries.', permissions: ['dashboard', 'inward-po', 'inward-subcontracting', 'inward-without-ref', 'outward-billing', 'outward-non-returnable', 'outward-returnable', 'exit', 'display', 'print'] },
+  { id: '3', roleName: 'Stores', roleDescription: 'Stores management operations including inventory and material handling.', permissions: ['dashboard', 'inward-po', 'inward-subcontracting', 'change', 'display', 'reports'] },
+  { id: '4', roleName: 'Finance', roleDescription: 'Reports, analytics, and financial data access only.', permissions: ['dashboard', 'display', 'reports', 'print'] },
+  { id: '5', roleName: 'Viewer', roleDescription: 'Read-only access to view entries and reports.', permissions: ['dashboard', 'display', 'reports'] },
 ];
 
 export default function Settings() {
-  const [activeTab, setActiveTab] = useState('appearance');
+  const [activeTab, setActiveTab] = useState('users');
   
   // Theme Settings
   const [theme, setTheme] = useState('light');
@@ -68,12 +88,33 @@ export default function Settings() {
   
   // Users & Roles
   const [users, setUsers] = useState<User[]>(initialUsers);
-  const [roles] = useState<Role[]>(initialRoles);
-  const [selectedRole, setSelectedRole] = useState('Admin');
-  const [rolePermissions, setRolePermissions] = useState<string[]>(['all']);
+  const [roles, setRoles] = useState<Role[]>(initialRoles);
   
-  // New User Form
-  const [newUser, setNewUser] = useState({ name: '', email: '', role: 'Viewer' });
+  // User Dialog
+  const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [userForm, setUserForm] = useState({
+    plant: '',
+    userId: '',
+    fullName: '',
+    emailId: '',
+    contactNumber: '',
+    role: 'Viewer',
+  });
+
+  // Role Dialog
+  const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
+  const [editingRole, setEditingRole] = useState<Role | null>(null);
+  const [roleForm, setRoleForm] = useState({
+    roleName: '',
+    roleDescription: '',
+    permissions: [] as string[],
+  });
+
+  // Permissions Dialog
+  const [isPermissionsDialogOpen, setIsPermissionsDialogOpen] = useState(false);
+  const [selectedRoleForPermissions, setSelectedRoleForPermissions] = useState<Role | null>(null);
+  const [tempPermissions, setTempPermissions] = useState<string[]>([]);
 
   const handleSaveAppearance = () => {
     if (theme === 'dark') {
@@ -88,21 +129,52 @@ export default function Settings() {
     toast.success('Welcome message updated!');
   };
 
-  const handleAddUser = () => {
-    if (!newUser.name || !newUser.email) {
-      toast.error('Please fill in all fields');
+  // User handlers
+  const openAddUserDialog = () => {
+    setEditingUser(null);
+    setUserForm({
+      plant: '',
+      userId: `USR${String(users.length + 1).padStart(3, '0')}`,
+      fullName: '',
+      emailId: '',
+      contactNumber: '',
+      role: 'Viewer',
+    });
+    setIsUserDialogOpen(true);
+  };
+
+  const openEditUserDialog = (user: User) => {
+    setEditingUser(user);
+    setUserForm({
+      plant: user.plant,
+      userId: user.userId,
+      fullName: user.fullName,
+      emailId: user.emailId,
+      contactNumber: user.contactNumber,
+      role: user.role,
+    });
+    setIsUserDialogOpen(true);
+  };
+
+  const handleSaveUser = () => {
+    if (!userForm.plant || !userForm.fullName || !userForm.emailId || !userForm.contactNumber) {
+      toast.error('Please fill in all required fields');
       return;
     }
-    const user: User = {
-      id: Date.now().toString(),
-      name: newUser.name,
-      email: newUser.email,
-      role: newUser.role,
-      status: 'active',
-    };
-    setUsers([...users, user]);
-    setNewUser({ name: '', email: '', role: 'Viewer' });
-    toast.success('User added successfully!');
+
+    if (editingUser) {
+      setUsers(users.map(u => u.id === editingUser.id ? { ...u, ...userForm } : u));
+      toast.success('User updated successfully!');
+    } else {
+      const newUser: User = {
+        id: Date.now().toString(),
+        ...userForm,
+        status: 'Active',
+      };
+      setUsers([...users, newUser]);
+      toast.success('User added successfully!');
+    }
+    setIsUserDialogOpen(false);
   };
 
   const handleDeleteUser = (id: string) => {
@@ -112,32 +184,90 @@ export default function Settings() {
 
   const handleToggleUserStatus = (id: string) => {
     setUsers(users.map(u => 
-      u.id === id ? { ...u, status: u.status === 'active' ? 'inactive' : 'active' } : u
+      u.id === id ? { ...u, status: u.status === 'Active' ? 'Inactive' : 'Active' } : u
     ));
   };
 
-  const handleRoleChange = (roleName: string) => {
-    setSelectedRole(roleName);
-    const role = roles.find(r => r.name === roleName);
-    setRolePermissions(role?.permissions || []);
+  // Role handlers
+  const openAddRoleDialog = () => {
+    setEditingRole(null);
+    setRoleForm({
+      roleName: '',
+      roleDescription: '',
+      permissions: [],
+    });
+    setIsRoleDialogOpen(true);
   };
 
-  const handleTogglePermission = (permission: string) => {
-    if (rolePermissions.includes('all')) {
-      setRolePermissions([permission]);
-    } else if (rolePermissions.includes(permission)) {
-      setRolePermissions(rolePermissions.filter(p => p !== permission));
-    } else {
-      setRolePermissions([...rolePermissions, permission]);
+  const openEditRoleDialog = (role: Role) => {
+    setEditingRole(role);
+    setRoleForm({
+      roleName: role.roleName,
+      roleDescription: role.roleDescription,
+      permissions: role.permissions,
+    });
+    setIsRoleDialogOpen(true);
+  };
+
+  const handleSaveRole = () => {
+    if (!roleForm.roleName || !roleForm.roleDescription) {
+      toast.error('Please fill in all required fields');
+      return;
     }
+
+    if (editingRole) {
+      setRoles(roles.map(r => r.id === editingRole.id ? { ...r, ...roleForm } : r));
+      toast.success('Role updated successfully!');
+    } else {
+      const newRole: Role = {
+        id: Date.now().toString(),
+        ...roleForm,
+      };
+      setRoles([...roles, newRole]);
+      toast.success('Role added successfully!');
+    }
+    setIsRoleDialogOpen(false);
+  };
+
+  const handleDeleteRole = (id: string) => {
+    const roleToDelete = roles.find(r => r.id === id);
+    if (roleToDelete?.roleName === 'Admin') {
+      toast.error('Cannot delete Admin role');
+      return;
+    }
+    setRoles(roles.filter(r => r.id !== id));
+    toast.success('Role removed!');
+  };
+
+  // Permissions handlers
+  const openPermissionsDialog = (role: Role) => {
+    setSelectedRoleForPermissions(role);
+    setTempPermissions([...role.permissions]);
+    setIsPermissionsDialogOpen(true);
+  };
+
+  const togglePermission = (permKey: string) => {
+    setTempPermissions(prev => 
+      prev.includes(permKey) 
+        ? prev.filter(p => p !== permKey)
+        : [...prev, permKey]
+    );
   };
 
   const handleSavePermissions = () => {
-    toast.success(`Permissions for ${selectedRole} role saved!`);
+    if (selectedRoleForPermissions) {
+      setRoles(roles.map(r => 
+        r.id === selectedRoleForPermissions.id 
+          ? { ...r, permissions: tempPermissions }
+          : r
+      ));
+      toast.success(`Permissions for ${selectedRoleForPermissions.roleName} saved!`);
+    }
+    setIsPermissionsDialogOpen(false);
   };
 
   return (
-    <div className="space-y-6 max-w-6xl">
+    <div className="space-y-6 max-w-7xl">
       <PageHeader 
         title="Settings" 
         subtitle="Configure system preferences, users, and roles"
@@ -146,14 +276,6 @@ export default function Settings() {
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
-          <TabsTrigger value="appearance" className="gap-2">
-            <Palette className="w-4 h-4 hidden sm:block" />
-            Appearance
-          </TabsTrigger>
-          <TabsTrigger value="welcome" className="gap-2">
-            <MessageSquare className="w-4 h-4 hidden sm:block" />
-            Welcome
-          </TabsTrigger>
           <TabsTrigger value="users" className="gap-2">
             <Users className="w-4 h-4 hidden sm:block" />
             Users
@@ -162,7 +284,157 @@ export default function Settings() {
             <Shield className="w-4 h-4 hidden sm:block" />
             Roles
           </TabsTrigger>
+          <TabsTrigger value="appearance" className="gap-2">
+            <Palette className="w-4 h-4 hidden sm:block" />
+            Appearance
+          </TabsTrigger>
+          <TabsTrigger value="welcome" className="gap-2">
+            <MessageSquare className="w-4 h-4 hidden sm:block" />
+            Welcome
+          </TabsTrigger>
         </TabsList>
+
+        {/* Users Tab */}
+        <TabsContent value="users" className="space-y-6">
+          <FormSection 
+            title="User Management" 
+            actions={
+              <Button onClick={openAddUserDialog} className="gap-2">
+                <Plus className="w-4 h-4" />
+                Add User
+              </Button>
+            }
+          >
+            <div className="rounded-lg border border-border overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    <TableHead className="font-semibold">Plant</TableHead>
+                    <TableHead className="font-semibold">User Id</TableHead>
+                    <TableHead className="font-semibold">Full Name</TableHead>
+                    <TableHead className="font-semibold">Email Id</TableHead>
+                    <TableHead className="font-semibold">Contact Number</TableHead>
+                    <TableHead className="font-semibold">Role</TableHead>
+                    <TableHead className="font-semibold text-center">Status</TableHead>
+                    <TableHead className="font-semibold text-center">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {users.map((user) => (
+                    <TableRow key={user.id} className="hover:bg-muted/30">
+                      <TableCell className="font-medium">{user.plant}</TableCell>
+                      <TableCell className="font-mono text-sm">{user.userId}</TableCell>
+                      <TableCell>{user.fullName}</TableCell>
+                      <TableCell className="text-muted-foreground">{user.emailId}</TableCell>
+                      <TableCell>{user.contactNumber}</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className="bg-primary/10 text-primary border-0">
+                          {user.role}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Switch
+                          checked={user.status === 'Active'}
+                          onCheckedChange={() => handleToggleUserStatus(user.id)}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex justify-center gap-1">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 hover:bg-primary/10 hover:text-primary"
+                            onClick={() => openEditUserDialog(user)}
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => handleDeleteUser(user.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </FormSection>
+        </TabsContent>
+
+        {/* Roles Tab */}
+        <TabsContent value="roles" className="space-y-6">
+          <FormSection 
+            title="Role Management"
+            actions={
+              <Button onClick={openAddRoleDialog} className="gap-2">
+                <Plus className="w-4 h-4" />
+                Add Role
+              </Button>
+            }
+          >
+            <div className="rounded-lg border border-border overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    <TableHead className="font-semibold w-[180px]">Role Name</TableHead>
+                    <TableHead className="font-semibold">Role Description</TableHead>
+                    <TableHead className="font-semibold w-[200px] text-center">Screen Permissions</TableHead>
+                    <TableHead className="font-semibold w-[100px] text-center">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {roles.map((role) => (
+                    <TableRow key={role.id} className="hover:bg-muted/30">
+                      <TableCell>
+                        <Badge variant="outline" className="font-medium text-sm px-3 py-1">
+                          {role.roleName}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">{role.roleDescription}</TableCell>
+                      <TableCell className="text-center">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => openPermissionsDialog(role)}
+                          className="gap-2"
+                        >
+                          <Shield className="w-4 h-4" />
+                          Manage ({role.permissions.length})
+                        </Button>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex justify-center gap-1">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 hover:bg-primary/10 hover:text-primary"
+                            onClick={() => openEditRoleDialog(role)}
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => handleDeleteRole(role.id)}
+                            disabled={role.roleName === 'Admin'}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </FormSection>
+        </TabsContent>
 
         {/* Appearance Tab */}
         <TabsContent value="appearance" className="space-y-6">
@@ -291,139 +563,163 @@ export default function Settings() {
             Save Welcome Message
           </Button>
         </TabsContent>
+      </Tabs>
 
-        {/* Users Tab */}
-        <TabsContent value="users" className="space-y-6">
-          <FormSection title="Add New User">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <TextField
-                label="Full Name"
-                value={newUser.name}
-                onChange={(value) => setNewUser({ ...newUser, name: value })}
-                placeholder="Enter name"
-              />
-              <TextField
-                label="Email"
-                type="email"
-                value={newUser.email}
-                onChange={(value) => setNewUser({ ...newUser, email: value })}
-                placeholder="Enter email"
-              />
-              <SelectField
-                label="Role"
-                value={newUser.role}
-                onChange={(value) => setNewUser({ ...newUser, role: value })}
-                options={roles.map(r => ({ value: r.name, label: r.name }))}
-              />
-              <div className="flex items-end">
-                <Button onClick={handleAddUser} className="w-full gap-2">
-                  <Plus className="w-4 h-4" />
-                  Add User
-                </Button>
-              </div>
-            </div>
-          </FormSection>
+      {/* Add/Edit User Dialog */}
+      <Dialog open={isUserDialogOpen} onOpenChange={setIsUserDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editingUser ? 'Edit User' : 'Add New User'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <SelectField
+              label="Plant"
+              value={userForm.plant}
+              onChange={(value) => setUserForm({ ...userForm, plant: value })}
+              options={plantOptions}
+              placeholder="Select plant"
+              required
+            />
+            <TextField
+              label="User ID"
+              value={userForm.userId}
+              onChange={(value) => setUserForm({ ...userForm, userId: value })}
+              placeholder="User ID"
+              disabled
+            />
+            <TextField
+              label="Full Name"
+              value={userForm.fullName}
+              onChange={(value) => setUserForm({ ...userForm, fullName: value })}
+              placeholder="Enter full name"
+              required
+            />
+            <TextField
+              label="Email ID"
+              type="email"
+              value={userForm.emailId}
+              onChange={(value) => setUserForm({ ...userForm, emailId: value })}
+              placeholder="Enter email"
+              required
+            />
+            <TextField
+              label="Contact Number"
+              value={userForm.contactNumber}
+              onChange={(value) => setUserForm({ ...userForm, contactNumber: value })}
+              placeholder="Enter contact number"
+              required
+            />
+            <SelectField
+              label="Role"
+              value={userForm.role}
+              onChange={(value) => setUserForm({ ...userForm, role: value })}
+              options={roles.map(r => ({ value: r.roleName, label: r.roleName }))}
+              required
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsUserDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleSaveUser} className="gap-2">
+              <Save className="w-4 h-4" />
+              {editingUser ? 'Update User' : 'Add User'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-          <FormSection title="User Management">
-            <div className="data-grid">
-              <table className="w-full">
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th className="w-24 text-center">Status</th>
-                    <th className="w-24 text-center">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.map((user) => (
-                    <tr key={user.id} className="group">
-                      <td className="font-medium">{user.name}</td>
-                      <td className="text-muted-foreground">{user.email}</td>
-                      <td>
-                        <span className="badge-status bg-primary/10 text-primary">{user.role}</span>
-                      </td>
-                      <td className="text-center">
-                        <Switch
-                          checked={user.status === 'active'}
-                          onCheckedChange={() => handleToggleUserStatus(user.id)}
-                        />
-                      </td>
-                      <td className="text-center">
-                        <div className="flex justify-center gap-1">
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <Edit2 className="w-4 h-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8 text-destructive hover:text-destructive"
-                            onClick={() => handleDeleteUser(user.id)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </FormSection>
-        </TabsContent>
-
-        {/* Roles Tab */}
-        <TabsContent value="roles" className="space-y-6">
-          <FormSection title="Role Configuration">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-              <SelectField
-                label="Select Role"
-                value={selectedRole}
-                onChange={handleRoleChange}
-                options={roles.map(r => ({ value: r.name, label: r.name }))}
+      {/* Add/Edit Role Dialog */}
+      <Dialog open={isRoleDialogOpen} onOpenChange={setIsRoleDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editingRole ? 'Edit Role' : 'Add New Role'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <TextField
+              label="Role Name"
+              value={roleForm.roleName}
+              onChange={(value) => setRoleForm({ ...roleForm, roleName: value })}
+              placeholder="Enter role name"
+              required
+            />
+            <div className="space-y-2">
+              <Label>Role Description</Label>
+              <Textarea
+                value={roleForm.roleDescription}
+                onChange={(e) => setRoleForm({ ...roleForm, roleDescription: e.target.value })}
+                placeholder="Enter role description"
+                rows={3}
               />
-              <div className="md:col-span-3">
-                <Label className="mb-2 block">Role Description</Label>
-                <p className="text-muted-foreground text-sm mt-2">
-                  {roles.find(r => r.name === selectedRole)?.description}
-                </p>
-              </div>
             </div>
-          </FormSection>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsRoleDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleSaveRole} className="gap-2">
+              <Save className="w-4 h-4" />
+              {editingRole ? 'Update Role' : 'Add Role'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-          <FormSection title="Screen Permissions">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-              {screenPermissions.map((screen) => (
-                <div 
-                  key={screen.key}
-                  className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors"
-                >
-                  <Label htmlFor={screen.key} className="cursor-pointer text-sm">
-                    {screen.label}
-                  </Label>
-                  <Switch
-                    id={screen.key}
-                    checked={rolePermissions.includes('all') || rolePermissions.includes(screen.key)}
-                    onCheckedChange={() => handleTogglePermission(screen.key)}
-                    disabled={selectedRole === 'Admin'}
-                  />
-                </div>
-              ))}
+      {/* Screen Permissions Dialog */}
+      <Dialog open={isPermissionsDialogOpen} onOpenChange={setIsPermissionsDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Shield className="w-5 h-5 text-primary" />
+              Screen Permissions - {selectedRoleForPermissions?.roleName}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-muted-foreground mb-4">
+              Assign or unassign screen access for this role. Toggle each screen to enable or disable access.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[50vh] overflow-y-auto pr-2">
+              {allScreenPermissions.map((screen) => {
+                const isAssigned = tempPermissions.includes(screen.key);
+                return (
+                  <div 
+                    key={screen.key}
+                    onClick={() => selectedRoleForPermissions?.roleName !== 'Admin' && togglePermission(screen.key)}
+                    className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all duration-200 ${
+                      isAssigned 
+                        ? 'border-primary bg-primary/5 hover:bg-primary/10' 
+                        : 'border-border hover:bg-muted/50'
+                    } ${selectedRoleForPermissions?.roleName === 'Admin' ? 'opacity-60 cursor-not-allowed' : ''}`}
+                  >
+                    <span className={`text-sm font-medium ${isAssigned ? 'text-primary' : 'text-foreground'}`}>
+                      {screen.label}
+                    </span>
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${
+                      isAssigned 
+                        ? 'bg-primary text-primary-foreground' 
+                        : 'bg-muted text-muted-foreground'
+                    }`}>
+                      {isAssigned ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-            {selectedRole === 'Admin' && (
-              <p className="text-sm text-muted-foreground mt-4">
-                Admin role has full access to all screens and cannot be modified.
+            {selectedRoleForPermissions?.roleName === 'Admin' && (
+              <p className="text-sm text-muted-foreground mt-4 p-3 bg-muted/50 rounded-lg">
+                ⚠️ Admin role has full access to all screens and cannot be modified.
               </p>
             )}
-          </FormSection>
-
-          <Button onClick={handleSavePermissions} className="bg-accent text-accent-foreground hover:bg-accent/90 gap-2">
-            <Save className="w-4 h-4" />
-            Save Role Permissions
-          </Button>
-        </TabsContent>
-      </Tabs>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsPermissionsDialogOpen(false)}>Cancel</Button>
+            <Button 
+              onClick={handleSavePermissions} 
+              className="gap-2"
+              disabled={selectedRoleForPermissions?.roleName === 'Admin'}
+            >
+              <Save className="w-4 h-4" />
+              Save Permissions
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
