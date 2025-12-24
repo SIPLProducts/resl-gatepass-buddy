@@ -262,7 +262,7 @@ export default function Dashboard() {
             <ChevronDown className="w-5 h-5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
           </CollapsibleTrigger>
           <CollapsibleContent className="px-4 pb-4">
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 pt-2">
+            <div className="grid grid-cols-4 gap-3 pt-2">
               {modules.map((module, index) => (
                 <div 
                   key={module.title} 
