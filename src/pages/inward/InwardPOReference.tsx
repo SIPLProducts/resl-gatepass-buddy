@@ -160,7 +160,7 @@ export default function InwardPOReference() {
 
       {/* PO Reference Section */}
       <FormSection title="PO Reference">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
           <SelectField
             label="Plant"
             value={headerData.plant}
@@ -179,8 +179,8 @@ export default function InwardPOReference() {
             placeholder="Enter PO Number"
             required
           />
-          <div className="flex items-end">
-            <Button onClick={handleFetchPO} disabled={isLoading} className="gap-2 w-full">
+          <div className="pb-0.5">
+            <Button onClick={handleFetchPO} disabled={isLoading} className="gap-2 w-full h-10">
               {isLoading ? (
                 <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
               ) : (
