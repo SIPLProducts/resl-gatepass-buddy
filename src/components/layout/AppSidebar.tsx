@@ -17,7 +17,6 @@ import {
   ChevronsRight,
   Menu,
   X,
-  Bell,
   ChevronDown,
   ChevronRight,
 } from 'lucide-react';
@@ -310,25 +309,6 @@ export function AppSidebar({ isOpen, onToggle, isCollapsed, onCollapse }: AppSid
           {/* Bottom Section */}
           <div className={`border-t border-sidebar-border/30 flex-shrink-0 ${isCollapsed ? 'px-3 py-2' : 'px-3 py-3'}`}>
             <div className="space-y-0.5">
-              {/* Notifications */}
-              {isCollapsed ? (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button className="flex items-center justify-center w-9 h-9 rounded-lg text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all mx-auto">
-                      <Bell className="w-[18px] h-[18px]" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="right" className="bg-sidebar text-sidebar-foreground border-sidebar-border">
-                    Notifications
-                  </TooltipContent>
-                </Tooltip>
-              ) : (
-                <button className="flex items-center gap-3 px-4 py-2 rounded-lg text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 transition-all w-full">
-                  <Bell className="w-[18px] h-[18px] flex-shrink-0" />
-                  <span className="text-sm font-medium">Notifications</span>
-                </button>
-              )}
-
               {/* Logout */}
               {isCollapsed ? (
                 <Tooltip>
