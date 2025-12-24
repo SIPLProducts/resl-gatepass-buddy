@@ -115,15 +115,18 @@ export default function Dashboard() {
   return (
     <div className="space-y-8">
       {/* User Welcome Banner with Themed Gradient */}
-      <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-r ${currentTheme.gradient} py-10 px-8 text-white animate-slide-up shadow-xl max-w-md`}>
+      <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-r ${currentTheme.gradient} py-5 px-6 text-white animate-slide-up shadow-lg max-w-2xl`}>
         <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.05%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')] opacity-50" />
-        <div className="relative z-10">
-          <p className="text-white/80 text-sm font-semibold uppercase tracking-widest mb-2">{greeting}</p>
-          <h1 className="text-3xl font-bold mb-3">{userName}</h1>
-          <p className="text-white/70 text-sm">
-            Ready to manage today's gate operations.
-          </p>
-          <div className="mt-4 flex items-center justify-between">
+        <div className="relative z-10 flex items-center justify-between">
+          <div>
+            <p className="text-white/80 text-xs font-semibold uppercase tracking-widest mb-1">{greeting}</p>
+            <h1 className="text-xl font-bold">{userName}</h1>
+            <p className="text-white/70 text-sm mt-1">Ready to manage today's gate operations.</p>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center">
+              <Package className="w-6 h-6 text-white/80" />
+            </div>
             <button 
               onClick={cycleTheme}
               className="text-xs text-white/50 hover:text-white transition-colors flex items-center gap-1"
@@ -134,10 +137,7 @@ export default function Dashboard() {
             </button>
           </div>
         </div>
-        <div className="absolute right-6 top-1/2 -translate-y-1/2 h-16 w-16 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center">
-          <Package className="w-8 h-8 text-white/80" />
-        </div>
-        <div className="absolute -bottom-10 -right-10 w-40 h-40 rounded-full bg-white/10 blur-3xl" />
+        <div className="absolute -bottom-8 -right-8 w-32 h-32 rounded-full bg-white/10 blur-3xl" />
       </div>
 
       {/* Stats Grid */}
