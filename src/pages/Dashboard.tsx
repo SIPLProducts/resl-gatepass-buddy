@@ -366,7 +366,7 @@ export default function Dashboard() {
       </div>
 
       {/* Weekly Trend & KPIs */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Weekly Trend Chart */}
         <div className="lg:col-span-2 enterprise-card p-6 animate-slide-up" style={{ animationDelay: '0.25s' }}>
           <div className="flex items-center justify-between mb-4">
@@ -448,34 +448,34 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Top Vendors */}
-      <div className="enterprise-card p-6 animate-slide-up" style={{ animationDelay: '0.35s' }}>
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Users className="w-5 h-5 text-accent" />
-            <h3 className="font-semibold text-foreground">Top Vendors</h3>
-          </div>
-          <span className="text-xs text-muted-foreground">This Month</span>
-        </div>
-        <div className="space-y-3">
-          {topVendorsData.map((vendor, idx) => (
-            <div key={vendor.name} className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center font-semibold">
-                  {idx + 1}
-                </span>
-                <span className="text-sm text-foreground truncate max-w-[120px]" title={vendor.name}>
-                  {vendor.name}
-                </span>
-              </div>
-              <div className="text-right">
-                <p className="text-sm font-semibold text-foreground">{vendor.entries}</p>
-                <p className="text-xs text-muted-foreground">{vendor.value}</p>
-              </div>
+        {/* Top Vendors */}
+        <div className="enterprise-card p-6 animate-slide-up" style={{ animationDelay: '0.35s' }}>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-accent" />
+              <h3 className="font-semibold text-foreground">Top Vendors</h3>
             </div>
-          ))}
+            <span className="text-xs text-muted-foreground">This Month</span>
+          </div>
+          <div className="space-y-3">
+            {topVendorsData.map((vendor, idx) => (
+              <div key={vendor.name} className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center font-semibold">
+                    {idx + 1}
+                  </span>
+                  <span className="text-sm text-foreground" title={vendor.name}>
+                    {vendor.name}
+                  </span>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-semibold text-foreground">{vendor.entries}</p>
+                  <p className="text-xs text-muted-foreground">{vendor.value}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
