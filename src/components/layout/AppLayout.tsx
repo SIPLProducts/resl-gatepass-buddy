@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
-import { AppSidebar, SidebarTrigger, SidebarCollapseTrigger } from './AppSidebar';
+import { AppSidebar, SidebarTrigger, SidebarCollapseTrigger, UserRole } from './AppSidebar';
 import { AppHeader } from './AppHeader';
 
 export function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [currentRole, setCurrentRole] = useState<UserRole>('admin');
 
   const toggleSidebar = () => setSidebarOpen(prev => !prev);
   const toggleCollapse = () => setSidebarCollapsed(prev => !prev);
@@ -17,6 +18,8 @@ export function AppLayout() {
         onToggle={toggleSidebar} 
         isCollapsed={sidebarCollapsed}
         onCollapse={toggleCollapse}
+        currentRole={currentRole}
+        onRoleChange={setCurrentRole}
       />
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         <AppHeader 
