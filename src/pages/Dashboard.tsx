@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   ArrowDownToLine,
   ArrowUpFromLine,
@@ -43,10 +43,10 @@ import {
 
 // Enhanced stats for Purchase & Plant
 const stats = [
-  { title: "Today's Inward", value: 24, icon: ArrowDownToLine, trend: { value: 12, isPositive: true }, color: 'accent' as const },
-  { title: "Today's Outward", value: 18, icon: ArrowUpFromLine, trend: { value: 8, isPositive: true }, color: 'info' as const },
-  { title: 'Pending Exit', value: 7, icon: Clock, color: 'warning' as const },
-  { title: 'Total Vehicles', value: 156, icon: Truck, trend: { value: 5, isPositive: true }, color: 'primary' as const },
+  { title: "Today's Inward", value: 24, icon: ArrowDownToLine, trend: { value: 12, isPositive: true }, color: 'accent' as const, path: '/inward/po-reference' },
+  { title: "Today's Outward", value: 18, icon: ArrowUpFromLine, trend: { value: 8, isPositive: true }, color: 'info' as const, path: '/outward/billing-reference' },
+  { title: 'Pending Exit', value: 7, icon: Clock, color: 'warning' as const, path: '/vehicle-exit' },
+  { title: 'Total Vehicles', value: 156, icon: Truck, trend: { value: 5, isPositive: true }, color: 'primary' as const, path: '/reports' },
 ];
 
 const modules = [
@@ -56,6 +56,7 @@ const modules = [
     icon: ArrowDownToLine,
     path: '/inward/po-reference',
     color: 'accent' as const,
+    shortcut: '1',
   },
   {
     title: 'Outward Gate Entry',
@@ -63,6 +64,7 @@ const modules = [
     icon: ArrowUpFromLine,
     path: '/outward/billing-reference',
     color: 'info' as const,
+    shortcut: '2',
   },
   {
     title: 'Change Entry',
@@ -70,6 +72,7 @@ const modules = [
     icon: FileEdit,
     path: '/change',
     color: 'primary' as const,
+    shortcut: '3',
   },
   {
     title: 'Display Entry',
@@ -77,6 +80,7 @@ const modules = [
     icon: Eye,
     path: '/display',
     color: 'success' as const,
+    shortcut: '4',
   },
   {
     title: 'Vehicle Exit',
@@ -84,6 +88,7 @@ const modules = [
     icon: DoorOpen,
     path: '/vehicle-exit',
     color: 'warning' as const,
+    shortcut: '5',
   },
   {
     title: 'Cancel Entry',
@@ -91,6 +96,7 @@ const modules = [
     icon: XCircle,
     path: '/cancel',
     color: 'warning' as const,
+    shortcut: '6',
   },
   {
     title: 'Print Entry',
@@ -98,6 +104,7 @@ const modules = [
     icon: Printer,
     path: '/print',
     color: 'primary' as const,
+    shortcut: '7',
   },
   {
     title: 'Reports',
@@ -105,6 +112,7 @@ const modules = [
     icon: BarChart3,
     path: '/reports',
     color: 'info' as const,
+    shortcut: '8',
   },
 ];
 
@@ -176,11 +184,31 @@ export default function Dashboard() {
   const userName = 'Admin User';
   
   const [themeIndex, setThemeIndex] = useState(0);
+  const [hoveredModule, setHoveredModule] = useState<string | null>(null);
   const currentTheme = welcomeThemes[themeIndex];
 
   const cycleTheme = () => {
     setThemeIndex((prev) => (prev + 1) % welcomeThemes.length);
   };
+
+  // Keyboard shortcuts for Quick Actions
+  const handleKeyPress = useCallback((event: KeyboardEvent) => {
+    // Don't trigger if user is typing in an input
+    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+      return;
+    }
+    
+    const key = event.key;
+    const module = modules.find(m => m.shortcut === key);
+    if (module) {
+      navigate(module.path);
+    }
+  }, [navigate]);
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [handleKeyPress]);
 
   // Calculate summary KPIs
   const summaryKpis = useMemo(() => ({
@@ -239,10 +267,15 @@ export default function Dashboard() {
         <div className="absolute -bottom-8 -right-8 w-32 h-32 rounded-full bg-white/10 blur-3xl" />
       </div>
 
-      {/* Stats Grid */}
+      {/* Stats Grid - Clickable */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" style={{ animationDelay: '0.1s' }}>
         {stats.map((stat, index) => (
-          <div key={stat.title} className="animate-slide-up" style={{ animationDelay: `${0.1 + index * 0.05}s` }}>
+          <div 
+            key={stat.title} 
+            className="animate-slide-up cursor-pointer transform hover:scale-[1.02] transition-all duration-200" 
+            style={{ animationDelay: `${0.1 + index * 0.05}s` }}
+            onClick={() => navigate(stat.path)}
+          >
             <StatCard {...stat} />
           </div>
         ))}
@@ -446,12 +479,26 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Modules Grid */}
+        {/* Modules Grid with Keyboard Shortcuts */}
         <div className="lg:col-span-2">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Quick Actions</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-foreground">Quick Actions</h3>
+            <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">Press 1-8 for quick access</span>
+          </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {modules.map((module, index) => (
-              <div key={module.title} className="animate-slide-up" style={{ animationDelay: `${0.4 + index * 0.03}s` }}>
+              <div 
+                key={module.title} 
+                className="animate-slide-up relative group" 
+                style={{ animationDelay: `${0.4 + index * 0.03}s` }}
+                onMouseEnter={() => setHoveredModule(module.title)}
+                onMouseLeave={() => setHoveredModule(null)}
+              >
+                <div 
+                  className={`absolute -top-2 -right-2 z-10 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shadow-md transition-all duration-200 ${hoveredModule === module.title ? 'scale-110 ring-2 ring-primary/50' : ''}`}
+                >
+                  {module.shortcut}
+                </div>
                 <ModuleCard {...module} />
               </div>
             ))}
