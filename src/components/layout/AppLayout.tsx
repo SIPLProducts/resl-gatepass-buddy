@@ -11,9 +11,9 @@ export function AppLayout() {
   return (
     <div className="flex min-h-screen bg-background w-full">
       <AppSidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         <AppHeader sidebarTrigger={<SidebarTrigger onClick={toggleSidebar} />} />
-        <main className="flex-1 p-6 overflow-auto">
+        <main className="flex-1 p-6 overflow-y-auto">
           <div className="animate-fade-in">
             <Outlet />
           </div>

@@ -92,8 +92,8 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
       {/* Sidebar */}
       <aside 
         className={`
-          fixed lg:static inset-y-0 left-0 z-50
-          w-64 min-h-screen bg-sidebar flex flex-col border-r border-sidebar-border
+          fixed lg:sticky inset-y-0 left-0 top-0 z-50
+          w-64 h-screen bg-sidebar flex flex-col border-r border-sidebar-border
           transform transition-transform duration-300 ease-in-out
           ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
