@@ -83,7 +83,7 @@ interface AppSidebarProps {
 export function AppSidebar({ isOpen, onToggle, isCollapsed, onCollapse }: AppSidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const [openGroups, setOpenGroups] = useState<string[]>(['Inward', 'Outward']);
+  const [openGroups, setOpenGroups] = useState<string[]>([]);
 
   const handleLogout = () => {
     navigate('/');
