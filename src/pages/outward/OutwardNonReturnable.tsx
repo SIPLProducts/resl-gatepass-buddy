@@ -9,12 +9,13 @@ import { toast } from 'sonner';
 import { exportToExcel, transporterOptions } from '@/lib/exportToExcel';
 
 interface ItemRow {
+  materialCode: string;
   materialDescription: string;
   quantity: string;
   unit: string;
 }
 
-const emptyItem: ItemRow = { materialDescription: '', quantity: '', unit: '' };
+const emptyItem: ItemRow = { materialCode: '', materialDescription: '', quantity: '', unit: '' };
 const ITEMS_PER_PAGE = 10;
 
 export default function OutwardNonReturnable() {
@@ -28,6 +29,8 @@ export default function OutwardNonReturnable() {
     vehicleNo: '',
     driverName: '',
     transporterName: '',
+    grLrNumber: '',
+    remarks: '',
   });
 
   const [items, setItems] = useState<ItemRow[]>(Array(5).fill(null).map(() => ({ ...emptyItem })));
@@ -75,18 +78,21 @@ export default function OutwardNonReturnable() {
       vehicleNo: '',
       driverName: '',
       transporterName: '',
+      grLrNumber: '',
+      remarks: '',
     });
     setItems(Array(5).fill(null).map(() => ({ ...emptyItem })));
     setCurrentPage(1);
   };
 
   const handleExport = () => {
-    const filledItems = items.filter(item => item.materialDescription);
+    const filledItems = items.filter(item => item.materialCode || item.materialDescription);
     if (filledItems.length === 0) {
       toast.error('No items to export');
       return;
     }
     const exportColumns = [
+      { key: 'materialCode', header: 'Material Code' },
       { key: 'materialDescription', header: 'Material Description' },
       { key: 'quantity', header: 'Quantity' },
       { key: 'unit', header: 'Unit' },
@@ -125,7 +131,7 @@ export default function OutwardNonReturnable() {
       </FormSection>
 
       <FormSection title="Vehicle & Transport Details">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <TextField label="Vehicle No" value={headerData.vehicleNo} onChange={(value) => setHeaderData({ ...headerData, vehicleNo: value })} placeholder="MH-12-AB-1234" required />
           <TextField label="Driver Name" value={headerData.driverName} onChange={(value) => setHeaderData({ ...headerData, driverName: value })} placeholder="Enter driver name" />
           <SelectField
@@ -133,6 +139,18 @@ export default function OutwardNonReturnable() {
             value={headerData.transporterName}
             onChange={(value) => setHeaderData({ ...headerData, transporterName: value })}
             options={transporterOptions}
+          />
+          <TextField
+            label="GR/LR Number"
+            value={headerData.grLrNumber}
+            onChange={(value) => setHeaderData({ ...headerData, grLrNumber: value })}
+            placeholder="Enter GR/LR number"
+          />
+          <TextField
+            label="Remarks"
+            value={headerData.remarks}
+            onChange={(value) => setHeaderData({ ...headerData, remarks: value })}
+            placeholder="Enter remarks"
           />
         </div>
       </FormSection>
@@ -150,6 +168,7 @@ export default function OutwardNonReturnable() {
               <thead>
                 <tr>
                   <th className="w-12 text-center">#</th>
+                  <th className="w-32">Material Code</th>
                   <th>Material Description</th>
                   <th className="w-40">Quantity</th>
                   <th className="w-32">Unit</th>
@@ -162,6 +181,9 @@ export default function OutwardNonReturnable() {
                   return (
                     <tr key={actualIndex} className="group">
                       <td className="text-center font-medium text-muted-foreground">{actualIndex + 1}</td>
+                      <td>
+                        <Input value={item.materialCode} onChange={(e) => handleItemChange(pageIndex, 'materialCode', e.target.value)} className="h-8" placeholder="Enter code" />
+                      </td>
                       <td>
                         <Input value={item.materialDescription} onChange={(e) => handleItemChange(pageIndex, 'materialDescription', e.target.value)} className="h-8" placeholder="Enter material description" />
                       </td>

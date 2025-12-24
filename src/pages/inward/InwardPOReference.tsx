@@ -6,10 +6,13 @@ import { TextField, SelectField } from '@/components/shared/FormField';
 import { DataGrid } from '@/components/shared/DataGrid';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { exportToExcel, transporterOptions, generateTestItems } from '@/lib/exportToExcel';
+import { exportToExcel, transporterOptions, generateTestItems, packingConditionOptions } from '@/lib/exportToExcel';
 
 interface ItemRow {
+  vendorCode: string;
+  vendorName: string;
   materialCode: string;
   materialDescription: string;
   poQty: string;
@@ -34,6 +37,7 @@ export default function InwardPOReference() {
     driverContact: '',
     transporterName: '',
     grLrNumber: '',
+    remarks: '',
     poNumber: '',
     vendorNumber: '',
     vendorName: '',
@@ -71,7 +75,11 @@ export default function InwardPOReference() {
         vendorContact: '+91 22 2345 6789',
         vendorGSTNo: '27AABCU9603R1ZM',
       }));
-      setItems(generateTestItems('inward') as ItemRow[]);
+      setItems(generateTestItems('inward').map(item => ({
+        ...item,
+        vendorCode: 'V1001',
+        vendorName: 'ABC Suppliers Pvt. Ltd.',
+      })) as ItemRow[]);
       setIsLoading(false);
       toast.success('PO data fetched successfully - 35 items loaded');
     }, 1000);
@@ -101,6 +109,7 @@ export default function InwardPOReference() {
       driverContact: '',
       transporterName: '',
       grLrNumber: '',
+      remarks: '',
       poNumber: '',
       vendorNumber: '',
       vendorName: '',
@@ -119,6 +128,8 @@ export default function InwardPOReference() {
       return;
     }
     const exportColumns = [
+      { key: 'vendorCode', header: 'Vendor Code' },
+      { key: 'vendorName', header: 'Vendor Name' },
       { key: 'materialCode', header: 'Material Code' },
       { key: 'materialDescription', header: 'Material Description' },
       { key: 'poQty', header: 'PO Qty' },
@@ -133,6 +144,8 @@ export default function InwardPOReference() {
   };
 
   const columns = [
+    { key: 'vendorCode', header: 'Vendor Code', width: '100px' },
+    { key: 'vendorName', header: 'Vendor Name', width: '150px' },
     { key: 'materialCode', header: 'Material Code', width: '120px' },
     { key: 'materialDescription', header: 'Material Description', width: '200px' },
     { key: 'poQty', header: 'PO Qty', width: '80px' },
@@ -158,12 +171,16 @@ export default function InwardPOReference() {
       header: 'Packing Condition',
       width: '150px',
       render: (value: string, _row: ItemRow, index: number) => (
-        <Input
-          value={value}
-          onChange={(e) => handleItemChange(index, 'packingCondition', e.target.value)}
-          className="h-8 w-full"
-          placeholder="Good/Damaged"
-        />
+        <Select value={value} onValueChange={(val) => handleItemChange(index, 'packingCondition', val)}>
+          <SelectTrigger className="h-8 w-full">
+            <SelectValue placeholder="Select" />
+          </SelectTrigger>
+          <SelectContent>
+            {packingConditionOptions.map(opt => (
+              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       ),
     },
   ];
@@ -305,6 +322,12 @@ export default function InwardPOReference() {
             value={headerData.grLrNumber}
             onChange={(value) => setHeaderData({ ...headerData, grLrNumber: value })}
             placeholder="Enter GR/LR number"
+          />
+          <TextField
+            label="Remarks"
+            value={headerData.remarks}
+            onChange={(value) => setHeaderData({ ...headerData, remarks: value })}
+            placeholder="Enter remarks"
           />
         </div>
       </FormSection>

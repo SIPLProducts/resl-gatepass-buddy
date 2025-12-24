@@ -1,13 +1,16 @@
 import { useState } from 'react';
-import { Save, RotateCcw, Plus, Trash2 } from 'lucide-react';
+import { Save, RotateCcw, Plus, Trash2, FileSpreadsheet } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { FormSection } from '@/components/shared/FormSection';
 import { TextField, SelectField } from '@/components/shared/FormField';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { exportToExcel, transporterOptions, packingConditionOptions } from '@/lib/exportToExcel';
 
 interface ItemRow {
+  materialCode: string;
   materialDescription: string;
   quantity: string;
   unit: string;
@@ -15,6 +18,7 @@ interface ItemRow {
 }
 
 const emptyItem: ItemRow = {
+  materialCode: '',
   materialDescription: '',
   quantity: '',
   unit: '',
@@ -34,6 +38,8 @@ export default function InwardWithoutReference() {
     vehicleNo: '',
     driverName: '',
     transporterName: '',
+    grLrNumber: '',
+    remarks: '',
     vendorName: '',
     inwardedBy: 'Admin User',
   });
@@ -87,11 +93,30 @@ export default function InwardWithoutReference() {
       vehicleNo: '',
       driverName: '',
       transporterName: '',
+      grLrNumber: '',
+      remarks: '',
       vendorName: '',
       inwardedBy: 'Admin User',
     });
     setItems(Array(5).fill(null).map(() => ({ ...emptyItem })));
     setCurrentPage(1);
+  };
+
+  const handleExport = () => {
+    const filledItems = items.filter(item => item.materialCode || item.materialDescription);
+    if (filledItems.length === 0) {
+      toast.error('No items to export');
+      return;
+    }
+    const exportColumns = [
+      { key: 'materialCode', header: 'Material Code' },
+      { key: 'materialDescription', header: 'Material Description' },
+      { key: 'quantity', header: 'Quantity' },
+      { key: 'unit', header: 'Unit' },
+      { key: 'packingCondition', header: 'Packing Condition' },
+    ];
+    exportToExcel(filledItems, exportColumns, `Inward_WithoutRef_${headerData.gateEntryNo || 'New'}`);
+    toast.success('Exported to Excel successfully');
   };
 
   return (
@@ -128,80 +153,118 @@ export default function InwardWithoutReference() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <TextField label="Vehicle No" value={headerData.vehicleNo} onChange={(value) => setHeaderData({ ...headerData, vehicleNo: value })} placeholder="MH-12-AB-1234" required />
           <TextField label="Driver Name" value={headerData.driverName} onChange={(value) => setHeaderData({ ...headerData, driverName: value })} placeholder="Enter driver name" />
-          <TextField label="Transporter Name" value={headerData.transporterName} onChange={(value) => setHeaderData({ ...headerData, transporterName: value })} placeholder="Enter transporter" />
+          <SelectField
+            label="Transporter Name"
+            value={headerData.transporterName}
+            onChange={(value) => setHeaderData({ ...headerData, transporterName: value })}
+            options={transporterOptions}
+          />
           <TextField label="Vendor Name" value={headerData.vendorName} onChange={(value) => setHeaderData({ ...headerData, vendorName: value })} placeholder="Enter vendor name" />
+          <TextField
+            label="GR/LR Number"
+            value={headerData.grLrNumber}
+            onChange={(value) => setHeaderData({ ...headerData, grLrNumber: value })}
+            placeholder="Enter GR/LR number"
+          />
+          <TextField
+            label="Remarks"
+            value={headerData.remarks}
+            onChange={(value) => setHeaderData({ ...headerData, remarks: value })}
+            placeholder="Enter remarks"
+          />
         </div>
       </FormSection>
 
       <FormSection title="Item Details">
+        <div className="flex justify-end mb-3">
+          <Button variant="outline" onClick={handleExport} className="gap-2">
+            <FileSpreadsheet className="w-4 h-4" />
+            Export to Excel
+          </Button>
+        </div>
         <div className="data-grid">
-          <table className="w-full">
-            <thead>
-              <tr>
-                <th className="w-12 text-center">#</th>
-                <th>Material Description</th>
-                <th className="w-32">Quantity</th>
-                <th className="w-32">Unit</th>
-                <th className="w-40">Packing Condition</th>
-                <th className="w-20 text-center">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedItems.map((item, pageIndex) => {
-                const actualIndex = startIndex + pageIndex;
-                return (
-                  <tr key={actualIndex} className="group">
-                    <td className="text-center font-medium text-muted-foreground">{actualIndex + 1}</td>
-                    <td>
-                      <Input
-                        value={item.materialDescription}
-                        onChange={(e) => handleItemChange(pageIndex, 'materialDescription', e.target.value)}
-                        className="h-8"
-                        placeholder="Enter material description"
-                      />
-                    </td>
-                    <td>
-                      <Input
-                        type="number"
-                        value={item.quantity}
-                        onChange={(e) => handleItemChange(pageIndex, 'quantity', e.target.value)}
-                        className="h-8"
-                        placeholder="Qty"
-                      />
-                    </td>
-                    <td>
-                      <Input
-                        value={item.unit}
-                        onChange={(e) => handleItemChange(pageIndex, 'unit', e.target.value)}
-                        className="h-8"
-                        placeholder="Unit"
-                      />
-                    </td>
-                    <td>
-                      <Input
-                        value={item.packingCondition}
-                        onChange={(e) => handleItemChange(pageIndex, 'packingCondition', e.target.value)}
-                        className="h-8"
-                        placeholder="Good/Damaged"
-                      />
-                    </td>
-                    <td className="text-center">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDeleteRow(pageIndex)}
-                        disabled={items.length <= 1}
-                        className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                        title="Delete row"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <div className="overflow-auto scrollbar-thin" style={{ maxHeight: '400px' }}>
+            <table className="w-full">
+              <thead>
+                <tr>
+                  <th className="w-12 text-center">#</th>
+                  <th className="w-32">Material Code</th>
+                  <th>Material Description</th>
+                  <th className="w-32">Quantity</th>
+                  <th className="w-32">Unit</th>
+                  <th className="w-40">Packing Condition</th>
+                  <th className="w-20 text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedItems.map((item, pageIndex) => {
+                  const actualIndex = startIndex + pageIndex;
+                  return (
+                    <tr key={actualIndex} className="group">
+                      <td className="text-center font-medium text-muted-foreground">{actualIndex + 1}</td>
+                      <td>
+                        <Input
+                          value={item.materialCode}
+                          onChange={(e) => handleItemChange(pageIndex, 'materialCode', e.target.value)}
+                          className="h-8"
+                          placeholder="Enter code"
+                        />
+                      </td>
+                      <td>
+                        <Input
+                          value={item.materialDescription}
+                          onChange={(e) => handleItemChange(pageIndex, 'materialDescription', e.target.value)}
+                          className="h-8"
+                          placeholder="Enter material description"
+                        />
+                      </td>
+                      <td>
+                        <Input
+                          type="number"
+                          value={item.quantity}
+                          onChange={(e) => handleItemChange(pageIndex, 'quantity', e.target.value)}
+                          className="h-8"
+                          placeholder="Qty"
+                        />
+                      </td>
+                      <td>
+                        <Input
+                          value={item.unit}
+                          onChange={(e) => handleItemChange(pageIndex, 'unit', e.target.value)}
+                          className="h-8"
+                          placeholder="Unit"
+                        />
+                      </td>
+                      <td>
+                        <Select value={item.packingCondition} onValueChange={(val) => handleItemChange(pageIndex, 'packingCondition', val)}>
+                          <SelectTrigger className="h-8 w-full">
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {packingConditionOptions.map(opt => (
+                              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </td>
+                      <td className="text-center">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteRow(pageIndex)}
+                          disabled={items.length <= 1}
+                          className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          title="Delete row"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* Pagination */}

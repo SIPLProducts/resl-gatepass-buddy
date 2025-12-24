@@ -51,6 +51,14 @@ export const transporterOptions = [
   { value: 'other', label: 'Other' },
 ];
 
+// Packing condition options for dropdown
+export const packingConditionOptions = [
+  { value: 'good', label: 'Good' },
+  { value: 'damaged', label: 'Damaged' },
+  { value: 'partial', label: 'Partially Damaged' },
+  { value: 'repacked', label: 'Repacked' },
+];
+
 // Generate 35 test items for scroll testing
 export function generateTestItems(type: 'inward' | 'outward' | 'subcontract' = 'inward') {
   const materials = [
