@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   ArrowDownToLine,
@@ -78,11 +78,17 @@ interface AppSidebarProps {
 
 export function AppSidebar({ isOpen, onToggle, isCollapsed, onCollapse, currentRole, onRoleChange }: AppSidebarProps) {
   const location = useLocation();
+  const navigate = useNavigate();
 
   const hasAccess = (roles: UserRole[]) => roles.includes(currentRole);
 
   const visibleMainItems = mainNavItems.filter(item => hasAccess(item.roles));
   const visibleBottomItems = bottomNavItems.filter(item => hasAccess(item.roles));
+
+  const handleLogout = () => {
+    // In a real app, this would call supabase.auth.signOut()
+    navigate('/');
+  };
 
   const renderNavItem = (item: NavItem) => {
     const Icon = item.icon;
@@ -95,14 +101,14 @@ export function AppSidebar({ isOpen, onToggle, isCollapsed, onCollapse, currentR
               to={item.path}
               onClick={() => window.innerWidth < 1024 && onToggle()}
               className={({ isActive }) => 
-                `flex items-center justify-center w-10 h-10 rounded-lg transition-all duration-200 mx-auto
+                `flex items-center justify-center w-9 h-9 rounded-lg transition-all duration-200 mx-auto
                 ${isActive 
                   ? 'bg-sidebar-primary text-sidebar-primary-foreground' 
                   : 'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
                 }`
               }
             >
-              <Icon className="w-5 h-5" />
+              <Icon className="w-[18px] h-[18px]" />
             </NavLink>
           </TooltipTrigger>
           <TooltipContent side="right" className="bg-sidebar text-sidebar-foreground border-sidebar-border">
@@ -118,14 +124,14 @@ export function AppSidebar({ isOpen, onToggle, isCollapsed, onCollapse, currentR
         to={item.path}
         onClick={() => window.innerWidth < 1024 && onToggle()}
         className={({ isActive }) => 
-          `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200
+          `flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200
           ${isActive 
             ? 'bg-sidebar-primary text-sidebar-primary-foreground' 
             : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/30'
           }`
         }
       >
-        <Icon className="w-5 h-5 flex-shrink-0" />
+        <Icon className="w-[18px] h-[18px] flex-shrink-0" />
         <span className="text-sm font-medium">{item.label}</span>
       </NavLink>
     );
@@ -152,16 +158,16 @@ export function AppSidebar({ isOpen, onToggle, isCollapsed, onCollapse, currentR
           `}
         >
           {/* Logo Section */}
-          <div className={`h-16 flex items-center ${isCollapsed ? 'justify-center px-3' : 'justify-between px-5'}`}>
+          <div className={`h-14 flex items-center flex-shrink-0 ${isCollapsed ? 'justify-center px-3' : 'justify-between px-5'}`}>
             {!isCollapsed ? (
               <>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-sidebar-primary flex items-center justify-center flex-shrink-0">
-                    <span className="text-sidebar-primary-foreground font-bold text-lg">R</span>
+                  <div className="w-9 h-9 rounded-xl bg-sidebar-primary flex items-center justify-center flex-shrink-0">
+                    <span className="text-sidebar-primary-foreground font-bold text-base">R</span>
                   </div>
                   <div>
-                    <h1 className="text-sidebar-foreground font-bold text-base">RESL Gate</h1>
-                    <p className="text-sidebar-foreground/40 text-xs">Entry System</p>
+                    <h1 className="text-sidebar-foreground font-bold text-sm">RESL Gate</h1>
+                    <p className="text-sidebar-foreground/40 text-[10px]">Entry System</p>
                   </div>
                 </div>
                 <Button 
@@ -174,23 +180,23 @@ export function AppSidebar({ isOpen, onToggle, isCollapsed, onCollapse, currentR
                 </Button>
               </>
             ) : (
-              <div className="w-10 h-10 rounded-xl bg-sidebar-primary flex items-center justify-center">
-                <span className="text-sidebar-primary-foreground font-bold text-lg">R</span>
+              <div className="w-9 h-9 rounded-xl bg-sidebar-primary flex items-center justify-center">
+                <span className="text-sidebar-primary-foreground font-bold text-base">R</span>
               </div>
             )}
           </div>
 
           {/* Role Switcher */}
           {!isCollapsed && (
-            <div className="px-4 pb-4">
+            <div className="px-4 pb-3 flex-shrink-0">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg bg-sidebar-accent/40 hover:bg-sidebar-accent/60 transition-colors border border-sidebar-border/30">
+                  <button className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-sidebar-accent/40 hover:bg-sidebar-accent/60 transition-colors border border-sidebar-border/30">
                     <div className="flex items-center gap-2">
-                      <Shield className="w-4 h-4 text-sidebar-primary" />
+                      <Shield className="w-3.5 h-3.5 text-sidebar-primary" />
                       <span className="text-xs font-medium text-sidebar-foreground">{roleConfig[currentRole].label}</span>
                     </div>
-                    <ChevronDown className="w-4 h-4 text-sidebar-foreground/50" />
+                    <ChevronDown className="w-3.5 h-3.5 text-sidebar-foreground/50" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-52 bg-sidebar border-sidebar-border">
@@ -216,23 +222,23 @@ export function AppSidebar({ isOpen, onToggle, isCollapsed, onCollapse, currentR
           )}
 
           {/* Main Navigation */}
-          <nav className={`flex-1 overflow-y-auto scrollbar-thin ${isCollapsed ? 'px-3' : 'px-4'}`}>
-            <div className="space-y-1">
+          <nav className={`flex-1 overflow-y-auto scrollbar-thin py-2 ${isCollapsed ? 'px-3' : 'px-4'}`}>
+            <div className="space-y-0.5">
               {visibleMainItems.map(renderNavItem)}
             </div>
           </nav>
 
           {/* Bottom Section */}
-          <div className={`border-t border-sidebar-border/30 ${isCollapsed ? 'px-3 py-3' : 'px-4 py-4'}`}>
-            <div className="space-y-1">
+          <div className={`border-t border-sidebar-border/30 flex-shrink-0 ${isCollapsed ? 'px-3 py-2' : 'px-4 py-3'}`}>
+            <div className="space-y-0.5">
               {visibleBottomItems.map(renderNavItem)}
               
               {/* Notifications */}
               {isCollapsed ? (
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <button className="flex items-center justify-center w-10 h-10 rounded-lg text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all mx-auto">
-                      <Bell className="w-5 h-5" />
+                    <button className="flex items-center justify-center w-9 h-9 rounded-lg text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all mx-auto">
+                      <Bell className="w-[18px] h-[18px]" />
                     </button>
                   </TooltipTrigger>
                   <TooltipContent side="right" className="bg-sidebar text-sidebar-foreground border-sidebar-border">
@@ -240,8 +246,8 @@ export function AppSidebar({ isOpen, onToggle, isCollapsed, onCollapse, currentR
                   </TooltipContent>
                 </Tooltip>
               ) : (
-                <button className="flex items-center gap-3 px-4 py-3 rounded-lg text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 transition-all w-full">
-                  <Bell className="w-5 h-5 flex-shrink-0" />
+                <button className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 transition-all w-full">
+                  <Bell className="w-[18px] h-[18px] flex-shrink-0" />
                   <span className="text-sm font-medium">Notifications</span>
                 </button>
               )}
@@ -250,8 +256,11 @@ export function AppSidebar({ isOpen, onToggle, isCollapsed, onCollapse, currentR
               {isCollapsed ? (
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <button className="flex items-center justify-center w-10 h-10 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all mx-auto">
-                      <LogOut className="w-5 h-5" />
+                    <button 
+                      onClick={handleLogout}
+                      className="flex items-center justify-center w-9 h-9 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all mx-auto"
+                    >
+                      <LogOut className="w-[18px] h-[18px]" />
                     </button>
                   </TooltipTrigger>
                   <TooltipContent side="right" className="bg-sidebar text-sidebar-foreground border-sidebar-border">
@@ -259,8 +268,11 @@ export function AppSidebar({ isOpen, onToggle, isCollapsed, onCollapse, currentR
                   </TooltipContent>
                 </Tooltip>
               ) : (
-                <button className="flex items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all w-full">
-                  <LogOut className="w-5 h-5 flex-shrink-0" />
+                <button 
+                  onClick={handleLogout}
+                  className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all w-full"
+                >
+                  <LogOut className="w-[18px] h-[18px] flex-shrink-0" />
                   <span className="text-sm font-medium">Logout</span>
                 </button>
               )}
