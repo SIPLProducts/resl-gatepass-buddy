@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, LogIn, Shield, Truck, ClipboardCheck, BarChart3 } from 'lucide-react';
+import { Eye, EyeOff, LogIn, Shield, Truck, ClipboardCheck, BarChart3, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -64,7 +64,7 @@ export default function Login() {
             </div>
             
             {/* Feature Highlights */}
-            <div className="grid grid-cols-3 gap-4 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+            <div className="grid grid-cols-4 gap-4 animate-slide-up" style={{ animationDelay: '0.2s' }}>
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
                 <Truck className="w-8 h-8 mb-2 text-white/90" />
                 <p className="text-sm font-medium">Vehicle Tracking</p>
@@ -72,6 +72,10 @@ export default function Login() {
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
                 <ClipboardCheck className="w-8 h-8 mb-2 text-white/90" />
                 <p className="text-sm font-medium">PO Integration</p>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                <FileText className="w-8 h-8 mb-2 text-white/90" />
+                <p className="text-sm font-medium">Billing Docs</p>
               </div>
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
                 <BarChart3 className="w-8 h-8 mb-2 text-white/90" />
