@@ -112,7 +112,7 @@ export default function Settings() {
     setEditingUser(null);
     setUserForm({
       plant: '',
-      userId: `USR${String(users.length + 1).padStart(3, '0')}`,
+      userId: '',
       fullName: '',
       emailId: '',
       contactNumber: '',
@@ -135,7 +135,7 @@ export default function Settings() {
   };
 
   const handleSaveUser = () => {
-    if (!userForm.plant || !userForm.fullName || !userForm.emailId || !userForm.contactNumber) {
+    if (!userForm.plant || !userForm.userId || !userForm.fullName || !userForm.emailId || !userForm.contactNumber) {
       toast.error('Please fill in all required fields');
       return;
     }
@@ -436,8 +436,8 @@ export default function Settings() {
                 label="User ID"
                 value={userForm.userId}
                 onChange={(value) => setUserForm({ ...userForm, userId: value })}
-                placeholder="User ID"
-                disabled
+                placeholder="Enter User ID (e.g., USR001)"
+                required
               />
               <TextField
                 label="Full Name"
