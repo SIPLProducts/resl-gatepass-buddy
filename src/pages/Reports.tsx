@@ -573,7 +573,7 @@ export default function Reports() {
                   <PieChartIcon className="w-5 h-5 text-accent" />
                   <h3 className="font-semibold text-foreground">Entry Type Distribution</h3>
                 </div>
-                <span className="text-xs text-muted-foreground">Click to drill down</span>
+                <span className="text-xs text-muted-foreground">Click segment to drill down</span>
               </div>
               <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
@@ -586,15 +586,22 @@ export default function Reports() {
                     paddingAngle={5}
                     dataKey="value"
                     label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    onClick={(data) => handleTypeDrillDown(data.name)}
-                    className="cursor-pointer"
+                    style={{ cursor: 'pointer' }}
                   >
                     {typeChartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} className="hover:opacity-80 transition-opacity" />
+                      <Cell 
+                        key={`cell-${index}`} 
+                        fill={entry.fill} 
+                        onClick={() => handleTypeDrillDown(entry.name)}
+                        style={{ cursor: 'pointer' }}
+                      />
                     ))}
                   </Pie>
                   <Tooltip content={<CustomTooltip />} />
-                  <Legend />
+                  <Legend 
+                    onClick={(e) => handleTypeDrillDown(e.value as string)}
+                    wrapperStyle={{ cursor: 'pointer' }}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -606,7 +613,7 @@ export default function Reports() {
                   <PieChartIcon className="w-5 h-5 text-accent" />
                   <h3 className="font-semibold text-foreground">Status Distribution</h3>
                 </div>
-                <span className="text-xs text-muted-foreground">Click to drill down</span>
+                <span className="text-xs text-muted-foreground">Click segment to drill down</span>
               </div>
               <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
@@ -619,15 +626,22 @@ export default function Reports() {
                     paddingAngle={5}
                     dataKey="value"
                     label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    onClick={(data) => handleStatusDrillDown(data.name)}
-                    className="cursor-pointer"
+                    style={{ cursor: 'pointer' }}
                   >
                     {statusChartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} className="hover:opacity-80 transition-opacity" />
+                      <Cell 
+                        key={`cell-${index}`} 
+                        fill={entry.fill} 
+                        onClick={() => handleStatusDrillDown(entry.name)}
+                        style={{ cursor: 'pointer' }}
+                      />
                     ))}
                   </Pie>
                   <Tooltip content={<CustomTooltip />} />
-                  <Legend />
+                  <Legend 
+                    onClick={(e) => handleStatusDrillDown(e.value as string)}
+                    wrapperStyle={{ cursor: 'pointer' }}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -642,26 +656,24 @@ export default function Reports() {
                 <span className="text-xs text-muted-foreground">Click bars to drill down</span>
               </div>
               <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={plantChartData} barGap={8}>
+                <BarChart 
+                  data={plantChartData} 
+                  barGap={8}
+                  onClick={(state) => {
+                    if (state && state.activePayload && state.activePayload.length > 0) {
+                      const plant = state.activePayload[0].payload.plant;
+                      handlePlantDrillDown(plant);
+                    }
+                  }}
+                  style={{ cursor: 'pointer' }}
+                >
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="plant" stroke="hsl(var(--muted-foreground))" fontSize={12} />
                   <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
                   <Tooltip content={<CustomTooltip />} />
                   <Legend />
-                  <Bar 
-                    dataKey="Inward" 
-                    fill={CHART_COLORS.accent} 
-                    radius={[4, 4, 0, 0]} 
-                    onClick={(data) => handlePlantDrillDown(data.plant, 'Inward')}
-                    className="cursor-pointer hover:opacity-80"
-                  />
-                  <Bar 
-                    dataKey="Outward" 
-                    fill={CHART_COLORS.info} 
-                    radius={[4, 4, 0, 0]} 
-                    onClick={(data) => handlePlantDrillDown(data.plant, 'Outward')}
-                    className="cursor-pointer hover:opacity-80"
-                  />
+                  <Bar dataKey="Inward" fill={CHART_COLORS.accent} radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="Outward" fill={CHART_COLORS.info} radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -676,19 +688,22 @@ export default function Reports() {
                 <span className="text-xs text-muted-foreground">Click to drill down</span>
               </div>
               <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={refDocTypeData} layout="vertical" barSize={24}>
+                <BarChart 
+                  data={refDocTypeData} 
+                  layout="vertical" 
+                  barSize={24}
+                  onClick={(state) => {
+                    if (state && state.activePayload && state.activePayload.length > 0) {
+                      handleRefTypeDrillDown(state.activePayload[0].payload.code);
+                    }
+                  }}
+                  style={{ cursor: 'pointer' }}
+                >
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} />
                   <YAxis type="category" dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} width={120} />
                   <Tooltip content={<CustomTooltip />} />
-                  <Bar 
-                    dataKey="count" 
-                    fill={CHART_COLORS.primary} 
-                    radius={[0, 4, 4, 0]} 
-                    name="Count"
-                    onClick={(data) => handleRefTypeDrillDown(data.code)}
-                    className="cursor-pointer hover:opacity-80"
-                  />
+                  <Bar dataKey="count" fill={CHART_COLORS.primary} radius={[0, 4, 4, 0]} name="Count" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -704,20 +719,24 @@ export default function Reports() {
               <span className="text-xs text-muted-foreground">Click to drill down</span>
             </div>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={vendorChartData} layout="vertical" barSize={28}>
+              <BarChart 
+                data={vendorChartData} 
+                layout="vertical" 
+                barSize={28}
+                onClick={(state) => {
+                  if (state && state.activePayload && state.activePayload.length > 0) {
+                    handleVendorDrillDown(state.activePayload[0].payload.name);
+                  }
+                }}
+                style={{ cursor: 'pointer' }}
+              >
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} />
                 <YAxis type="category" dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={11} width={160} />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar 
-                  dataKey="value" 
-                  radius={[0, 4, 4, 0]} 
-                  name="Entries"
-                  onClick={(data) => handleVendorDrillDown(data.name)}
-                  className="cursor-pointer"
-                >
+                <Bar dataKey="value" radius={[0, 4, 4, 0]} name="Entries">
                   {vendorChartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} className="hover:opacity-80 transition-opacity" />
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
                   ))}
                 </Bar>
               </BarChart>
@@ -727,6 +746,18 @@ export default function Reports() {
 
         <TabsContent value="table">
           <div className="enterprise-card overflow-hidden">
+            {/* Table Header with Export */}
+            <div className="flex items-center justify-between p-4 border-b border-border">
+              <div className="flex items-center gap-2">
+                <FileSpreadsheet className="w-5 h-5 text-accent" />
+                <h3 className="font-semibold text-foreground">Data Table</h3>
+                <span className="text-sm text-muted-foreground">({results.length} records)</span>
+              </div>
+              <Button variant="outline" size="sm" onClick={handleExport} className="gap-2">
+                <Download className="w-4 h-4" />
+                Export to Excel
+              </Button>
+            </div>
             <div className="data-grid overflow-x-auto max-h-[500px] data-grid-scroll">
               <table className="w-full text-sm">
                 <thead>
