@@ -6,11 +6,13 @@ import { TextField } from '@/components/shared/FormField';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 
 export default function VehicleExit() {
   const [gateEntryNo, setGateEntryNo] = useState('');
   const [isLoaded, setIsLoaded] = useState(false);
+  const [exitConfirmed, setExitConfirmed] = useState(false);
 
   // Gate Entry Header (read-only, fetched from system)
   const [headerData, setHeaderData] = useState({
@@ -20,13 +22,13 @@ export default function VehicleExit() {
     checkInTime: '',
     vehicleNumber: '',
     driver: '',
+    inwardedBy: '',
   });
 
   // Exit Details (editable)
   const [exitData, setExitData] = useState({
     checkOutDate: new Date().toISOString().split('T')[0],
     checkOutTime: new Date().toTimeString().slice(0, 5),
-    inwardedBy: '',
     remarks: '',
   });
 
@@ -35,7 +37,7 @@ export default function VehicleExit() {
       toast.error('Enter Gate Entry No');
       return;
     }
-    // Simulate fetching gate entry data
+    // Simulate fetching gate entry data (including inwardedBy)
     setHeaderData({
       gateEntryNumber: gateEntryNo,
       plant: '3601',
@@ -43,14 +45,16 @@ export default function VehicleExit() {
       checkInTime: '22:25:10',
       vehicleNumber: 'TS098ERT',
       driver: 'ABC',
+      inwardedBy: 'TEST SIPL',
     });
+    setExitConfirmed(false);
     setIsLoaded(true);
     toast.success('Entry loaded');
   };
 
   const handleSave = () => {
-    if (!exitData.inwardedBy) {
-      toast.error('Please enter Inwarded By');
+    if (!exitConfirmed) {
+      toast.error('Please confirm Gate Entry Exit by enabling the checkbox');
       return;
     }
     toast.success('Vehicle exit recorded!');
@@ -126,6 +130,17 @@ export default function VehicleExit() {
           </FormSection>
 
           <FormSection title="Gate Entry Exit">
+            <div className="flex items-center space-x-2 mb-4 p-3 bg-muted/50 rounded-lg border">
+              <Checkbox
+                id="exitConfirm"
+                checked={exitConfirmed}
+                onCheckedChange={(checked) => setExitConfirmed(checked === true)}
+              />
+              <Label htmlFor="exitConfirm" className="font-medium cursor-pointer">
+                Gate Entry Exit
+              </Label>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <TextField
                 label="Check-out Date"
@@ -143,10 +158,9 @@ export default function VehicleExit() {
               />
               <TextField
                 label="Inwarded By"
-                value={exitData.inwardedBy}
-                onChange={(v) => setExitData({ ...exitData, inwardedBy: v })}
-                placeholder="Enter name"
-                required
+                value={headerData.inwardedBy}
+                onChange={() => {}}
+                disabled
               />
             </div>
             <div className="mt-4">
