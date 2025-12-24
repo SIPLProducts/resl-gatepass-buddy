@@ -5,7 +5,6 @@ import { FormSection } from '@/components/shared/FormSection';
 import { TextField, SelectField } from '@/components/shared/FormField';
 import { DataGrid } from '@/components/shared/DataGrid';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 
 interface ItemRow {
@@ -19,7 +18,8 @@ export default function OutwardBillingReference() {
   const [headerData, setHeaderData] = useState({
     gateEntryNo: '',
     plant: '',
-    gateEntryType: 'Outward - Billing Reference',
+    refDocType: 'Billing Reference',
+    gateEntryType: 'Outward',
     vehicleDate: new Date().toISOString().split('T')[0],
     vehicleTime: new Date().toTimeString().slice(0, 5),
     vehicleNo: '',
@@ -67,7 +67,8 @@ export default function OutwardBillingReference() {
     setHeaderData({
       gateEntryNo: '',
       plant: '',
-      gateEntryType: 'Outward - Billing Reference',
+      refDocType: 'Billing Reference',
+      gateEntryType: 'Outward',
       vehicleDate: new Date().toISOString().split('T')[0],
       vehicleTime: new Date().toTimeString().slice(0, 5),
       vehicleNo: '',
@@ -92,18 +93,6 @@ export default function OutwardBillingReference() {
         title="Outward Gate Entry - Billing Reference"
         subtitle="Create gate entry for outward materials with billing document"
         breadcrumbs={[{ label: 'Outward', path: '/outward/billing-reference' }, { label: 'Billing Reference' }]}
-        actions={
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handleReset} className="gap-2">
-              <RotateCcw className="w-4 h-4" />
-              Reset
-            </Button>
-            <Button onClick={handleSave} className="bg-accent text-accent-foreground hover:bg-accent/90 gap-2">
-              <Save className="w-4 h-4" />
-              Save Entry
-            </Button>
-          </div>
-        }
       />
 
       <FormSection title="Billing Reference">
@@ -142,6 +131,7 @@ export default function OutwardBillingReference() {
       <FormSection title="Header Information">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <TextField label="Gate Entry No" value={headerData.gateEntryNo} placeholder="Auto-generated" readOnly />
+          <TextField label="Ref Doc Type" value={headerData.refDocType} readOnly />
           <TextField label="Gate Entry Type" value={headerData.gateEntryType} readOnly />
           <TextField label="Vehicle Date" type="date" value={headerData.vehicleDate} onChange={(value) => setHeaderData({ ...headerData, vehicleDate: value })} required />
           <TextField label="Vehicle Time" type="time" value={headerData.vehicleTime} onChange={(value) => setHeaderData({ ...headerData, vehicleTime: value })} required />
@@ -164,13 +154,26 @@ export default function OutwardBillingReference() {
             <p>No items loaded. Enter Billing Document No and click "Fetch Data" to load items.</p>
           </div>
         ) : (
-          <DataGrid 
-            columns={columns} 
-            data={items} 
-            editable={true}
-            onRowDelete={handleDeleteRow}
-            minRows={1}
-          />
+          <>
+            <DataGrid 
+              columns={columns} 
+              data={items} 
+              editable={true}
+              onRowDelete={handleDeleteRow}
+              minRows={1}
+              itemsPerPage={5}
+            />
+            <div className="flex justify-end gap-2 mt-4 pt-4 border-t">
+              <Button variant="outline" onClick={handleReset} className="gap-2">
+                <RotateCcw className="w-4 h-4" />
+                Reset
+              </Button>
+              <Button onClick={handleSave} className="bg-accent text-accent-foreground hover:bg-accent/90 gap-2">
+                <Save className="w-4 h-4" />
+                Save Entry
+              </Button>
+            </div>
+          </>
         )}
       </FormSection>
     </div>

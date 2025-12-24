@@ -20,7 +20,8 @@ export default function InwardSubcontracting() {
   const [headerData, setHeaderData] = useState({
     gateEntryNo: '',
     plant: '',
-    gateEntryType: 'Inward - Subcontracting',
+    refDocType: 'Subcontracting',
+    gateEntryType: 'Inward',
     vehicleDate: new Date().toISOString().split('T')[0],
     vehicleTime: new Date().toTimeString().slice(0, 5),
     vehicleNo: '',
@@ -29,6 +30,10 @@ export default function InwardSubcontracting() {
     subcontractPONo: '',
     vendorNumber: '',
     vendorName: '',
+    vendorAddress: '',
+    vendorCity: '',
+    vendorContact: '',
+    vendorGSTNo: '',
     inwardedBy: 'Admin User',
   });
 
@@ -53,6 +58,10 @@ export default function InwardSubcontracting() {
         ...prev,
         vendorNumber: 'V2001',
         vendorName: 'Subcontractor Industries Ltd.',
+        vendorAddress: '456, Industrial Zone, Phase 2',
+        vendorCity: 'Pune, Maharashtra - 411001',
+        vendorContact: '+91 20 2567 8901',
+        vendorGSTNo: '27AABCU9603R1ZP',
       }));
       setItems([
         { materialCode: 'SC001', materialDescription: 'Machined Part A', quantity: '', unit: 'NOS', packingCondition: '' },
@@ -77,7 +86,8 @@ export default function InwardSubcontracting() {
     setHeaderData({
       gateEntryNo: '',
       plant: '',
-      gateEntryType: 'Inward - Subcontracting',
+      refDocType: 'Subcontracting',
+      gateEntryType: 'Inward',
       vehicleDate: new Date().toISOString().split('T')[0],
       vehicleTime: new Date().toTimeString().slice(0, 5),
       vehicleNo: '',
@@ -86,6 +96,10 @@ export default function InwardSubcontracting() {
       subcontractPONo: '',
       vendorNumber: '',
       vendorName: '',
+      vendorAddress: '',
+      vendorCity: '',
+      vendorContact: '',
+      vendorGSTNo: '',
       inwardedBy: 'Admin User',
     });
     setItems([]);
@@ -130,18 +144,6 @@ export default function InwardSubcontracting() {
         title="Inward Gate Entry - Subcontracting"
         subtitle="Create gate entry for subcontracting materials"
         breadcrumbs={[{ label: 'Inward', path: '/inward/subcontracting' }, { label: 'Subcontracting' }]}
-        actions={
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handleReset} className="gap-2">
-              <RotateCcw className="w-4 h-4" />
-              Reset
-            </Button>
-            <Button onClick={handleSave} className="bg-accent text-accent-foreground hover:bg-accent/90 gap-2">
-              <Save className="w-4 h-4" />
-              Save Entry
-            </Button>
-          </div>
-        }
       />
 
       <FormSection title="Subcontract PO Reference">
@@ -180,7 +182,9 @@ export default function InwardSubcontracting() {
       <FormSection title="Header Information">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <TextField label="Gate Entry No" value={headerData.gateEntryNo} placeholder="Auto-generated" readOnly />
+          <TextField label="Ref Doc Type" value={headerData.refDocType} readOnly />
           <TextField label="Gate Entry Type" value={headerData.gateEntryType} readOnly />
+          <TextField label="Inwarded By" value={headerData.inwardedBy} readOnly />
           <TextField label="Vehicle Date" type="date" value={headerData.vehicleDate} onChange={(value) => setHeaderData({ ...headerData, vehicleDate: value })} required />
           <TextField label="Vehicle Time" type="time" value={headerData.vehicleTime} onChange={(value) => setHeaderData({ ...headerData, vehicleTime: value })} required />
         </div>
@@ -194,11 +198,14 @@ export default function InwardSubcontracting() {
         </div>
       </FormSection>
 
-      <FormSection title="Vendor Details">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <FormSection title="Vendor Information">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <TextField label="Vendor Number" value={headerData.vendorNumber} readOnly />
           <TextField label="Vendor Name" value={headerData.vendorName} readOnly />
-          <TextField label="Inwarded By" value={headerData.inwardedBy} readOnly />
+          <TextField label="Vendor Address" value={headerData.vendorAddress} readOnly />
+          <TextField label="City / State" value={headerData.vendorCity} readOnly />
+          <TextField label="Vendor Contact" value={headerData.vendorContact} readOnly />
+          <TextField label="GST Number" value={headerData.vendorGSTNo} readOnly />
         </div>
       </FormSection>
 
@@ -209,13 +216,26 @@ export default function InwardSubcontracting() {
             <p>No items loaded. Enter Subcontract PO and click "Fetch Data" to load items.</p>
           </div>
         ) : (
-          <DataGrid 
-            columns={columns} 
-            data={items} 
-            editable={true}
-            onRowDelete={handleDeleteRow}
-            minRows={1}
-          />
+          <>
+            <DataGrid 
+              columns={columns} 
+              data={items} 
+              editable={true}
+              onRowDelete={handleDeleteRow}
+              minRows={1}
+              itemsPerPage={5}
+            />
+            <div className="flex justify-end gap-2 mt-4 pt-4 border-t">
+              <Button variant="outline" onClick={handleReset} className="gap-2">
+                <RotateCcw className="w-4 h-4" />
+                Reset
+              </Button>
+              <Button onClick={handleSave} className="bg-accent text-accent-foreground hover:bg-accent/90 gap-2">
+                <Save className="w-4 h-4" />
+                Save Entry
+              </Button>
+            </div>
+          </>
         )}
       </FormSection>
     </div>
