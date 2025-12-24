@@ -19,6 +19,7 @@ interface DataGridProps<T> {
   emptyMessage?: string;
   itemsPerPage?: number;
   showActions?: boolean;
+  maxHeight?: string;
 }
 
 export function DataGrid<T extends Record<string, any>>({
@@ -31,6 +32,7 @@ export function DataGrid<T extends Record<string, any>>({
   emptyMessage = 'No items added',
   itemsPerPage = 5,
   showActions = true,
+  maxHeight = '400px',
 }: DataGridProps<T>) {
   const [currentPage, setCurrentPage] = useState(1);
   const canDelete = data.length > minRows;
@@ -56,56 +58,58 @@ export function DataGrid<T extends Record<string, any>>({
   return (
     <div className="space-y-3">
       <div className="data-grid">
-        <table className="w-full">
-          <thead>
-            <tr>
-              <th className="w-12 text-center">#</th>
-              {columns.map((col) => (
-                <th key={col.key} style={{ width: col.width }}>
-                  {col.header}
-                </th>
-              ))}
-              {editable && showActions && <th className="w-20 text-center">Action</th>}
-            </tr>
-          </thead>
-          <tbody>
-            {data.length === 0 ? (
+        <div className="overflow-auto scrollbar-thin" style={{ maxHeight }}>
+          <table className="w-full">
+            <thead>
               <tr>
-                <td colSpan={columns.length + (editable && showActions ? 2 : 1)} className="text-center py-8 text-muted-foreground">
-                  {emptyMessage}
-                </td>
+                <th className="w-12 text-center">#</th>
+                {columns.map((col) => (
+                  <th key={col.key} style={{ width: col.width }}>
+                    {col.header}
+                  </th>
+                ))}
+                {editable && showActions && <th className="w-20 text-center">Action</th>}
               </tr>
-            ) : (
-              paginatedData.map((row, pageIndex) => {
-                const actualIndex = startIndex + pageIndex;
-                return (
-                  <tr key={actualIndex} className="group">
-                    <td className="text-center font-medium text-muted-foreground">{actualIndex + 1}</td>
-                    {columns.map((col) => (
-                      <td key={col.key}>
-                        {col.render ? col.render(row[col.key], row, actualIndex) : row[col.key] || '-'}
-                      </td>
-                    ))}
-                    {editable && showActions && (
-                      <td className="text-center">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                          onClick={() => onRowDelete?.(actualIndex)}
-                          disabled={!canDelete}
-                          title="Delete row"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </td>
-                    )}
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {data.length === 0 ? (
+                <tr>
+                  <td colSpan={columns.length + (editable && showActions ? 2 : 1)} className="text-center py-8 text-muted-foreground">
+                    {emptyMessage}
+                  </td>
+                </tr>
+              ) : (
+                paginatedData.map((row, pageIndex) => {
+                  const actualIndex = startIndex + pageIndex;
+                  return (
+                    <tr key={actualIndex} className="group">
+                      <td className="text-center font-medium text-muted-foreground">{actualIndex + 1}</td>
+                      {columns.map((col) => (
+                        <td key={col.key}>
+                          {col.render ? col.render(row[col.key], row, actualIndex) : row[col.key] || '-'}
+                        </td>
+                      ))}
+                      {editable && showActions && (
+                        <td className="text-center">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => onRowDelete?.(actualIndex)}
+                            disabled={!canDelete}
+                            title="Delete row"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Pagination */}
