@@ -116,7 +116,7 @@ export default function Settings() {
       fullName: '',
       emailId: '',
       contactNumber: '',
-      role: 'Viewer',
+      role: '',
     });
     setIsUserDialogOpen(true);
   };
@@ -135,8 +135,15 @@ export default function Settings() {
   };
 
   const handleSaveUser = () => {
-    if (!userForm.plant || !userForm.userId || !userForm.fullName || !userForm.emailId || !userForm.contactNumber) {
+    if (!userForm.plant || !userForm.userId || !userForm.fullName || !userForm.emailId || !userForm.contactNumber || !userForm.role) {
       toast.error('Please fill in all required fields');
+      return;
+    }
+
+    // Check for unique User ID (only for new users or if ID changed)
+    const existingUser = users.find(u => u.userId.toLowerCase() === userForm.userId.toLowerCase());
+    if (existingUser && (!editingUser || editingUser.id !== existingUser.id)) {
+      toast.error('User ID already exists. Please use a unique User ID.');
       return;
     }
 
@@ -466,6 +473,7 @@ export default function Settings() {
                 value={userForm.role}
                 onChange={(value) => setUserForm({ ...userForm, role: value })}
                 options={roles.map(r => ({ value: r.roleName, label: r.roleName }))}
+                placeholder="Select role"
                 required
               />
             </div>
