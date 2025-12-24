@@ -76,9 +76,19 @@ export default function InwardWithoutReference() {
   };
 
   const handleAddRow = () => {
-    setItems(prev => [...prev, { ...emptyItem }]);
-    const newTotalPages = Math.ceil((items.length + 1) / ITEMS_PER_PAGE);
-    setCurrentPage(newTotalPages);
+    const newItem: ItemRow = {
+      materialCode: '',
+      materialDescription: '',
+      quantity: '',
+      unit: '',
+      packingCondition: '',
+    };
+    setItems(prevItems => {
+      const newItems = [...prevItems, newItem];
+      const newTotalPages = Math.ceil(newItems.length / ITEMS_PER_PAGE);
+      setCurrentPage(newTotalPages);
+      return newItems;
+    });
   };
 
   const handleDeleteRow = (pageIndex: number) => {
@@ -180,12 +190,18 @@ export default function InwardWithoutReference() {
             onChange={(value) => setHeaderData({ ...headerData, grLrNumber: value })}
             placeholder="Enter GR/LR number"
           />
-          <TextField
-            label="Remarks"
-            value={headerData.remarks}
-            onChange={(value) => setHeaderData({ ...headerData, remarks: value })}
-            placeholder="Enter remarks"
-          />
+          <div className="md:col-span-2">
+            <TextField
+              label="Remarks"
+              value={headerData.remarks}
+              onChange={(value) => {
+                if (value.length <= 255) {
+                  setHeaderData({ ...headerData, remarks: value });
+                }
+              }}
+              placeholder="Enter remarks (max 255 characters)"
+            />
+          </div>
         </div>
       </FormSection>
 
