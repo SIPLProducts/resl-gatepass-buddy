@@ -1,4 +1,4 @@
-import { Search, Download, FileSpreadsheet, Package, Truck, Clock, XCircle, CheckCircle, Filter, ChevronDown, BarChart3, PieChart as PieChartIcon, RefreshCw } from 'lucide-react';
+import { Search, Download, FileSpreadsheet, Package, Truck, Clock, XCircle, CheckCircle, Filter, ChevronDown, BarChart3, PieChart as PieChartIcon, RefreshCw, Calendar, X } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
 import { useState, useMemo } from 'react';
@@ -10,6 +10,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { format, subDays, startOfMonth, startOfYear, startOfWeek, endOfWeek } from 'date-fns';
 import {
   BarChart,
   Bar,
@@ -23,6 +25,29 @@ import {
   Pie,
   Cell,
 } from 'recharts';
+
+// Reference Document Type mapping for full names
+const REF_DOC_TYPE_NAMES: Record<string, string> = {
+  'PO': 'Purchase Order',
+  'SO': 'Sales Order',
+  'SUB': 'Subcontracting',
+  'STO': 'Stock Transfer Order',
+  'RET': 'Returnable',
+  'NRET': 'Non-Returnable',
+};
+
+const getRefDocTypeName = (code: string) => REF_DOC_TYPE_NAMES[code] || code;
+
+// Quick date presets
+const DATE_PRESETS = [
+  { label: 'Today', getValue: () => ({ from: format(new Date(), 'yyyy-MM-dd'), to: format(new Date(), 'yyyy-MM-dd') }) },
+  { label: 'Yesterday', getValue: () => ({ from: format(subDays(new Date(), 1), 'yyyy-MM-dd'), to: format(subDays(new Date(), 1), 'yyyy-MM-dd') }) },
+  { label: 'This Week', getValue: () => ({ from: format(startOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd'), to: format(endOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd') }) },
+  { label: 'Last 7 Days', getValue: () => ({ from: format(subDays(new Date(), 6), 'yyyy-MM-dd'), to: format(new Date(), 'yyyy-MM-dd') }) },
+  { label: 'Last 30 Days', getValue: () => ({ from: format(subDays(new Date(), 29), 'yyyy-MM-dd'), to: format(new Date(), 'yyyy-MM-dd') }) },
+  { label: 'This Month', getValue: () => ({ from: format(startOfMonth(new Date()), 'yyyy-MM-dd'), to: format(new Date(), 'yyyy-MM-dd') }) },
+  { label: 'This Year', getValue: () => ({ from: format(startOfYear(new Date()), 'yyyy-MM-dd'), to: format(new Date(), 'yyyy-MM-dd') }) },
+];
 
 // Mock data based on Excel structure
 const mockData = [
@@ -64,6 +89,11 @@ const CHART_COLORS = {
 
 const PIE_COLORS = [CHART_COLORS.accent, CHART_COLORS.info, CHART_COLORS.warning, CHART_COLORS.success, CHART_COLORS.destructive];
 
+interface DrillDownData {
+  title: string;
+  data: typeof mockData;
+}
+
 export default function Reports() {
   const [filters, setFilters] = useState<FilterState>({
     gateEntryNoFrom: '',
@@ -82,6 +112,14 @@ export default function Reports() {
   const [results, setResults] = useState(mockData);
   const [isFilterOpen, setIsFilterOpen] = useState(true);
   const [activeView, setActiveView] = useState<'charts' | 'table'>('charts');
+  const [drillDown, setDrillDown] = useState<DrillDownData | null>(null);
+
+  // Apply date preset
+  const applyDatePreset = (preset: typeof DATE_PRESETS[0]) => {
+    const { from, to } = preset.getValue();
+    setFilters(prev => ({ ...prev, entryDateFrom: from, entryDateTo: to }));
+    toast.success(`Applied: ${preset.label}`);
+  };
 
   // Calculate KPIs
   const kpis = useMemo(() => ({
@@ -136,8 +174,49 @@ export default function Reports() {
     results.forEach(r => {
       typeCounts[r.refDocType] = (typeCounts[r.refDocType] || 0) + 1;
     });
-    return Object.entries(typeCounts).map(([name, count]) => ({ name, count }));
+    return Object.entries(typeCounts).map(([code, count]) => ({ 
+      code, 
+      name: getRefDocTypeName(code), 
+      count 
+    }));
   }, [results]);
+
+  // Drill-down handlers
+  const handleTypeDrillDown = (type: string) => {
+    const typeCode = type === 'Inward' ? 'IN' : 'OUT';
+    const filtered = results.filter(r => r.type === typeCode);
+    setDrillDown({ title: `${type} Entries`, data: filtered });
+  };
+
+  const handleStatusDrillDown = (status: string) => {
+    let filtered: typeof mockData = [];
+    if (status === 'Completed') {
+      filtered = results.filter(r => r.vehicleExit && !r.cancelled);
+    } else if (status === 'Pending') {
+      filtered = results.filter(r => !r.vehicleExit && !r.cancelled);
+    } else if (status === 'Cancelled') {
+      filtered = results.filter(r => r.cancelled);
+    }
+    setDrillDown({ title: `${status} Entries`, data: filtered });
+  };
+
+  const handlePlantDrillDown = (plant: string, type?: 'Inward' | 'Outward') => {
+    let filtered = results.filter(r => r.plant === plant);
+    if (type) {
+      filtered = filtered.filter(r => (type === 'Inward' ? r.type === 'IN' : r.type === 'OUT'));
+    }
+    setDrillDown({ title: `Plant ${plant}${type ? ` - ${type}` : ''}`, data: filtered });
+  };
+
+  const handleRefTypeDrillDown = (refType: string) => {
+    const filtered = results.filter(r => r.refDocType === refType);
+    setDrillDown({ title: `${getRefDocTypeName(refType)} Entries`, data: filtered });
+  };
+
+  const handleVendorDrillDown = (vendorName: string) => {
+    const filtered = results.filter(r => r.vendorName.includes(vendorName.replace('...', '')));
+    setDrillDown({ title: `Vendor: ${vendorName}`, data: filtered });
+  };
 
   const handleSearch = () => {
     let filtered = [...mockData];
@@ -284,9 +363,29 @@ export default function Reports() {
                   </div>
                 </div>
 
-                {/* Entry Date Range */}
+                {/* Entry Date Range with Quick Presets */}
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">Entry Date</Label>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium">Entry Date</Label>
+                    <div className="flex items-center gap-1">
+                      <Calendar className="w-3 h-3 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">Quick Select</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {DATE_PRESETS.map((preset) => (
+                      <Button
+                        key={preset.label}
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => applyDatePreset(preset)}
+                        className="h-6 text-xs px-2 hover:bg-accent hover:text-accent-foreground"
+                      >
+                        {preset.label}
+                      </Button>
+                    ))}
+                  </div>
                   <div className="flex items-center gap-2">
                     <Input 
                       type="date" 
@@ -469,9 +568,12 @@ export default function Reports() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Inward vs Outward Pie Chart */}
             <div className="enterprise-card p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <PieChartIcon className="w-5 h-5 text-accent" />
-                <h3 className="font-semibold text-foreground">Entry Type Distribution</h3>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <PieChartIcon className="w-5 h-5 text-accent" />
+                  <h3 className="font-semibold text-foreground">Entry Type Distribution</h3>
+                </div>
+                <span className="text-xs text-muted-foreground">Click to drill down</span>
               </div>
               <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
@@ -484,9 +586,11 @@ export default function Reports() {
                     paddingAngle={5}
                     dataKey="value"
                     label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    onClick={(data) => handleTypeDrillDown(data.name)}
+                    className="cursor-pointer"
                   >
                     {typeChartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                      <Cell key={`cell-${index}`} fill={entry.fill} className="hover:opacity-80 transition-opacity" />
                     ))}
                   </Pie>
                   <Tooltip content={<CustomTooltip />} />
@@ -497,9 +601,12 @@ export default function Reports() {
 
             {/* Status Pie Chart */}
             <div className="enterprise-card p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <PieChartIcon className="w-5 h-5 text-accent" />
-                <h3 className="font-semibold text-foreground">Status Distribution</h3>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <PieChartIcon className="w-5 h-5 text-accent" />
+                  <h3 className="font-semibold text-foreground">Status Distribution</h3>
+                </div>
+                <span className="text-xs text-muted-foreground">Click to drill down</span>
               </div>
               <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
@@ -512,9 +619,11 @@ export default function Reports() {
                     paddingAngle={5}
                     dataKey="value"
                     label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    onClick={(data) => handleStatusDrillDown(data.name)}
+                    className="cursor-pointer"
                   >
                     {statusChartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                      <Cell key={`cell-${index}`} fill={entry.fill} className="hover:opacity-80 transition-opacity" />
                     ))}
                   </Pie>
                   <Tooltip content={<CustomTooltip />} />
@@ -525,9 +634,12 @@ export default function Reports() {
 
             {/* Plant-wise Bar Chart */}
             <div className="enterprise-card p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <BarChart3 className="w-5 h-5 text-accent" />
-                <h3 className="font-semibold text-foreground">Plant-wise Entry Analysis</h3>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5 text-accent" />
+                  <h3 className="font-semibold text-foreground">Plant-wise Entry Analysis</h3>
+                </div>
+                <span className="text-xs text-muted-foreground">Click bars to drill down</span>
               </div>
               <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={plantChartData} barGap={8}>
@@ -536,25 +648,47 @@ export default function Reports() {
                   <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
                   <Tooltip content={<CustomTooltip />} />
                   <Legend />
-                  <Bar dataKey="Inward" fill={CHART_COLORS.accent} radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="Outward" fill={CHART_COLORS.info} radius={[4, 4, 0, 0]} />
+                  <Bar 
+                    dataKey="Inward" 
+                    fill={CHART_COLORS.accent} 
+                    radius={[4, 4, 0, 0]} 
+                    onClick={(data) => handlePlantDrillDown(data.plant, 'Inward')}
+                    className="cursor-pointer hover:opacity-80"
+                  />
+                  <Bar 
+                    dataKey="Outward" 
+                    fill={CHART_COLORS.info} 
+                    radius={[4, 4, 0, 0]} 
+                    onClick={(data) => handlePlantDrillDown(data.plant, 'Outward')}
+                    className="cursor-pointer hover:opacity-80"
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </div>
 
             {/* Reference Document Type Bar Chart */}
             <div className="enterprise-card p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <BarChart3 className="w-5 h-5 text-accent" />
-                <h3 className="font-semibold text-foreground">Reference Document Type</h3>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5 text-accent" />
+                  <h3 className="font-semibold text-foreground">Reference Document Type</h3>
+                </div>
+                <span className="text-xs text-muted-foreground">Click to drill down</span>
               </div>
               <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={refDocTypeData} layout="vertical" barSize={24}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                  <YAxis type="category" dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} width={60} />
+                  <YAxis type="category" dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} width={120} />
                   <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="count" fill={CHART_COLORS.primary} radius={[0, 4, 4, 0]} name="Count" />
+                  <Bar 
+                    dataKey="count" 
+                    fill={CHART_COLORS.primary} 
+                    radius={[0, 4, 4, 0]} 
+                    name="Count"
+                    onClick={(data) => handleRefTypeDrillDown(data.code)}
+                    className="cursor-pointer hover:opacity-80"
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -562,9 +696,12 @@ export default function Reports() {
 
           {/* Top Vendors Chart - Full Width */}
           <div className="enterprise-card p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <PieChartIcon className="w-5 h-5 text-accent" />
-              <h3 className="font-semibold text-foreground">Top 5 Vendors by Entry Count</h3>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <PieChartIcon className="w-5 h-5 text-accent" />
+                <h3 className="font-semibold text-foreground">Top 5 Vendors by Entry Count</h3>
+              </div>
+              <span className="text-xs text-muted-foreground">Click to drill down</span>
             </div>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={vendorChartData} layout="vertical" barSize={28}>
@@ -572,9 +709,15 @@ export default function Reports() {
                 <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} />
                 <YAxis type="category" dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={11} width={160} />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="value" radius={[0, 4, 4, 0]} name="Entries">
+                <Bar 
+                  dataKey="value" 
+                  radius={[0, 4, 4, 0]} 
+                  name="Entries"
+                  onClick={(data) => handleVendorDrillDown(data.name)}
+                  className="cursor-pointer"
+                >
                   {vendorChartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                    <Cell key={`cell-${index}`} fill={entry.fill} className="hover:opacity-80 transition-opacity" />
                   ))}
                 </Bar>
               </BarChart>
@@ -618,7 +761,7 @@ export default function Reports() {
                       <td className="whitespace-nowrap">{r.vehicleNo}</td>
                       <td>{r.driverName}</td>
                       <td>{r.transporterName}</td>
-                      <td>{r.refDocType}</td>
+                      <td title={getRefDocTypeName(r.refDocType)}>{getRefDocTypeName(r.refDocType)}</td>
                       <td>{r.poNo || '-'}</td>
                       <td className="max-w-[150px] truncate" title={r.materialDesc}>{r.materialDesc}</td>
                       <td className="max-w-[150px] truncate" title={r.vendorName}>{r.vendorName}</td>
@@ -647,6 +790,88 @@ export default function Reports() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Drill-Down Dialog */}
+      <Dialog open={!!drillDown} onOpenChange={() => setDrillDown(null)}>
+        <DialogContent className="max-w-5xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader className="flex-shrink-0">
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-lg font-semibold">{drillDown?.title}</DialogTitle>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => {
+                    if (drillDown) {
+                      const columns = [
+                        { key: 'gateEntryNo', header: 'Gate Entry No' },
+                        { key: 'plant', header: 'Plant' },
+                        { key: 'type', header: 'Type' },
+                        { key: 'vehicleDate', header: 'Vehicle Date' },
+                        { key: 'vehicleNo', header: 'Vehicle No' },
+                        { key: 'refDocType', header: 'Ref Doc Type' },
+                        { key: 'vendorName', header: 'Vendor Name' },
+                        { key: 'quantity', header: 'Quantity' },
+                      ];
+                      exportToExcel(drillDown.data, columns, drillDown.title.replace(/\s+/g, '_'));
+                      toast.success('Exported to Excel');
+                    }
+                  }}
+                  className="gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  Export Excel
+                </Button>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground">{drillDown?.data.length} entries</p>
+          </DialogHeader>
+          <div className="flex-1 overflow-auto data-grid-scroll">
+            <table className="w-full text-sm">
+              <thead className="sticky top-0 bg-card z-10">
+                <tr className="border-b border-border">
+                  <th className="p-3 text-left font-medium whitespace-nowrap">Gate Entry No</th>
+                  <th className="p-3 text-left font-medium whitespace-nowrap">Plant</th>
+                  <th className="p-3 text-left font-medium whitespace-nowrap">Type</th>
+                  <th className="p-3 text-left font-medium whitespace-nowrap">Vehicle Date</th>
+                  <th className="p-3 text-left font-medium whitespace-nowrap">Vehicle No</th>
+                  <th className="p-3 text-left font-medium whitespace-nowrap">Ref Type</th>
+                  <th className="p-3 text-left font-medium whitespace-nowrap">Vendor</th>
+                  <th className="p-3 text-left font-medium whitespace-nowrap">Qty</th>
+                  <th className="p-3 text-left font-medium whitespace-nowrap">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {drillDown?.data.map((r) => (
+                  <tr key={r.gateEntryNo} className="border-b border-border/50 hover:bg-muted/50">
+                    <td className="p-3 text-accent font-medium whitespace-nowrap">{r.gateEntryNo}</td>
+                    <td className="p-3">{r.plant}</td>
+                    <td className="p-3">
+                      <span className={`badge-status ${r.type === 'IN' ? 'badge-success' : 'badge-info'}`}>
+                        {r.type === 'IN' ? 'Inward' : 'Outward'}
+                      </span>
+                    </td>
+                    <td className="p-3 whitespace-nowrap">{r.vehicleDate}</td>
+                    <td className="p-3 whitespace-nowrap">{r.vehicleNo}</td>
+                    <td className="p-3">{getRefDocTypeName(r.refDocType)}</td>
+                    <td className="p-3 max-w-[200px] truncate" title={r.vendorName}>{r.vendorName}</td>
+                    <td className="p-3">{r.quantity} {r.unit}</td>
+                    <td className="p-3">
+                      {r.cancelled ? (
+                        <span className="badge-status bg-destructive/10 text-destructive">Cancelled</span>
+                      ) : r.vehicleExit ? (
+                        <span className="badge-status badge-success">Completed</span>
+                      ) : (
+                        <span className="badge-status badge-warning">Active</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
