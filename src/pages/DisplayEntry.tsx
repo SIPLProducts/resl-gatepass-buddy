@@ -17,6 +17,39 @@ interface ItemRow {
   packingCondition: string;
 }
 
+const generateSampleItems = (): ItemRow[] => {
+  const materials = [
+    { code: 'MAT001', desc: 'Steel Plate 10mm', unit: 'KG' },
+    { code: 'MAT002', desc: 'Copper Wire 2.5mm', unit: 'MTR' },
+    { code: 'MAT003', desc: 'Aluminium Rod 8mm', unit: 'NOS' },
+    { code: 'MAT004', desc: 'Iron Sheet 5mm', unit: 'KG' },
+    { code: 'MAT005', desc: 'Brass Fitting 1"', unit: 'NOS' },
+    { code: 'MAT006', desc: 'PVC Pipe 2"', unit: 'MTR' },
+    { code: 'MAT007', desc: 'Rubber Gasket', unit: 'NOS' },
+    { code: 'MAT008', desc: 'Stainless Steel Bolt M10', unit: 'NOS' },
+    { code: 'MAT009', desc: 'Welding Rod 3.15mm', unit: 'KG' },
+    { code: 'MAT010', desc: 'Electric Cable 4sq', unit: 'MTR' },
+  ];
+  const conditions = ['Good', 'Damaged', 'Partial'];
+  const items: ItemRow[] = [];
+  
+  for (let i = 0; i < 48; i++) {
+    const mat = materials[i % materials.length];
+    const poQty = Math.floor(Math.random() * 500) + 50;
+    const gateQty = Math.floor(poQty * (0.8 + Math.random() * 0.2));
+    items.push({
+      materialCode: `${mat.code}-${String(i + 1).padStart(3, '0')}`,
+      materialDescription: `${mat.desc} - Batch ${i + 1}`,
+      poQty: String(poQty),
+      poUnit: mat.unit,
+      gateEntryQty: String(gateQty),
+      unit: mat.unit,
+      packingCondition: conditions[Math.floor(Math.random() * conditions.length)],
+    });
+  }
+  return items;
+};
+
 export default function DisplayEntry() {
   const [gateEntryNo, setGateEntryNo] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -70,11 +103,7 @@ export default function DisplayEntry() {
         createdAt: '2024-01-15 10:35:22',
         createdBy: 'Admin User',
       });
-      setItems([
-        { materialCode: 'MAT001', materialDescription: 'Steel Plate 10mm', poQty: '100', poUnit: 'KG', gateEntryQty: '95', unit: 'KG', packingCondition: 'Good' },
-        { materialCode: 'MAT002', materialDescription: 'Copper Wire 2.5mm', poQty: '500', poUnit: 'MTR', gateEntryQty: '500', unit: 'MTR', packingCondition: 'Good' },
-        { materialCode: 'MAT003', materialDescription: 'Aluminium Rod 8mm', poQty: '200', poUnit: 'NOS', gateEntryQty: '180', unit: 'NOS', packingCondition: 'Damaged' },
-      ]);
+      setItems(generateSampleItems());
       setIsLoaded(true);
       setIsLoading(false);
       toast.success('Gate Entry displayed');
@@ -176,7 +205,12 @@ export default function DisplayEntry() {
 
           {/* Item Grid */}
           <FormSection title="Item Details">
-            <DataGrid columns={columns} data={items} />
+            <DataGrid 
+              columns={columns} 
+              data={items} 
+              maxHeight="350px"
+              itemsPerPage={10}
+            />
           </FormSection>
 
           {/* Audit Information */}

@@ -90,23 +90,35 @@ const recentEntries = [
 ];
 
 export default function Dashboard() {
+  const currentHour = new Date().getHours();
+  const greeting = currentHour < 12 ? 'Good Morning' : currentHour < 17 ? 'Good Afternoon' : 'Good Evening';
+  const userName = 'Admin User'; // This would come from auth context in real app
+
   return (
     <div className="space-y-8">
-      <PageHeader
-        title="Dashboard"
-        subtitle="Welcome back! Here's an overview of today's gate activities."
-      />
-
-      {/* Welcome Banner */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-primary to-primary/80 p-4 md:p-5 text-primary-foreground animate-slide-up">
-        <div className="relative z-10">
-          <h2 className="text-lg md:text-xl font-bold mb-1">Welcome to RESL Gate Entry System</h2>
-          <p className="text-primary-foreground/80 text-sm max-w-xl">
-            Manage gate operations with seamless SAP integration.
-          </p>
+      {/* User Welcome Banner with Themed Gradient */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-accent via-accent/90 to-primary p-6 md:p-8 text-accent-foreground animate-slide-up shadow-xl">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.05%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')] opacity-50" />
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <p className="text-accent-foreground/70 text-sm font-medium uppercase tracking-wider mb-1">{greeting}</p>
+            <h1 className="text-2xl md:text-3xl font-bold mb-2">{userName}</h1>
+            <p className="text-accent-foreground/80 text-sm md:text-base max-w-md">
+              Ready to manage today's gate operations? Here's your activity overview.
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="hidden md:flex flex-col items-end text-right">
+              <span className="text-xs text-accent-foreground/60 uppercase tracking-wide">Today</span>
+              <span className="text-lg font-semibold">{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' })}</span>
+            </div>
+            <div className="h-12 w-12 md:h-16 md:w-16 rounded-full bg-background/20 backdrop-blur-sm flex items-center justify-center border-2 border-accent-foreground/20">
+              <Package className="w-6 h-6 md:w-8 md:h-8 text-accent-foreground" />
+            </div>
+          </div>
         </div>
-        <div className="absolute right-0 top-0 h-full w-1/4 bg-gradient-to-l from-accent/20 to-transparent" />
-        <Package className="absolute right-6 top-1/2 -translate-y-1/2 w-16 h-16 text-primary-foreground/10" />
+        <div className="absolute -bottom-8 -right-8 w-32 h-32 rounded-full bg-primary/30 blur-2xl" />
+        <div className="absolute -top-4 -left-4 w-24 h-24 rounded-full bg-accent-foreground/10 blur-xl" />
       </div>
 
       {/* Stats Grid */}
