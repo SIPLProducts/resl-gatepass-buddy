@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, LogIn, Shield } from 'lucide-react';
+import { Eye, EyeOff, LogIn, Shield, Truck, ClipboardCheck, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import loginBg from '@/assets/login-bg.jpg';
+import reslLogo from '@/assets/resl-logo.png';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -34,32 +35,55 @@ export default function Login() {
         className="hidden lg:flex lg:w-1/2 relative bg-cover bg-center"
         style={{ backgroundImage: `url(${loginBg})` }}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/90 to-primary/70" />
-        <div className="relative z-10 flex flex-col justify-between p-12 text-primary-foreground">
-          <div>
-            <div className="flex items-center gap-3 mb-8">
-              <div className="w-12 h-12 rounded-xl bg-accent flex items-center justify-center">
-                <span className="text-accent-foreground font-bold text-2xl">R</span>
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold">RESL</h1>
-                <p className="text-sm opacity-80">Gate Entry Management</p>
-              </div>
+        <div className="absolute inset-0 bg-gradient-to-br from-[#E31E24]/95 via-[#E31E24]/85 to-[#B71C1C]/90" />
+        <div className="relative z-10 flex flex-col justify-between p-12 text-white">
+          {/* Logo Section */}
+          <div className="flex items-center gap-4">
+            <div className="bg-white rounded-2xl p-3 shadow-xl">
+              <img 
+                src={reslLogo} 
+                alt="RESL Sustainability Logo" 
+                className="h-14 w-auto object-contain"
+              />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight">RE Sustainability</h1>
+              <p className="text-white/80 text-sm">Gate Entry Management System</p>
             </div>
           </div>
           
-          <div className="max-w-md">
-            <h2 className="text-4xl font-bold mb-4 animate-slide-up">
-              Streamline Your Gate Operations
-            </h2>
-            <p className="text-lg opacity-90 animate-slide-up" style={{ animationDelay: '0.1s' }}>
-              Efficient tracking of inward and outward movements with seamless SAP integration.
-            </p>
+          {/* Main Content */}
+          <div className="max-w-lg space-y-8">
+            <div>
+              <h2 className="text-5xl font-bold mb-4 leading-tight animate-slide-up">
+                Smart Gate Operations for Sustainable Industries
+              </h2>
+              <p className="text-xl text-white/90 animate-slide-up leading-relaxed" style={{ animationDelay: '0.1s' }}>
+                Digitize your inward and outward material tracking with real-time SAP integration and comprehensive reporting.
+              </p>
+            </div>
+            
+            {/* Feature Highlights */}
+            <div className="grid grid-cols-3 gap-4 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                <Truck className="w-8 h-8 mb-2 text-white/90" />
+                <p className="text-sm font-medium">Vehicle Tracking</p>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                <ClipboardCheck className="w-8 h-8 mb-2 text-white/90" />
+                <p className="text-sm font-medium">PO Integration</p>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                <BarChart3 className="w-8 h-8 mb-2 text-white/90" />
+                <p className="text-sm font-medium">Real-time Reports</p>
+              </div>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2 text-sm opacity-70">
-            <Shield className="w-4 h-4" />
-            <span>Enterprise-grade security for your data</span>
+          {/* Footer */}
+          <div className="flex items-center gap-3 text-sm text-white/70">
+            <Shield className="w-5 h-5" />
+            <span>Enterprise-grade security with role-based access control</span>
           </div>
         </div>
       </div>
@@ -68,19 +92,23 @@ export default function Login() {
       <div className="flex-1 flex items-center justify-center p-8 bg-background">
         <div className="w-full max-w-md animate-fade-in">
           {/* Mobile Logo */}
-          <div className="lg:hidden flex items-center gap-3 mb-8">
-            <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-2xl">R</span>
+          <div className="lg:hidden flex items-center gap-4 mb-8">
+            <div className="bg-white rounded-xl p-2 shadow-lg border">
+              <img 
+                src={reslLogo} 
+                alt="RESL Sustainability Logo" 
+                className="h-12 w-auto object-contain"
+              />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">RESL</h1>
-              <p className="text-sm text-muted-foreground">Gate Entry Management</p>
+              <h1 className="text-xl font-bold text-foreground">RE Sustainability</h1>
+              <p className="text-sm text-muted-foreground">Gate Entry System</p>
             </div>
           </div>
 
           <div className="mb-8">
-            <h2 className="text-3xl font-bold text-foreground mb-2">Welcome back</h2>
-            <p className="text-muted-foreground">Enter your credentials to access the system</p>
+            <h2 className="text-3xl font-bold text-foreground mb-2">Welcome Back</h2>
+            <p className="text-muted-foreground">Sign in to manage your gate operations efficiently</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-6">
@@ -130,19 +158,19 @@ export default function Login() {
                   Remember me
                 </Label>
               </div>
-              <button type="button" className="text-sm text-accent hover:underline">
+              <button type="button" className="text-sm text-[#E31E24] hover:underline font-medium">
                 Forgot password?
               </button>
             </div>
 
             <Button
               type="submit"
-              className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
+              className="w-full h-12 bg-[#E31E24] hover:bg-[#C41E24] text-white font-medium shadow-lg hover:shadow-xl transition-all"
               disabled={isLoading}
             >
               {isLoading ? (
                 <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   Signing in...
                 </div>
               ) : (

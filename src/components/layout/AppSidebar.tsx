@@ -24,6 +24,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import reslLogo from '@/assets/resl-logo.png';
 
 // Role types
 export type UserRole = 'admin' | 'security' | 'stores' | 'finance' | 'viewer';
@@ -243,16 +244,20 @@ export function AppSidebar({ isOpen, onToggle, isCollapsed, onCollapse }: AppSid
           `}
         >
           {/* Logo Section */}
-          <div className={`h-14 flex items-center flex-shrink-0 ${isCollapsed ? 'justify-center px-3' : 'justify-between px-5'}`}>
+          <div className={`h-16 flex items-center flex-shrink-0 border-b border-sidebar-border/20 ${isCollapsed ? 'justify-center px-3' : 'justify-between px-4'}`}>
             {!isCollapsed ? (
               <>
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-sidebar-primary flex items-center justify-center flex-shrink-0">
-                    <span className="text-sidebar-primary-foreground font-bold text-base">R</span>
+                  <div className="bg-white rounded-xl p-1.5 shadow-md">
+                    <img 
+                      src={reslLogo} 
+                      alt="RESL Logo" 
+                      className="h-9 w-auto object-contain"
+                    />
                   </div>
                   <div>
-                    <h1 className="text-sidebar-foreground font-bold text-sm">RESL Gate</h1>
-                    <p className="text-sidebar-foreground/40 text-[10px]">Entry System</p>
+                    <h1 className="text-sidebar-foreground font-bold text-sm leading-tight">RE Sustainability</h1>
+                    <p className="text-sidebar-foreground/50 text-[10px]">Gate Entry System</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
@@ -276,8 +281,12 @@ export function AppSidebar({ isOpen, onToggle, isCollapsed, onCollapse }: AppSid
               </>
             ) : (
               <div className="flex flex-col items-center gap-2">
-                <div className="w-9 h-9 rounded-xl bg-sidebar-primary flex items-center justify-center">
-                  <span className="text-sidebar-primary-foreground font-bold text-base">R</span>
+                <div className="bg-white rounded-lg p-1 shadow-md">
+                  <img 
+                    src={reslLogo} 
+                    alt="RESL Logo" 
+                    className="h-8 w-auto object-contain"
+                  />
                 </div>
                 <Button 
                   variant="ghost" 
