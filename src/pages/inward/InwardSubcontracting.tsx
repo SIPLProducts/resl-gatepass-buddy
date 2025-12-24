@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Save, RotateCcw, FileDown, FileSpreadsheet, Plus, Trash2 } from 'lucide-react';
+import { Search, Save, RotateCcw, FileSpreadsheet, Plus, Trash2 } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { FormSection } from '@/components/shared/FormSection';
 import { TextField, SelectField } from '@/components/shared/FormField';
@@ -13,7 +13,9 @@ import { materialMaster, getMaterialByCode } from '@/lib/materialMaster';
 interface ItemRow {
   materialCode: string;
   materialDescription: string;
-  quantity: string;
+  poQty: string;
+  balanceQty: string;
+  gateEntryQty: string;
   unit: string;
   packingCondition: string;
 }
@@ -21,12 +23,36 @@ interface ItemRow {
 const emptyItem: ItemRow = {
   materialCode: '',
   materialDescription: '',
-  quantity: '',
+  poQty: '',
+  balanceQty: '',
+  gateEntryQty: '',
   unit: '',
   packingCondition: '',
 };
 
 const ITEMS_PER_PAGE = 10;
+
+// Simulate PO data fetch
+const fetchPOData = (poNumber: string) => {
+  // Simulated PO data
+  const poItems: ItemRow[] = [
+    { materialCode: 'MAT001', materialDescription: 'Steel Plate 10mm', poQty: '500', balanceQty: '300', gateEntryQty: '', unit: 'KG', packingCondition: '' },
+    { materialCode: 'MAT002', materialDescription: 'Copper Wire 2.5mm', poQty: '1000', balanceQty: '750', gateEntryQty: '', unit: 'MTR', packingCondition: '' },
+    { materialCode: 'MAT003', materialDescription: 'Aluminium Rod 8mm', poQty: '200', balanceQty: '150', gateEntryQty: '', unit: 'NOS', packingCondition: '' },
+    { materialCode: 'MAT005', materialDescription: 'Brass Fitting 1"', poQty: '100', balanceQty: '80', gateEntryQty: '', unit: 'NOS', packingCondition: '' },
+    { materialCode: 'MAT008', materialDescription: 'Stainless Steel Bolt M10', poQty: '500', balanceQty: '400', gateEntryQty: '', unit: 'NOS', packingCondition: '' },
+  ];
+  
+  return {
+    vendorNumber: 'V1001',
+    vendorName: 'ABC Subcontractor Pvt. Ltd.',
+    vendorAddress: 'Industrial Area, Phase 2',
+    vendorCity: 'Pune',
+    vendorContact: '+91 98765 43210',
+    vendorGSTNo: '27AABCU9603R1ZM',
+    items: poItems,
+  };
+};
 
 export default function InwardSubcontracting() {
   const [headerData, setHeaderData] = useState({
@@ -53,11 +79,44 @@ export default function InwardSubcontracting() {
 
   const [items, setItems] = useState<ItemRow[]>(Array(5).fill(null).map(() => ({ ...emptyItem })));
   const [currentPage, setCurrentPage] = useState(1);
+  const [isPoMode, setIsPoMode] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
   const paginatedItems = items.slice(startIndex, endIndex);
+
+  const handleFetchPO = () => {
+    if (!headerData.plant) {
+      toast.error('Please select Plant first');
+      return;
+    }
+    if (!headerData.subcontractPONo) {
+      toast.error('Please enter Subcontract PO Number');
+      return;
+    }
+
+    setIsLoading(true);
+    // Simulate API call
+    setTimeout(() => {
+      const poData = fetchPOData(headerData.subcontractPONo);
+      setHeaderData(prev => ({
+        ...prev,
+        vendorNumber: poData.vendorNumber,
+        vendorName: poData.vendorName,
+        vendorAddress: poData.vendorAddress,
+        vendorCity: poData.vendorCity,
+        vendorContact: poData.vendorContact,
+        vendorGSTNo: poData.vendorGSTNo,
+      }));
+      setItems(poData.items);
+      setIsPoMode(true);
+      setIsLoading(false);
+      setCurrentPage(1);
+      toast.success('PO data fetched successfully');
+    }, 800);
+  };
 
   const handleMaterialCodeChange = (pageIndex: number, code: string) => {
     const actualIndex = startIndex + pageIndex;
@@ -126,6 +185,7 @@ export default function InwardSubcontracting() {
     });
     setItems(Array(5).fill(null).map(() => ({ ...emptyItem })));
     setCurrentPage(1);
+    setIsPoMode(false);
   };
 
   const handleExport = () => {
@@ -137,7 +197,9 @@ export default function InwardSubcontracting() {
     const exportColumns = [
       { key: 'materialCode', header: 'Material Code' },
       { key: 'materialDescription', header: 'Material Description' },
-      { key: 'quantity', header: 'Quantity' },
+      { key: 'poQty', header: 'PO Qty' },
+      { key: 'balanceQty', header: 'Balance Qty' },
+      { key: 'gateEntryQty', header: 'Gate Entry Qty' },
       { key: 'unit', header: 'Unit' },
       { key: 'packingCondition', header: 'Packing Condition' },
     ];
@@ -149,12 +211,12 @@ export default function InwardSubcontracting() {
     <div className="space-y-6">
       <PageHeader
         title="Inward Gate Entry - Subcontracting"
-        subtitle="Create gate entry for subcontracting materials"
+        subtitle="Create gate entry with PO reference or manual entry"
         breadcrumbs={[{ label: 'Inward', path: '/inward/subcontracting' }, { label: 'Subcontracting' }]}
       />
 
       <FormSection title="Subcontract Reference">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <SelectField
             label="Plant"
             value={headerData.plant}
@@ -170,11 +232,26 @@ export default function InwardSubcontracting() {
             label="Subcontract PO Number"
             value={headerData.subcontractPONo}
             onChange={(value) => setHeaderData({ ...headerData, subcontractPONo: value })}
-            placeholder="Enter Subcontract PO"
+            placeholder="Enter PO Number to fetch"
           />
-          <TextField label="Vendor Number" value={headerData.vendorNumber} onChange={(value) => setHeaderData({ ...headerData, vendorNumber: value })} placeholder="Enter vendor number" />
-          <TextField label="Vendor Name" value={headerData.vendorName} onChange={(value) => setHeaderData({ ...headerData, vendorName: value })} placeholder="Enter vendor name" />
+          <div className="flex items-end">
+            <Button onClick={handleFetchPO} disabled={isLoading} className="gap-2 w-full">
+              {isLoading ? (
+                <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+              ) : (
+                <Search className="w-4 h-4" />
+              )}
+              Fetch PO
+            </Button>
+          </div>
+          <TextField label="Vendor Number" value={headerData.vendorNumber} onChange={(value) => setHeaderData({ ...headerData, vendorNumber: value })} placeholder="Enter vendor number" disabled={isPoMode} />
+          <TextField label="Vendor Name" value={headerData.vendorName} onChange={(value) => setHeaderData({ ...headerData, vendorName: value })} placeholder="Enter vendor name" disabled={isPoMode} />
         </div>
+        {isPoMode && (
+          <div className="mt-3 p-3 bg-accent/10 rounded-lg border border-accent/20">
+            <p className="text-sm text-accent font-medium">PO Mode Active - Items fetched from PO: {headerData.subcontractPONo}</p>
+          </div>
+        )}
       </FormSection>
 
       <FormSection title="Header Information">
@@ -213,7 +290,7 @@ export default function InwardSubcontracting() {
         </div>
       </FormSection>
 
-      <FormSection title="Item Details (Manual Entry)">
+      <FormSection title={isPoMode ? "Item Details (From PO)" : "Item Details (Manual Entry)"}>
         <div className="flex justify-end mb-3">
           <Button variant="outline" onClick={handleExport} className="gap-2">
             <FileSpreadsheet className="w-4 h-4" />
@@ -228,10 +305,16 @@ export default function InwardSubcontracting() {
                   <th className="w-12 text-center">#</th>
                   <th className="w-40">Material Code</th>
                   <th>Material Description</th>
-                  <th className="w-32">Quantity</th>
-                  <th className="w-24">Unit</th>
-                  <th className="w-40">Packing Condition</th>
-                  <th className="w-20 text-center">Action</th>
+                  {isPoMode && (
+                    <>
+                      <th className="w-24">PO Qty</th>
+                      <th className="w-24">Balance Qty</th>
+                    </>
+                  )}
+                  <th className="w-28">Gate Entry Qty</th>
+                  <th className="w-20">Unit</th>
+                  <th className="w-36">Packing Condition</th>
+                  {!isPoMode && <th className="w-20 text-center">Action</th>}
                 </tr>
               </thead>
               <tbody>
@@ -241,16 +324,20 @@ export default function InwardSubcontracting() {
                     <tr key={actualIndex} className="group">
                       <td className="text-center font-medium text-muted-foreground">{actualIndex + 1}</td>
                       <td>
-                        <Select value={item.materialCode} onValueChange={(val) => handleMaterialCodeChange(pageIndex, val)}>
-                          <SelectTrigger className="h-8 w-full">
-                            <SelectValue placeholder="Select Material" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {materialMaster.map(mat => (
-                              <SelectItem key={mat.code} value={mat.code}>{mat.code}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        {isPoMode ? (
+                          <Input value={item.materialCode} readOnly className="h-8 bg-muted/50" />
+                        ) : (
+                          <Select value={item.materialCode} onValueChange={(val) => handleMaterialCodeChange(pageIndex, val)}>
+                            <SelectTrigger className="h-8 w-full">
+                              <SelectValue placeholder="Select Material" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {materialMaster.map(mat => (
+                                <SelectItem key={mat.code} value={mat.code}>{mat.code}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
                       </td>
                       <td>
                         <Input
@@ -260,20 +347,30 @@ export default function InwardSubcontracting() {
                           placeholder="Auto-populated"
                         />
                       </td>
+                      {isPoMode && (
+                        <>
+                          <td>
+                            <Input value={item.poQty} readOnly className="h-8 bg-muted/50 text-center" />
+                          </td>
+                          <td>
+                            <Input value={item.balanceQty} readOnly className="h-8 bg-muted/50 text-center" />
+                          </td>
+                        </>
+                      )}
                       <td>
                         <Input
                           type="number"
-                          value={item.quantity}
-                          onChange={(e) => handleItemChange(pageIndex, 'quantity', e.target.value)}
+                          value={item.gateEntryQty}
+                          onChange={(e) => handleItemChange(pageIndex, 'gateEntryQty', e.target.value)}
                           className="h-8"
-                          placeholder="Qty"
+                          placeholder="Enter Qty"
                         />
                       </td>
                       <td>
                         <Input
                           value={item.unit}
                           readOnly
-                          className="h-8 bg-muted/50"
+                          className="h-8 bg-muted/50 text-center"
                           placeholder="Unit"
                         />
                       </td>
@@ -289,18 +386,20 @@ export default function InwardSubcontracting() {
                           </SelectContent>
                         </Select>
                       </td>
-                      <td className="text-center">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteRow(pageIndex)}
-                          disabled={items.length <= 1}
-                          className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                          title="Delete row"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </td>
+                      {!isPoMode && (
+                        <td className="text-center">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteRow(pageIndex)}
+                            disabled={items.length <= 1}
+                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            title="Delete row"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </td>
+                      )}
                     </tr>
                   );
                 })}
@@ -339,10 +438,12 @@ export default function InwardSubcontracting() {
           </div>
         )}
 
-        <Button variant="outline" size="sm" onClick={handleAddRow} className="mt-3 gap-2">
-          <Plus className="w-4 h-4" />
-          Add Row
-        </Button>
+        {!isPoMode && (
+          <Button variant="outline" size="sm" onClick={handleAddRow} className="mt-3 gap-2">
+            <Plus className="w-4 h-4" />
+            Add Row
+          </Button>
+        )}
 
         <div className="flex justify-end gap-2 mt-4 pt-4 border-t">
           <Button variant="outline" onClick={handleReset} className="gap-2">
