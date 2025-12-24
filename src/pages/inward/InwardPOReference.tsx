@@ -154,13 +154,13 @@ export default function InwardPOReference() {
     {
       key: 'gateEntryQty',
       header: 'Gate Entry Qty',
-      width: '150px',
+      width: '180px',
       render: (value: string, _row: ItemRow, index: number) => (
         <Input
           type="number"
           value={value}
           onChange={(e) => handleItemChange(index, 'gateEntryQty', e.target.value)}
-          className="h-8 w-full"
+          className="h-8 w-full min-w-[120px]"
           placeholder="Enter qty"
         />
       ),
@@ -323,12 +323,18 @@ export default function InwardPOReference() {
             onChange={(value) => setHeaderData({ ...headerData, grLrNumber: value })}
             placeholder="Enter GR/LR number"
           />
-          <TextField
-            label="Remarks"
-            value={headerData.remarks}
-            onChange={(value) => setHeaderData({ ...headerData, remarks: value })}
-            placeholder="Enter remarks"
-          />
+          <div className="md:col-span-2">
+            <TextField
+              label="Remarks"
+              value={headerData.remarks}
+              onChange={(value) => {
+                if (value.length <= 255) {
+                  setHeaderData({ ...headerData, remarks: value });
+                }
+              }}
+              placeholder="Enter remarks (max 255 characters)"
+            />
+          </div>
         </div>
       </FormSection>
 
