@@ -147,7 +147,7 @@ export default function InwardSubcontracting() {
       />
 
       <FormSection title="Subcontract PO Reference">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <SelectField
             label="Plant"
             value={headerData.plant}
@@ -176,6 +176,8 @@ export default function InwardSubcontracting() {
               Fetch Data
             </Button>
           </div>
+          <TextField label="Vendor Number" value={headerData.vendorNumber} readOnly />
+          <TextField label="Vendor Name" value={headerData.vendorName} readOnly />
         </div>
       </FormSection>
 
@@ -195,17 +197,6 @@ export default function InwardSubcontracting() {
           <TextField label="Vehicle No" value={headerData.vehicleNo} onChange={(value) => setHeaderData({ ...headerData, vehicleNo: value })} placeholder="MH-12-AB-1234" required />
           <TextField label="Driver Name" value={headerData.driverName} onChange={(value) => setHeaderData({ ...headerData, driverName: value })} placeholder="Enter driver name" />
           <TextField label="Transporter Name" value={headerData.transporterName} onChange={(value) => setHeaderData({ ...headerData, transporterName: value })} placeholder="Enter transporter" />
-        </div>
-      </FormSection>
-
-      <FormSection title="Vendor Information">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <TextField label="Vendor Number" value={headerData.vendorNumber} readOnly />
-          <TextField label="Vendor Name" value={headerData.vendorName} readOnly />
-          <TextField label="Vendor Address" value={headerData.vendorAddress} readOnly />
-          <TextField label="City / State" value={headerData.vendorCity} readOnly />
-          <TextField label="Vendor Contact" value={headerData.vendorContact} readOnly />
-          <TextField label="GST Number" value={headerData.vendorGSTNo} readOnly />
         </div>
       </FormSection>
 
