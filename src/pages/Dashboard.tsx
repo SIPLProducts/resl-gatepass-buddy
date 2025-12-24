@@ -281,6 +281,31 @@ export default function Dashboard() {
         ))}
       </div>
 
+      {/* Quick Actions with Keyboard Shortcuts */}
+      <div className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-foreground">Quick Actions</h3>
+          <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">Press 1-8 for quick access</span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+          {modules.map((module, index) => (
+            <div 
+              key={module.title} 
+              className="relative group" 
+              onMouseEnter={() => setHoveredModule(module.title)}
+              onMouseLeave={() => setHoveredModule(null)}
+            >
+              <div 
+                className={`absolute -top-2 -right-2 z-10 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shadow-md transition-all duration-200 ${hoveredModule === module.title ? 'scale-110 ring-2 ring-primary/50' : ''}`}
+              >
+                {module.shortcut}
+              </div>
+              <ModuleCard {...module} />
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Purchase & Plant Analytics Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Plant-wise Summary */}
@@ -448,61 +473,32 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Top Vendors & Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Top Vendors */}
-        <div className="enterprise-card p-6 animate-slide-up" style={{ animationDelay: '0.35s' }}>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Users className="w-5 h-5 text-accent" />
-              <h3 className="font-semibold text-foreground">Top Vendors</h3>
-            </div>
-            <span className="text-xs text-muted-foreground">This Month</span>
+      {/* Top Vendors */}
+      <div className="enterprise-card p-6 animate-slide-up" style={{ animationDelay: '0.35s' }}>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Users className="w-5 h-5 text-accent" />
+            <h3 className="font-semibold text-foreground">Top Vendors</h3>
           </div>
-          <div className="space-y-3">
-            {topVendorsData.map((vendor, idx) => (
-              <div key={vendor.name} className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center font-semibold">
-                    {idx + 1}
-                  </span>
-                  <span className="text-sm text-foreground truncate max-w-[120px]" title={vendor.name}>
-                    {vendor.name}
-                  </span>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-semibold text-foreground">{vendor.entries}</p>
-                  <p className="text-xs text-muted-foreground">{vendor.value}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+          <span className="text-xs text-muted-foreground">This Month</span>
         </div>
-
-        {/* Modules Grid with Keyboard Shortcuts */}
-        <div className="lg:col-span-2">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-foreground">Quick Actions</h3>
-            <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">Press 1-8 for quick access</span>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {modules.map((module, index) => (
-              <div 
-                key={module.title} 
-                className="animate-slide-up relative group" 
-                style={{ animationDelay: `${0.4 + index * 0.03}s` }}
-                onMouseEnter={() => setHoveredModule(module.title)}
-                onMouseLeave={() => setHoveredModule(null)}
-              >
-                <div 
-                  className={`absolute -top-2 -right-2 z-10 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shadow-md transition-all duration-200 ${hoveredModule === module.title ? 'scale-110 ring-2 ring-primary/50' : ''}`}
-                >
-                  {module.shortcut}
-                </div>
-                <ModuleCard {...module} />
+        <div className="space-y-3">
+          {topVendorsData.map((vendor, idx) => (
+            <div key={vendor.name} className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center font-semibold">
+                  {idx + 1}
+                </span>
+                <span className="text-sm text-foreground truncate max-w-[120px]" title={vendor.name}>
+                  {vendor.name}
+                </span>
               </div>
-            ))}
-          </div>
+              <div className="text-right">
+                <p className="text-sm font-semibold text-foreground">{vendor.entries}</p>
+                <p className="text-xs text-muted-foreground">{vendor.value}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
