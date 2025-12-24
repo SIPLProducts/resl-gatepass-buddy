@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Search, Save, RotateCcw, FileDown } from 'lucide-react';
+import { Search, Save, RotateCcw, FileDown, FileSpreadsheet } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { FormSection } from '@/components/shared/FormSection';
 import { TextField, SelectField } from '@/components/shared/FormField';
 import { DataGrid } from '@/components/shared/DataGrid';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { exportToExcel, transporterOptions, generateTestItems } from '@/lib/exportToExcel';
 
 interface ItemRow {
   materialCode: string;
@@ -50,12 +51,9 @@ export default function OutwardBillingReference() {
         ...prev,
         customerName: 'XYZ Corporation Ltd.',
       }));
-      setItems([
-        { materialCode: 'FG001', materialDescription: 'Finished Product A', quantity: '50', unit: 'NOS' },
-        { materialCode: 'FG002', materialDescription: 'Finished Product B', quantity: '100', unit: 'NOS' },
-      ]);
+      setItems(generateTestItems('outward') as ItemRow[]);
       setIsLoading(false);
-      toast.success('Billing data fetched successfully');
+      toast.success('Billing data fetched successfully - 35 items loaded');
     }, 1000);
   };
 
@@ -80,10 +78,25 @@ export default function OutwardBillingReference() {
     setItems([]);
   };
 
+  const handleExport = () => {
+    if (items.length === 0) {
+      toast.error('No items to export');
+      return;
+    }
+    const exportColumns = [
+      { key: 'materialCode', header: 'Material Code' },
+      { key: 'materialDescription', header: 'Material Description' },
+      { key: 'quantity', header: 'Quantity' },
+      { key: 'unit', header: 'Unit' },
+    ];
+    exportToExcel(items, exportColumns, `Outward_Billing_${headerData.billingDocNo}`);
+    toast.success('Exported to Excel successfully');
+  };
+
   const columns = [
     { key: 'materialCode', header: 'Material Code', width: '150px' },
     { key: 'materialDescription', header: 'Material Description', width: '300px' },
-    { key: 'quantity', header: 'Quantity', width: '100px' },
+    { key: 'quantity', header: 'Quantity', width: '120px' },
     { key: 'unit', header: 'Unit', width: '100px' },
   ];
 
@@ -116,7 +129,7 @@ export default function OutwardBillingReference() {
             required
           />
           <div className="flex items-end">
-            <Button onClick={handleFetchBilling} disabled={isLoading} className="gap-2 w-full">
+            <Button onClick={handleFetchBilling} disabled={isLoading} className="gap-2 w-full bg-primary text-primary-foreground hover:bg-primary/90">
               {isLoading ? (
                 <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
               ) : (
@@ -142,7 +155,12 @@ export default function OutwardBillingReference() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <TextField label="Vehicle No" value={headerData.vehicleNo} onChange={(value) => setHeaderData({ ...headerData, vehicleNo: value })} placeholder="MH-12-AB-1234" required />
           <TextField label="Driver Name" value={headerData.driverName} onChange={(value) => setHeaderData({ ...headerData, driverName: value })} placeholder="Enter driver name" />
-          <TextField label="Transporter Name" value={headerData.transporterName} onChange={(value) => setHeaderData({ ...headerData, transporterName: value })} placeholder="Enter transporter" />
+          <SelectField
+            label="Transporter Name"
+            value={headerData.transporterName}
+            onChange={(value) => setHeaderData({ ...headerData, transporterName: value })}
+            options={transporterOptions}
+          />
           <TextField label="Customer Name" value={headerData.customerName} readOnly />
         </div>
       </FormSection>
@@ -155,13 +173,20 @@ export default function OutwardBillingReference() {
           </div>
         ) : (
           <>
+            <div className="flex justify-end mb-3">
+              <Button variant="outline" onClick={handleExport} className="gap-2">
+                <FileSpreadsheet className="w-4 h-4" />
+                Export to Excel
+              </Button>
+            </div>
             <DataGrid 
               columns={columns} 
               data={items} 
               editable={true}
               onRowDelete={handleDeleteRow}
               minRows={1}
-              itemsPerPage={5}
+              itemsPerPage={10}
+              maxHeight="400px"
             />
             <div className="flex justify-end gap-2 mt-4 pt-4 border-t">
               <Button variant="outline" onClick={handleReset} className="gap-2">

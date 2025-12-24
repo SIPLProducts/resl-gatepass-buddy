@@ -40,8 +40,9 @@ interface NavItem {
   subItems?: SubNavItem[];
 }
 
-// Navigation structure matching user's requirement
+// Navigation structure matching user's requirement - Dashboard at top
 const navigationItems: NavItem[] = [
+  { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
   { 
     label: 'Inward', 
     icon: ArrowDownToLine,
@@ -66,7 +67,6 @@ const navigationItems: NavItem[] = [
   { label: 'Cancel', icon: XCircle, path: '/cancel' },
   { label: 'Print', icon: Printer, path: '/print' },
   { label: 'Report', icon: BarChart3, path: '/reports' },
-  { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
   { label: 'Settings', icon: Settings, path: '/settings' },
   { label: 'Help & Support', icon: HelpCircle, path: '/help' },
 ];
