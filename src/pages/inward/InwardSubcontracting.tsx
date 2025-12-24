@@ -216,36 +216,42 @@ export default function InwardSubcontracting() {
       />
 
       <FormSection title="Subcontract Reference">
-        <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-          <SelectField
-            label="Plant"
-            value={headerData.plant}
-            onChange={(value) => setHeaderData({ ...headerData, plant: value })}
-            options={[
-              { value: '1000', label: '1000 - Main Plant' },
-              { value: '2000', label: '2000 - Warehouse' },
-              { value: '3000', label: '3000 - Factory' },
-            ]}
-            required
-          />
-          <TextField
-            label="Subcontract PO Number"
-            value={headerData.subcontractPONo}
-            onChange={(value) => setHeaderData({ ...headerData, subcontractPONo: value })}
-            placeholder="Enter PO Number"
-          />
-          <TextField label="Vendor Number" value={headerData.vendorNumber} onChange={(value) => setHeaderData({ ...headerData, vendorNumber: value })} placeholder="Vendor number" disabled={isPoMode} />
-          <TextField label="Vendor Name" value={headerData.vendorName} onChange={(value) => setHeaderData({ ...headerData, vendorName: value })} placeholder="Vendor name" disabled={isPoMode} />
-          <div className="flex items-end">
-            <Button onClick={handleFetchPO} disabled={isLoading} className="gap-2 w-full">
-              {isLoading ? (
-                <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-              ) : (
-                <Search className="w-4 h-4" />
-              )}
-              Fetch PO
-            </Button>
+        <div className="flex flex-wrap items-end gap-4">
+          <div className="w-40">
+            <SelectField
+              label="Plant"
+              value={headerData.plant}
+              onChange={(value) => setHeaderData({ ...headerData, plant: value })}
+              options={[
+                { value: '1000', label: '1000 - Main Plant' },
+                { value: '2000', label: '2000 - Warehouse' },
+                { value: '3000', label: '3000 - Factory' },
+              ]}
+              required
+            />
           </div>
+          <div className="w-44">
+            <TextField
+              label="Subcontract PO Number"
+              value={headerData.subcontractPONo}
+              onChange={(value) => setHeaderData({ ...headerData, subcontractPONo: value })}
+              placeholder="Enter PO Number"
+            />
+          </div>
+          <div className="w-40">
+            <TextField label="Vendor Number" value={headerData.vendorNumber} onChange={(value) => setHeaderData({ ...headerData, vendorNumber: value })} placeholder="Vendor number" disabled={isPoMode} />
+          </div>
+          <div className="w-44">
+            <TextField label="Vendor Name" value={headerData.vendorName} onChange={(value) => setHeaderData({ ...headerData, vendorName: value })} placeholder="Vendor name" disabled={isPoMode} />
+          </div>
+          <Button onClick={handleFetchPO} disabled={isLoading} className="gap-2 h-10">
+            {isLoading ? (
+              <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+            ) : (
+              <Search className="w-4 h-4" />
+            )}
+            Fetch PO
+          </Button>
         </div>
         {isPoMode && (
           <div className="mt-3 p-3 bg-accent/10 rounded-lg border border-accent/20">
