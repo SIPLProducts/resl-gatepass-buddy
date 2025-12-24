@@ -9,6 +9,8 @@ import { toast } from 'sonner';
 import { exportToExcel, transporterOptions, generateTestItems } from '@/lib/exportToExcel';
 
 interface ItemRow {
+  customerCode: string;
+  customerName: string;
   materialCode: string;
   materialDescription: string;
   quantity: string;
@@ -26,7 +28,10 @@ export default function OutwardBillingReference() {
     vehicleNo: '',
     driverName: '',
     transporterName: '',
+    grLrNumber: '',
+    remarks: '',
     billingDocNo: '',
+    customerCode: '',
     customerName: '',
   });
 
@@ -49,9 +54,14 @@ export default function OutwardBillingReference() {
     setTimeout(() => {
       setHeaderData(prev => ({
         ...prev,
+        customerCode: 'C1001',
         customerName: 'XYZ Corporation Ltd.',
       }));
-      setItems(generateTestItems('outward') as ItemRow[]);
+      setItems(generateTestItems('outward').map(item => ({
+        ...item,
+        customerCode: 'C1001',
+        customerName: 'XYZ Corporation Ltd.',
+      })) as ItemRow[]);
       setIsLoading(false);
       toast.success('Billing data fetched successfully - 35 items loaded');
     }, 1000);
@@ -72,7 +82,10 @@ export default function OutwardBillingReference() {
       vehicleNo: '',
       driverName: '',
       transporterName: '',
+      grLrNumber: '',
+      remarks: '',
       billingDocNo: '',
+      customerCode: '',
       customerName: '',
     });
     setItems([]);
@@ -84,6 +97,8 @@ export default function OutwardBillingReference() {
       return;
     }
     const exportColumns = [
+      { key: 'customerCode', header: 'Customer Code' },
+      { key: 'customerName', header: 'Customer Name' },
       { key: 'materialCode', header: 'Material Code' },
       { key: 'materialDescription', header: 'Material Description' },
       { key: 'quantity', header: 'Quantity' },
@@ -94,8 +109,10 @@ export default function OutwardBillingReference() {
   };
 
   const columns = [
+    { key: 'customerCode', header: 'Customer Code', width: '120px' },
+    { key: 'customerName', header: 'Customer Name', width: '180px' },
     { key: 'materialCode', header: 'Material Code', width: '150px' },
-    { key: 'materialDescription', header: 'Material Description', width: '300px' },
+    { key: 'materialDescription', header: 'Material Description', width: '250px' },
     { key: 'quantity', header: 'Quantity', width: '120px' },
     { key: 'unit', header: 'Unit', width: '100px' },
   ];
@@ -109,7 +126,7 @@ export default function OutwardBillingReference() {
       />
 
       <FormSection title="Billing Reference">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
           <SelectField
             label="Plant"
             value={headerData.plant}
@@ -128,8 +145,18 @@ export default function OutwardBillingReference() {
             placeholder="Enter Billing Doc No"
             required
           />
-          <div className="flex items-end">
-            <Button onClick={handleFetchBilling} disabled={isLoading} className="gap-2 w-full bg-primary text-primary-foreground hover:bg-primary/90">
+          <TextField
+            label="Customer Code"
+            value={headerData.customerCode}
+            readOnly
+          />
+          <TextField
+            label="Customer Name"
+            value={headerData.customerName}
+            readOnly
+          />
+          <div className="pb-0.5">
+            <Button onClick={handleFetchBilling} disabled={isLoading} className="gap-2 w-full h-10 bg-primary text-primary-foreground hover:bg-primary/90">
               {isLoading ? (
                 <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
               ) : (
@@ -151,7 +178,7 @@ export default function OutwardBillingReference() {
         </div>
       </FormSection>
 
-      <FormSection title="Vehicle & Customer Details">
+      <FormSection title="Vehicle & Transport Details">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <TextField label="Vehicle No" value={headerData.vehicleNo} onChange={(value) => setHeaderData({ ...headerData, vehicleNo: value })} placeholder="MH-12-AB-1234" required />
           <TextField label="Driver Name" value={headerData.driverName} onChange={(value) => setHeaderData({ ...headerData, driverName: value })} placeholder="Enter driver name" />
@@ -161,7 +188,18 @@ export default function OutwardBillingReference() {
             onChange={(value) => setHeaderData({ ...headerData, transporterName: value })}
             options={transporterOptions}
           />
-          <TextField label="Customer Name" value={headerData.customerName} readOnly />
+          <TextField
+            label="GR/LR Number"
+            value={headerData.grLrNumber}
+            onChange={(value) => setHeaderData({ ...headerData, grLrNumber: value })}
+            placeholder="Enter GR/LR number"
+          />
+          <TextField
+            label="Remarks"
+            value={headerData.remarks}
+            onChange={(value) => setHeaderData({ ...headerData, remarks: value })}
+            placeholder="Enter remarks"
+          />
         </div>
       </FormSection>
 

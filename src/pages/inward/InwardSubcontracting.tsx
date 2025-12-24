@@ -1,24 +1,31 @@
 import { useState } from 'react';
-import { Search, Save, RotateCcw, FileDown, FileSpreadsheet } from 'lucide-react';
+import { Search, Save, RotateCcw, FileDown, FileSpreadsheet, Plus, Trash2 } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { FormSection } from '@/components/shared/FormSection';
 import { TextField, SelectField } from '@/components/shared/FormField';
-import { DataGrid } from '@/components/shared/DataGrid';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { exportToExcel, transporterOptions, generateTestItems } from '@/lib/exportToExcel';
+import { exportToExcel, transporterOptions, packingConditionOptions } from '@/lib/exportToExcel';
 
 interface ItemRow {
   materialCode: string;
   materialDescription: string;
-  poQty: string;
-  poUnit: string;
-  balanceQty: string;
   quantity: string;
   unit: string;
   packingCondition: string;
 }
+
+const emptyItem: ItemRow = {
+  materialCode: '',
+  materialDescription: '',
+  quantity: '',
+  unit: '',
+  packingCondition: '',
+};
+
+const ITEMS_PER_PAGE = 10;
 
 export default function InwardSubcontracting() {
   const [headerData, setHeaderData] = useState({
@@ -31,6 +38,8 @@ export default function InwardSubcontracting() {
     vehicleNo: '',
     driverName: '',
     transporterName: '',
+    grLrNumber: '',
+    remarks: '',
     subcontractPONo: '',
     vendorNumber: '',
     vendorName: '',
@@ -41,42 +50,36 @@ export default function InwardSubcontracting() {
     inwardedBy: 'Admin User',
   });
 
-  const [items, setItems] = useState<ItemRow[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [items, setItems] = useState<ItemRow[]>(Array(5).fill(null).map(() => ({ ...emptyItem })));
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const handleDeleteRow = (index: number) => {
-    if (items.length > 1) {
-      setItems(prev => prev.filter((_, i) => i !== index));
-    }
-  };
+  const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedItems = items.slice(startIndex, endIndex);
 
-  const handleFetchPO = () => {
-    if (!headerData.plant) {
-      toast.error('Please select Plant');
-      return;
-    }
-
-    setIsLoading(true);
-    setTimeout(() => {
-      setHeaderData(prev => ({
-        ...prev,
-        vendorNumber: 'V2001',
-        vendorName: 'Subcontractor Industries Ltd.',
-        vendorAddress: '456, Industrial Zone, Phase 2',
-        vendorCity: 'Pune, Maharashtra - 411001',
-        vendorContact: '+91 20 2567 8901',
-        vendorGSTNo: '27AABCU9603R1ZP',
-      }));
-      setItems(generateTestItems('subcontract') as ItemRow[]);
-      setIsLoading(false);
-      toast.success('Subcontract PO data fetched successfully - 35 items loaded');
-    }, 1000);
-  };
-
-  const handleItemChange = (index: number, field: keyof ItemRow, value: string) => {
+  const handleItemChange = (pageIndex: number, field: keyof ItemRow, value: string) => {
+    const actualIndex = startIndex + pageIndex;
     setItems(prev => prev.map((item, i) => 
-      i === index ? { ...item, [field]: value } : item
+      i === actualIndex ? { ...item, [field]: value } : item
     ));
+  };
+
+  const handleAddRow = () => {
+    setItems(prev => [...prev, { ...emptyItem }]);
+    const newTotalPages = Math.ceil((items.length + 1) / ITEMS_PER_PAGE);
+    setCurrentPage(newTotalPages);
+  };
+
+  const handleDeleteRow = (pageIndex: number) => {
+    const actualIndex = startIndex + pageIndex;
+    if (items.length > 1) {
+      setItems(prev => prev.filter((_, i) => i !== actualIndex));
+      const newTotalPages = Math.ceil((items.length - 1) / ITEMS_PER_PAGE);
+      if (currentPage > newTotalPages && newTotalPages > 0) {
+        setCurrentPage(newTotalPages);
+      }
+    }
   };
 
   const handleSave = () => {
@@ -94,6 +97,8 @@ export default function InwardSubcontracting() {
       vehicleNo: '',
       driverName: '',
       transporterName: '',
+      grLrNumber: '',
+      remarks: '',
       subcontractPONo: '',
       vendorNumber: '',
       vendorName: '',
@@ -103,63 +108,26 @@ export default function InwardSubcontracting() {
       vendorGSTNo: '',
       inwardedBy: 'Admin User',
     });
-    setItems([]);
+    setItems(Array(5).fill(null).map(() => ({ ...emptyItem })));
+    setCurrentPage(1);
   };
 
   const handleExport = () => {
-    if (items.length === 0) {
+    const filledItems = items.filter(item => item.materialCode || item.materialDescription);
+    if (filledItems.length === 0) {
       toast.error('No items to export');
       return;
     }
     const exportColumns = [
       { key: 'materialCode', header: 'Material Code' },
       { key: 'materialDescription', header: 'Material Description' },
-      { key: 'poQty', header: 'PO Qty' },
-      { key: 'poUnit', header: 'PO Unit' },
-      { key: 'balanceQty', header: 'Balance Qty' },
-      { key: 'quantity', header: 'Gate Entry Qty' },
+      { key: 'quantity', header: 'Quantity' },
       { key: 'unit', header: 'Unit' },
       { key: 'packingCondition', header: 'Packing Condition' },
     ];
-    exportToExcel(items, exportColumns, `Inward_Subcontract_${headerData.subcontractPONo}`);
+    exportToExcel(filledItems, exportColumns, `Inward_Subcontract_${headerData.subcontractPONo || 'New'}`);
     toast.success('Exported to Excel successfully');
   };
-
-  const columns = [
-    { key: 'materialCode', header: 'Material Code', width: '120px' },
-    { key: 'materialDescription', header: 'Material Description', width: '200px' },
-    { key: 'poQty', header: 'PO Qty', width: '80px' },
-    { key: 'poUnit', header: 'PO Unit', width: '70px' },
-    { key: 'balanceQty', header: 'Balance Qty', width: '100px' },
-    {
-      key: 'quantity',
-      header: 'Gate Entry Qty',
-      width: '150px',
-      render: (value: string, _row: ItemRow, index: number) => (
-        <Input
-          type="number"
-          value={value}
-          onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
-          className="h-8 w-full"
-          placeholder="Enter qty"
-        />
-      ),
-    },
-    { key: 'unit', header: 'Unit', width: '70px' },
-    {
-      key: 'packingCondition',
-      header: 'Packing Condition',
-      width: '150px',
-      render: (value: string, _row: ItemRow, index: number) => (
-        <Input
-          value={value}
-          onChange={(e) => handleItemChange(index, 'packingCondition', e.target.value)}
-          className="h-8 w-full"
-          placeholder="Good/Damaged"
-        />
-      ),
-    },
-  ];
 
   return (
     <div className="space-y-6">
@@ -169,8 +137,8 @@ export default function InwardSubcontracting() {
         breadcrumbs={[{ label: 'Inward', path: '/inward/subcontracting' }, { label: 'Subcontracting' }]}
       />
 
-      <FormSection title="Subcontract PO Reference">
-        <div className="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
+      <FormSection title="Subcontract Reference">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <SelectField
             label="Plant"
             value={headerData.plant}
@@ -188,18 +156,8 @@ export default function InwardSubcontracting() {
             onChange={(value) => setHeaderData({ ...headerData, subcontractPONo: value })}
             placeholder="Enter Subcontract PO"
           />
-          <TextField label="Vendor Number" value={headerData.vendorNumber} readOnly />
-          <TextField label="Vendor Name" value={headerData.vendorName} readOnly />
-          <div className="pb-0.5">
-            <Button onClick={handleFetchPO} disabled={isLoading} className="gap-2 w-full h-10 bg-primary text-primary-foreground hover:bg-primary/90">
-              {isLoading ? (
-                <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-              ) : (
-                <Search className="w-4 h-4" />
-              )}
-              Fetch Data
-            </Button>
-          </div>
+          <TextField label="Vendor Number" value={headerData.vendorNumber} onChange={(value) => setHeaderData({ ...headerData, vendorNumber: value })} placeholder="Enter vendor number" />
+          <TextField label="Vendor Name" value={headerData.vendorName} onChange={(value) => setHeaderData({ ...headerData, vendorName: value })} placeholder="Enter vendor name" />
         </div>
       </FormSection>
 
@@ -224,44 +182,158 @@ export default function InwardSubcontracting() {
             onChange={(value) => setHeaderData({ ...headerData, transporterName: value })}
             options={transporterOptions}
           />
+          <TextField
+            label="GR/LR Number"
+            value={headerData.grLrNumber}
+            onChange={(value) => setHeaderData({ ...headerData, grLrNumber: value })}
+            placeholder="Enter GR/LR number"
+          />
+          <TextField
+            label="Remarks"
+            value={headerData.remarks}
+            onChange={(value) => setHeaderData({ ...headerData, remarks: value })}
+            placeholder="Enter remarks"
+          />
         </div>
       </FormSection>
 
-      <FormSection title="Item Details">
-        {items.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">
-            <FileDown className="w-12 h-12 mx-auto mb-3 opacity-50" />
-            <p>No items loaded. Select Plant and click "Fetch Data" to load items.</p>
+      <FormSection title="Item Details (Manual Entry)">
+        <div className="flex justify-end mb-3">
+          <Button variant="outline" onClick={handleExport} className="gap-2">
+            <FileSpreadsheet className="w-4 h-4" />
+            Export to Excel
+          </Button>
+        </div>
+        <div className="data-grid">
+          <div className="overflow-auto scrollbar-thin" style={{ maxHeight: '400px' }}>
+            <table className="w-full">
+              <thead>
+                <tr>
+                  <th className="w-12 text-center">#</th>
+                  <th className="w-32">Material Code</th>
+                  <th>Material Description</th>
+                  <th className="w-32">Quantity</th>
+                  <th className="w-24">Unit</th>
+                  <th className="w-40">Packing Condition</th>
+                  <th className="w-20 text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedItems.map((item, pageIndex) => {
+                  const actualIndex = startIndex + pageIndex;
+                  return (
+                    <tr key={actualIndex} className="group">
+                      <td className="text-center font-medium text-muted-foreground">{actualIndex + 1}</td>
+                      <td>
+                        <Input
+                          value={item.materialCode}
+                          onChange={(e) => handleItemChange(pageIndex, 'materialCode', e.target.value)}
+                          className="h-8"
+                          placeholder="Enter code"
+                        />
+                      </td>
+                      <td>
+                        <Input
+                          value={item.materialDescription}
+                          onChange={(e) => handleItemChange(pageIndex, 'materialDescription', e.target.value)}
+                          className="h-8"
+                          placeholder="Enter material description"
+                        />
+                      </td>
+                      <td>
+                        <Input
+                          type="number"
+                          value={item.quantity}
+                          onChange={(e) => handleItemChange(pageIndex, 'quantity', e.target.value)}
+                          className="h-8"
+                          placeholder="Qty"
+                        />
+                      </td>
+                      <td>
+                        <Input
+                          value={item.unit}
+                          onChange={(e) => handleItemChange(pageIndex, 'unit', e.target.value)}
+                          className="h-8"
+                          placeholder="Unit"
+                        />
+                      </td>
+                      <td>
+                        <Select value={item.packingCondition} onValueChange={(val) => handleItemChange(pageIndex, 'packingCondition', val)}>
+                          <SelectTrigger className="h-8 w-full">
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {packingConditionOptions.map(opt => (
+                              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </td>
+                      <td className="text-center">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteRow(pageIndex)}
+                          disabled={items.length <= 1}
+                          className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          title="Delete row"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
-        ) : (
-          <>
-            <div className="flex justify-end mb-3">
-              <Button variant="outline" onClick={handleExport} className="gap-2">
-                <FileSpreadsheet className="w-4 h-4" />
-                Export to Excel
+        </div>
+
+        {/* Pagination */}
+        {items.length > ITEMS_PER_PAGE && (
+          <div className="flex items-center justify-between pt-2 border-t mt-3">
+            <span className="text-sm text-muted-foreground">
+              Showing {startIndex + 1}-{Math.min(endIndex, items.length)} of {items.length} items
+            </span>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+              >
+                Previous
+              </Button>
+              <span className="text-sm px-2">
+                Page {currentPage} of {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+              >
+                Next
               </Button>
             </div>
-            <DataGrid 
-              columns={columns} 
-              data={items} 
-              editable={true}
-              onRowDelete={handleDeleteRow}
-              minRows={1}
-              itemsPerPage={10}
-              maxHeight="400px"
-            />
-            <div className="flex justify-end gap-2 mt-4 pt-4 border-t">
-              <Button variant="outline" onClick={handleReset} className="gap-2">
-                <RotateCcw className="w-4 h-4" />
-                Reset
-              </Button>
-              <Button onClick={handleSave} className="bg-accent text-accent-foreground hover:bg-accent/90 gap-2">
-                <Save className="w-4 h-4" />
-                Save Entry
-              </Button>
-            </div>
-          </>
+          </div>
         )}
+
+        <Button variant="outline" size="sm" onClick={handleAddRow} className="mt-3 gap-2">
+          <Plus className="w-4 h-4" />
+          Add Row
+        </Button>
+
+        <div className="flex justify-end gap-2 mt-4 pt-4 border-t">
+          <Button variant="outline" onClick={handleReset} className="gap-2">
+            <RotateCcw className="w-4 h-4" />
+            Reset
+          </Button>
+          <Button onClick={handleSave} className="bg-accent text-accent-foreground hover:bg-accent/90 gap-2">
+            <Save className="w-4 h-4" />
+            Save Entry
+          </Button>
+        </div>
       </FormSection>
     </div>
   );
