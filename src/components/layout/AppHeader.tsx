@@ -1,12 +1,12 @@
-import { Search, Sun, Moon, User } from 'lucide-react';
+import { Search, Sun, Moon, User, LogOut } from 'lucide-react';
 import { useState, ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
@@ -17,11 +17,24 @@ interface AppHeaderProps {
 }
 
 export function AppHeader({ sidebarTrigger, collapseTrigger }: AppHeaderProps) {
+  const navigate = useNavigate();
   const [isDark, setIsDark] = useState(false);
 
   const toggleTheme = () => {
     setIsDark(!isDark);
     document.documentElement.classList.toggle('dark');
+  };
+
+  const handleLogout = () => {
+    navigate('/');
+  };
+
+  const handleProfile = () => {
+    navigate('/profile');
+  };
+
+  const handleSettings = () => {
+    navigate('/settings');
   };
 
   return (
@@ -63,12 +76,18 @@ export function AppHeader({ sidebarTrigger, collapseTrigger }: AppHeaderProps) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuLabel className="text-xs">My Account</DropdownMenuLabel>
+            <DropdownMenuItem onClick={handleProfile} className="text-sm cursor-pointer">
+              <User className="w-4 h-4 mr-2" />
+              Profile
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleSettings} className="text-sm cursor-pointer">
+              Settings
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-sm">Profile</DropdownMenuItem>
-            <DropdownMenuItem className="text-sm">Settings</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive text-sm">Logout</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout} className="text-destructive text-sm cursor-pointer">
+              <LogOut className="w-4 h-4 mr-2" />
+              Logout
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

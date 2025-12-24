@@ -306,35 +306,6 @@ export function AppSidebar({ isOpen, onToggle, isCollapsed, onCollapse }: AppSid
             </div>
           </nav>
 
-          {/* Bottom Section */}
-          <div className={`border-t border-sidebar-border/30 flex-shrink-0 ${isCollapsed ? 'px-3 py-2' : 'px-3 py-3'}`}>
-            <div className="space-y-0.5">
-              {/* Logout */}
-              {isCollapsed ? (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button 
-                      onClick={handleLogout}
-                      className="flex items-center justify-center w-9 h-9 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all mx-auto"
-                    >
-                      <LogOut className="w-[18px] h-[18px]" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="right" className="bg-sidebar text-sidebar-foreground border-sidebar-border">
-                    Logout
-                  </TooltipContent>
-                </Tooltip>
-              ) : (
-                <button 
-                  onClick={handleLogout}
-                  className="flex items-center gap-3 px-4 py-2 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all w-full"
-                >
-                  <LogOut className="w-[18px] h-[18px] flex-shrink-0" />
-                  <span className="text-sm font-medium">Logout</span>
-                </button>
-              )}
-            </div>
-          </div>
         </aside>
       </>
     </TooltipProvider>
