@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   ArrowDownToLine,
   ArrowUpFromLine,
@@ -20,6 +21,7 @@ import {
   FileText,
   CheckCircle,
   AlertCircle,
+  ChevronDown,
 } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { ModuleCard } from '@/components/shared/ModuleCard';
@@ -281,30 +283,37 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Quick Actions with Keyboard Shortcuts */}
-      <div className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-foreground">Quick Actions</h3>
-          <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">Press 1-8 for quick access</span>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
-          {modules.map((module, index) => (
-            <div 
-              key={module.title} 
-              className="relative group" 
-              onMouseEnter={() => setHoveredModule(module.title)}
-              onMouseLeave={() => setHoveredModule(null)}
-            >
-              <div 
-                className={`absolute -top-2 -right-2 z-10 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shadow-md transition-all duration-200 ${hoveredModule === module.title ? 'scale-110 ring-2 ring-primary/50' : ''}`}
-              >
-                {module.shortcut}
-              </div>
-              <ModuleCard {...module} />
+      {/* Quick Actions with Keyboard Shortcuts - Collapsible */}
+      <Collapsible defaultOpen className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
+        <div className="enterprise-card">
+          <CollapsibleTrigger className="w-full p-4 flex items-center justify-between hover:bg-muted/50 transition-colors rounded-t-lg group">
+            <div className="flex items-center gap-3">
+              <h3 className="text-lg font-semibold text-foreground">Quick Actions</h3>
+              <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">Press 1-8 for quick access</span>
             </div>
-          ))}
+            <ChevronDown className="w-5 h-5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+          </CollapsibleTrigger>
+          <CollapsibleContent className="px-4 pb-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 pt-2">
+              {modules.map((module, index) => (
+                <div 
+                  key={module.title} 
+                  className="relative group" 
+                  onMouseEnter={() => setHoveredModule(module.title)}
+                  onMouseLeave={() => setHoveredModule(null)}
+                >
+                  <div 
+                    className={`absolute -top-2 -right-2 z-10 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shadow-md transition-all duration-200 ${hoveredModule === module.title ? 'scale-110 ring-2 ring-primary/50' : ''}`}
+                  >
+                    {module.shortcut}
+                  </div>
+                  <ModuleCard {...module} />
+                </div>
+              ))}
+            </div>
+          </CollapsibleContent>
         </div>
-      </div>
+      </Collapsible>
 
       {/* Purchase & Plant Analytics Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
