@@ -165,8 +165,10 @@ export default function InwardSubcontracting() {
             onChange={(value) => setHeaderData({ ...headerData, subcontractPONo: value })}
             placeholder="Enter Subcontract PO"
           />
+          <TextField label="Vendor Number" value={headerData.vendorNumber} readOnly />
+          <TextField label="Vendor Name" value={headerData.vendorName} readOnly />
           <div className="pb-0.5">
-            <Button onClick={handleFetchPO} disabled={isLoading} className="gap-2 w-full h-10">
+            <Button onClick={handleFetchPO} disabled={isLoading} className="gap-2 w-full h-10 bg-primary text-primary-foreground hover:bg-primary/90">
               {isLoading ? (
                 <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
               ) : (
@@ -175,8 +177,6 @@ export default function InwardSubcontracting() {
               Fetch Data
             </Button>
           </div>
-          <TextField label="Vendor Number" value={headerData.vendorNumber} readOnly />
-          <TextField label="Vendor Name" value={headerData.vendorName} readOnly />
         </div>
       </FormSection>
 

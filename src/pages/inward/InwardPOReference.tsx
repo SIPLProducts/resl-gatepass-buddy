@@ -179,16 +179,6 @@ export default function InwardPOReference() {
             placeholder="Enter PO Number"
             required
           />
-          <div className="pb-0.5">
-            <Button onClick={handleFetchPO} disabled={isLoading} className="gap-2 w-full h-10">
-              {isLoading ? (
-                <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-              ) : (
-                <Search className="w-4 h-4" />
-              )}
-              Fetch PO Data
-            </Button>
-          </div>
           <TextField
             label="Vendor Number"
             value={headerData.vendorNumber}
@@ -199,6 +189,16 @@ export default function InwardPOReference() {
             value={headerData.vendorName}
             readOnly
           />
+          <div className="pb-0.5">
+            <Button onClick={handleFetchPO} disabled={isLoading} className="gap-2 w-full h-10 bg-primary text-primary-foreground hover:bg-primary/90">
+              {isLoading ? (
+                <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+              ) : (
+                <Search className="w-4 h-4" />
+              )}
+              Fetch PO Data
+            </Button>
+          </div>
         </div>
       </FormSection>
 
