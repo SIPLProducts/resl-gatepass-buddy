@@ -35,6 +35,12 @@ export default function InwardSubcontracting() {
   const [items, setItems] = useState<ItemRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
+  const handleDeleteRow = (index: number) => {
+    if (items.length > 1) {
+      setItems(prev => prev.filter((_, i) => i !== index));
+    }
+  };
+
   const handleFetchPO = () => {
     if (!headerData.subcontractPONo || !headerData.plant) {
       toast.error('Please enter Subcontract PO Number and Plant');
@@ -203,7 +209,13 @@ export default function InwardSubcontracting() {
             <p>No items loaded. Enter Subcontract PO and click "Fetch Data" to load items.</p>
           </div>
         ) : (
-          <DataGrid columns={columns} data={items} />
+          <DataGrid 
+            columns={columns} 
+            data={items} 
+            editable={true}
+            onRowDelete={handleDeleteRow}
+            minRows={1}
+          />
         )}
       </FormSection>
     </div>

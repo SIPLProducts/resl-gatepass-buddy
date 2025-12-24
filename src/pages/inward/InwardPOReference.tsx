@@ -40,6 +40,12 @@ export default function InwardPOReference() {
   const [items, setItems] = useState<ItemRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
+  const handleDeleteRow = (index: number) => {
+    if (items.length > 1) {
+      setItems(prev => prev.filter((_, i) => i !== index));
+    }
+  };
+
   const handleFetchPO = () => {
     if (!headerData.poNumber || !headerData.plant) {
       toast.error('Please enter PO Number and Plant');
@@ -292,7 +298,13 @@ export default function InwardPOReference() {
             <p>No items loaded. Enter PO Number and click "Fetch PO Data" to load items.</p>
           </div>
         ) : (
-          <DataGrid columns={columns} data={items} />
+          <DataGrid 
+            columns={columns} 
+            data={items} 
+            editable={true}
+            onRowDelete={handleDeleteRow}
+            minRows={1}
+          />
         )}
       </FormSection>
     </div>
