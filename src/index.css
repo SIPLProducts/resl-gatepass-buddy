@@ -206,12 +206,12 @@
   }
 
   .sidebar-nav-item {
-    @apply flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200;
-    @apply text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent;
+    @apply flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200;
+    @apply text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50;
   }
 
   .sidebar-nav-item.active {
-    @apply bg-sidebar-primary text-sidebar-primary-foreground;
+    @apply bg-sidebar-primary/90 text-sidebar-primary-foreground shadow-sm;
   }
 
   .badge-status {
