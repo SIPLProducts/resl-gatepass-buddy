@@ -13,6 +13,9 @@ import {
   Settings,
   HelpCircle,
   LogOut,
+  PanelLeftClose,
+  ChevronsLeft,
+  ChevronsRight,
   Menu,
   X,
   Bell,
@@ -170,18 +173,38 @@ export function AppSidebar({ isOpen, onToggle, isCollapsed, onCollapse, currentR
                     <p className="text-sidebar-foreground/40 text-[10px]">Entry System</p>
                   </div>
                 </div>
+                <div className="flex items-center gap-1">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="hidden lg:flex text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent h-7 w-7"
+                    onClick={onCollapse}
+                  >
+                    <ChevronsLeft className="w-4 h-4" />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="lg:hidden text-sidebar-foreground hover:bg-sidebar-accent h-8 w-8"
+                    onClick={onToggle}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-9 h-9 rounded-xl bg-sidebar-primary flex items-center justify-center">
+                  <span className="text-sidebar-primary-foreground font-bold text-base">R</span>
+                </div>
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="lg:hidden text-sidebar-foreground hover:bg-sidebar-accent h-8 w-8"
-                  onClick={onToggle}
+                  className="hidden lg:flex text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent h-7 w-7"
+                  onClick={onCollapse}
                 >
-                  <X className="w-4 h-4" />
+                  <ChevronsRight className="w-4 h-4" />
                 </Button>
-              </>
-            ) : (
-              <div className="w-9 h-9 rounded-xl bg-sidebar-primary flex items-center justify-center">
-                <span className="text-sidebar-primary-foreground font-bold text-base">R</span>
               </div>
             )}
           </div>
