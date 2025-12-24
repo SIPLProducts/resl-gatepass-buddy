@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { exportToExcel, transporterOptions, packingConditionOptions } from '@/lib/exportToExcel';
+import { materialMaster, getMaterialByCode } from '@/lib/materialMaster';
 
 interface ItemRow {
   materialCode: string;
@@ -57,6 +58,21 @@ export default function InwardSubcontracting() {
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
   const paginatedItems = items.slice(startIndex, endIndex);
+
+  const handleMaterialCodeChange = (pageIndex: number, code: string) => {
+    const actualIndex = startIndex + pageIndex;
+    const material = getMaterialByCode(code);
+    setItems(prev => prev.map((item, i) => 
+      i === actualIndex 
+        ? { 
+            ...item, 
+            materialCode: code, 
+            materialDescription: material?.description || '',
+            unit: material?.unit || item.unit
+          } 
+        : item
+    ));
+  };
 
   const handleItemChange = (pageIndex: number, field: keyof ItemRow, value: string) => {
     const actualIndex = startIndex + pageIndex;
@@ -210,7 +226,7 @@ export default function InwardSubcontracting() {
               <thead>
                 <tr>
                   <th className="w-12 text-center">#</th>
-                  <th className="w-32">Material Code</th>
+                  <th className="w-40">Material Code</th>
                   <th>Material Description</th>
                   <th className="w-32">Quantity</th>
                   <th className="w-24">Unit</th>
@@ -225,19 +241,23 @@ export default function InwardSubcontracting() {
                     <tr key={actualIndex} className="group">
                       <td className="text-center font-medium text-muted-foreground">{actualIndex + 1}</td>
                       <td>
-                        <Input
-                          value={item.materialCode}
-                          onChange={(e) => handleItemChange(pageIndex, 'materialCode', e.target.value)}
-                          className="h-8"
-                          placeholder="Enter code"
-                        />
+                        <Select value={item.materialCode} onValueChange={(val) => handleMaterialCodeChange(pageIndex, val)}>
+                          <SelectTrigger className="h-8 w-full">
+                            <SelectValue placeholder="Select Material" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {materialMaster.map(mat => (
+                              <SelectItem key={mat.code} value={mat.code}>{mat.code}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </td>
                       <td>
                         <Input
                           value={item.materialDescription}
-                          onChange={(e) => handleItemChange(pageIndex, 'materialDescription', e.target.value)}
-                          className="h-8"
-                          placeholder="Enter material description"
+                          readOnly
+                          className="h-8 bg-muted/50"
+                          placeholder="Auto-populated"
                         />
                       </td>
                       <td>
@@ -252,8 +272,8 @@ export default function InwardSubcontracting() {
                       <td>
                         <Input
                           value={item.unit}
-                          onChange={(e) => handleItemChange(pageIndex, 'unit', e.target.value)}
-                          className="h-8"
+                          readOnly
+                          className="h-8 bg-muted/50"
                           placeholder="Unit"
                         />
                       </td>

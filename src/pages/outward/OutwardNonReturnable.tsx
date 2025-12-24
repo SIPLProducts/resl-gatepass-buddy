@@ -5,17 +5,20 @@ import { FormSection } from '@/components/shared/FormSection';
 import { TextField, SelectField } from '@/components/shared/FormField';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { exportToExcel, transporterOptions } from '@/lib/exportToExcel';
+import { exportToExcel, transporterOptions, packingConditionOptions } from '@/lib/exportToExcel';
+import { materialMaster, getMaterialByCode } from '@/lib/materialMaster';
 
 interface ItemRow {
   materialCode: string;
   materialDescription: string;
   quantity: string;
   unit: string;
+  packingCondition: string;
 }
 
-const emptyItem: ItemRow = { materialCode: '', materialDescription: '', quantity: '', unit: '' };
+const emptyItem: ItemRow = { materialCode: '', materialDescription: '', quantity: '', unit: '', packingCondition: '' };
 const ITEMS_PER_PAGE = 10;
 
 export default function OutwardNonReturnable() {
@@ -40,6 +43,21 @@ export default function OutwardNonReturnable() {
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
   const paginatedItems = items.slice(startIndex, endIndex);
+
+  const handleMaterialCodeChange = (pageIndex: number, code: string) => {
+    const actualIndex = startIndex + pageIndex;
+    const material = getMaterialByCode(code);
+    setItems(prev => prev.map((item, i) => 
+      i === actualIndex 
+        ? { 
+            ...item, 
+            materialCode: code, 
+            materialDescription: material?.description || '',
+            unit: material?.unit || item.unit
+          } 
+        : item
+    ));
+  };
 
   const handleItemChange = (pageIndex: number, field: keyof ItemRow, value: string) => {
     const actualIndex = startIndex + pageIndex;
@@ -96,6 +114,7 @@ export default function OutwardNonReturnable() {
       { key: 'materialDescription', header: 'Material Description' },
       { key: 'quantity', header: 'Quantity' },
       { key: 'unit', header: 'Unit' },
+      { key: 'packingCondition', header: 'Packing Condition' },
     ];
     exportToExcel(filledItems, exportColumns, `Outward_NonReturnable_${headerData.gatePassNo || 'New'}`);
     toast.success('Exported to Excel successfully');
@@ -104,7 +123,7 @@ export default function OutwardNonReturnable() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Outward Gate Pass - Non-Returnable"
+        title="Outward Gate Pass - Non-Returnable (NRGP)"
         subtitle="Create non-returnable gate pass for outgoing materials"
         breadcrumbs={[{ label: 'Outward', path: '/outward/non-returnable' }, { label: 'Non-Returnable' }]}
       />
@@ -168,10 +187,11 @@ export default function OutwardNonReturnable() {
               <thead>
                 <tr>
                   <th className="w-12 text-center">#</th>
-                  <th className="w-32">Material Code</th>
+                  <th className="w-40">Material Code</th>
                   <th>Material Description</th>
-                  <th className="w-40">Quantity</th>
-                  <th className="w-32">Unit</th>
+                  <th className="w-32">Quantity</th>
+                  <th className="w-24">Unit</th>
+                  <th className="w-40">Packing Condition</th>
                   <th className="w-20 text-center">Action</th>
                 </tr>
               </thead>
@@ -182,16 +202,37 @@ export default function OutwardNonReturnable() {
                     <tr key={actualIndex} className="group">
                       <td className="text-center font-medium text-muted-foreground">{actualIndex + 1}</td>
                       <td>
-                        <Input value={item.materialCode} onChange={(e) => handleItemChange(pageIndex, 'materialCode', e.target.value)} className="h-8" placeholder="Enter code" />
+                        <Select value={item.materialCode} onValueChange={(val) => handleMaterialCodeChange(pageIndex, val)}>
+                          <SelectTrigger className="h-8 w-full">
+                            <SelectValue placeholder="Select Material" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {materialMaster.map(mat => (
+                              <SelectItem key={mat.code} value={mat.code}>{mat.code}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </td>
                       <td>
-                        <Input value={item.materialDescription} onChange={(e) => handleItemChange(pageIndex, 'materialDescription', e.target.value)} className="h-8" placeholder="Enter material description" />
+                        <Input value={item.materialDescription} readOnly className="h-8 bg-muted/50" placeholder="Auto-populated" />
                       </td>
                       <td>
                         <Input type="number" value={item.quantity} onChange={(e) => handleItemChange(pageIndex, 'quantity', e.target.value)} className="h-8" placeholder="Qty" />
                       </td>
                       <td>
-                        <Input value={item.unit} onChange={(e) => handleItemChange(pageIndex, 'unit', e.target.value)} className="h-8" placeholder="Unit" />
+                        <Input value={item.unit} readOnly className="h-8 bg-muted/50" placeholder="Unit" />
+                      </td>
+                      <td>
+                        <Select value={item.packingCondition} onValueChange={(val) => handleItemChange(pageIndex, 'packingCondition', val)}>
+                          <SelectTrigger className="h-8 w-full">
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {packingConditionOptions.map(opt => (
+                              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </td>
                       <td className="text-center">
                         <Button
