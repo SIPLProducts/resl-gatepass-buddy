@@ -1,4 +1,4 @@
-import { Bell, Search, Sun, Moon, User } from 'lucide-react';
+import { Search, Sun, Moon, User } from 'lucide-react';
 import { useState, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -51,12 +51,6 @@ export function AppHeader({ sidebarTrigger, collapseTrigger }: AppHeaderProps) {
         {/* Theme Toggle */}
         <Button variant="ghost" size="icon" onClick={toggleTheme} className="text-muted-foreground h-9 w-9">
           {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-        </Button>
-
-        {/* Notifications */}
-        <Button variant="ghost" size="icon" className="text-muted-foreground relative h-9 w-9">
-          <Bell className="w-4 h-4" />
-          <span className="absolute top-2 right-2 w-2 h-2 bg-accent rounded-full" />
         </Button>
 
         {/* User Menu */}

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Save, Plus, Trash2, Edit2, Shield, Users, Check, X } from 'lucide-react';
+import { Save, Plus, Trash2, Edit2, Shield, Users, Check, X, Search } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { FormSection } from '@/components/shared/FormSection';
 import { TextField, SelectField } from '@/components/shared/FormField';
@@ -76,10 +76,18 @@ const initialRoles: Role[] = [
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState('users');
+  const [userSearchQuery, setUserSearchQuery] = useState('');
   
   // Users & Roles
   const [users, setUsers] = useState<User[]>(initialUsers);
   const [roles, setRoles] = useState<Role[]>(initialRoles);
+
+  // Filtered users based on search
+  const filteredUsers = users.filter(user => 
+    user.fullName.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
+    user.userId.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
+    user.emailId.toLowerCase().includes(userSearchQuery.toLowerCase())
+  );
   
   // User Dialog
   const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
@@ -285,10 +293,22 @@ export default function Settings() {
           <FormSection 
             title="User Management" 
             actions={
-              <Button onClick={openAddUserDialog} className="gap-2">
-                <Plus className="w-4 h-4" />
-                Add User
-              </Button>
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Search users..."
+                    value={userSearchQuery}
+                    onChange={(e) => setUserSearchQuery(e.target.value)}
+                    className="pl-9 pr-4 py-2 text-sm rounded-lg border border-border bg-background w-64 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+                <Button onClick={openAddUserDialog} className="gap-2">
+                  <Plus className="w-4 h-4" />
+                  Add User
+                </Button>
+              </div>
             }
           >
             <div className="rounded-lg border border-border overflow-hidden">
@@ -306,46 +326,54 @@ export default function Settings() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {users.map((user) => (
-                    <TableRow key={user.id} className="hover:bg-muted/30">
-                      <TableCell className="font-medium">{user.plant}</TableCell>
-                      <TableCell className="font-mono text-sm">{user.userId}</TableCell>
-                      <TableCell>{user.fullName}</TableCell>
-                      <TableCell className="text-muted-foreground">{user.emailId}</TableCell>
-                      <TableCell>{user.contactNumber}</TableCell>
-                      <TableCell>
-                        <Badge variant="secondary" className="bg-primary/10 text-primary border-0">
-                          {user.role}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Switch
-                          checked={user.status === 'Active'}
-                          onCheckedChange={() => handleToggleUserStatus(user.id)}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex justify-center gap-1">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8 hover:bg-primary/10 hover:text-primary"
-                            onClick={() => openEditUserDialog(user)}
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                            onClick={() => handleDeleteUser(user.id)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
+                  {filteredUsers.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                        No users found matching "{userSearchQuery}"
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : (
+                    filteredUsers.map((user) => (
+                      <TableRow key={user.id} className="hover:bg-muted/30">
+                        <TableCell className="font-medium">{user.plant}</TableCell>
+                        <TableCell className="font-mono text-sm">{user.userId}</TableCell>
+                        <TableCell>{user.fullName}</TableCell>
+                        <TableCell className="text-muted-foreground">{user.emailId}</TableCell>
+                        <TableCell>{user.contactNumber}</TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className="bg-primary/10 text-primary border-0">
+                            {user.role}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Switch
+                            checked={user.status === 'Active'}
+                            onCheckedChange={() => handleToggleUserStatus(user.id)}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex justify-center gap-1">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 hover:bg-primary/10 hover:text-primary"
+                              onClick={() => openEditUserDialog(user)}
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                              onClick={() => handleDeleteUser(user.id)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </div>
@@ -521,9 +549,29 @@ export default function Settings() {
                     {roleForm.permissions.length} of {allScreenPermissions.length} assigned
                   </span>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  Select which screens this role can access
-                </p>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-muted-foreground">
+                    Select which screens this role can access
+                  </p>
+                  <div className="flex gap-2">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setRoleForm({ ...roleForm, permissions: allScreenPermissions.map(p => p.key) })}
+                    >
+                      Select All
+                    </Button>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setRoleForm({ ...roleForm, permissions: [] })}
+                    >
+                      Deselect All
+                    </Button>
+                  </div>
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
                   {allScreenPermissions.map((screen) => {
                     const isAssigned = roleForm.permissions.includes(screen.key);
@@ -575,9 +623,31 @@ export default function Settings() {
           </DialogHeader>
           <ScrollArea className="max-h-[60vh] pr-4">
             <div className="py-4">
-              <p className="text-sm text-muted-foreground mb-4">
-                Assign or unassign screen access for this role. Toggle each screen to enable or disable access.
-              </p>
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-sm text-muted-foreground">
+                  Assign or unassign screen access for this role.
+                </p>
+                {selectedRoleForPermissions?.roleName !== 'Admin' && (
+                  <div className="flex gap-2">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setTempPermissions(allScreenPermissions.map(p => p.key))}
+                    >
+                      Select All
+                    </Button>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setTempPermissions([])}
+                    >
+                      Deselect All
+                    </Button>
+                  </div>
+                )}
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {allScreenPermissions.map((screen) => {
                   const isAssigned = tempPermissions.includes(screen.key);
