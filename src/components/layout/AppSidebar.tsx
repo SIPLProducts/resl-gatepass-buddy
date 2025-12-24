@@ -83,10 +83,9 @@ export function AppSidebar({ isOpen, onToggle, isCollapsed, onCollapse, currentR
   const location = useLocation();
   const navigate = useNavigate();
 
-  const hasAccess = (roles: UserRole[]) => roles.includes(currentRole);
-
-  const visibleMainItems = mainNavItems.filter(item => hasAccess(item.roles));
-  const visibleBottomItems = bottomNavItems.filter(item => hasAccess(item.roles));
+  // Show all items without role filtering
+  const visibleMainItems = mainNavItems;
+  const visibleBottomItems = bottomNavItems;
 
   const handleLogout = () => {
     // In a real app, this would call supabase.auth.signOut()
@@ -209,40 +208,6 @@ export function AppSidebar({ isOpen, onToggle, isCollapsed, onCollapse, currentR
             )}
           </div>
 
-          {/* Role Switcher */}
-          {!isCollapsed && (
-            <div className="px-4 pb-3 flex-shrink-0">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-sidebar-accent/40 hover:bg-sidebar-accent/60 transition-colors border border-sidebar-border/30">
-                    <div className="flex items-center gap-2">
-                      <Shield className="w-3.5 h-3.5 text-sidebar-primary" />
-                      <span className="text-xs font-medium text-sidebar-foreground">{roleConfig[currentRole].label}</span>
-                    </div>
-                    <ChevronDown className="w-3.5 h-3.5 text-sidebar-foreground/50" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-52 bg-sidebar border-sidebar-border">
-                  <DropdownMenuLabel className="text-sidebar-foreground/60 text-xs">Switch Role</DropdownMenuLabel>
-                  <DropdownMenuSeparator className="bg-sidebar-border" />
-                  {(Object.keys(roleConfig) as UserRole[]).map((role) => (
-                    <DropdownMenuItem
-                      key={role}
-                      onClick={() => onRoleChange(role)}
-                      className={`cursor-pointer ${currentRole === role ? 'bg-sidebar-accent' : ''} text-sidebar-foreground hover:bg-sidebar-accent focus:bg-sidebar-accent`}
-                    >
-                      <span className="text-sm">{roleConfig[role].label}</span>
-                      {currentRole === role && (
-                        <Badge variant="outline" className="ml-auto text-[10px] h-4 px-1.5 border-sidebar-primary text-sidebar-primary">
-                          Active
-                        </Badge>
-                      )}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          )}
 
           {/* Main Navigation */}
           <nav className={`flex-1 overflow-y-auto scrollbar-thin py-2 ${isCollapsed ? 'px-3' : 'px-4'}`}>
