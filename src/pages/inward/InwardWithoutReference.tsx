@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { exportToExcel, transporterOptions, packingConditionOptions } from '@/lib/exportToExcel';
 import { materialMaster, getMaterialByCode } from '@/lib/materialMaster';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface ItemRow {
   materialCode: string;
@@ -213,7 +214,7 @@ export default function InwardWithoutReference() {
           </Button>
         </div>
         <div className="data-grid">
-          <div className="overflow-auto scrollbar-thin" style={{ maxHeight: '400px' }}>
+          <ScrollArea className="h-[350px] w-full rounded-md border">
             <table className="w-full">
               <thead>
                 <tr>
@@ -298,7 +299,7 @@ export default function InwardWithoutReference() {
                 })}
               </tbody>
             </table>
-          </div>
+          </ScrollArea>
         </div>
 
         {/* Pagination */}
