@@ -216,7 +216,7 @@ export default function InwardSubcontracting() {
       />
 
       <FormSection title="Subcontract Reference">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
           <SelectField
             label="Plant"
             value={headerData.plant}
@@ -232,8 +232,10 @@ export default function InwardSubcontracting() {
             label="Subcontract PO Number"
             value={headerData.subcontractPONo}
             onChange={(value) => setHeaderData({ ...headerData, subcontractPONo: value })}
-            placeholder="Enter PO Number to fetch"
+            placeholder="Enter PO Number"
           />
+          <TextField label="Vendor Number" value={headerData.vendorNumber} onChange={(value) => setHeaderData({ ...headerData, vendorNumber: value })} placeholder="Vendor number" disabled={isPoMode} />
+          <TextField label="Vendor Name" value={headerData.vendorName} onChange={(value) => setHeaderData({ ...headerData, vendorName: value })} placeholder="Vendor name" disabled={isPoMode} />
           <div className="flex items-end">
             <Button onClick={handleFetchPO} disabled={isLoading} className="gap-2 w-full">
               {isLoading ? (
@@ -244,8 +246,6 @@ export default function InwardSubcontracting() {
               Fetch PO
             </Button>
           </div>
-          <TextField label="Vendor Number" value={headerData.vendorNumber} onChange={(value) => setHeaderData({ ...headerData, vendorNumber: value })} placeholder="Enter vendor number" disabled={isPoMode} />
-          <TextField label="Vendor Name" value={headerData.vendorName} onChange={(value) => setHeaderData({ ...headerData, vendorName: value })} placeholder="Enter vendor name" disabled={isPoMode} />
         </div>
         {isPoMode && (
           <div className="mt-3 p-3 bg-accent/10 rounded-lg border border-accent/20">
