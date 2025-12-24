@@ -1,5 +1,5 @@
 import { Bell, Search, Sun, Moon, User } from 'lucide-react';
-import { useState } from 'react';
+import { useState, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -11,7 +11,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-export function AppHeader() {
+interface AppHeaderProps {
+  sidebarTrigger?: ReactNode;
+}
+
+export function AppHeader({ sidebarTrigger }: AppHeaderProps) {
   const [isDark, setIsDark] = useState(false);
 
   const toggleTheme = () => {
@@ -20,19 +24,28 @@ export function AppHeader() {
   };
 
   return (
-    <header className="h-16 border-b border-border bg-card px-6 flex items-center justify-between gap-4">
-      {/* Search */}
-      <div className="relative flex-1 max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          type="search"
-          placeholder="Search gate entries, vendors, materials..."
-          className="pl-10 bg-background"
-        />
+    <header className="h-16 border-b border-border bg-card px-4 md:px-6 flex items-center justify-between gap-4">
+      {/* Left Section */}
+      <div className="flex items-center gap-3">
+        {sidebarTrigger}
+        {/* Search */}
+        <div className="relative flex-1 max-w-md hidden sm:block">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Search gate entries, vendors, materials..."
+            className="pl-10 bg-background w-64 md:w-80"
+          />
+        </div>
       </div>
 
       {/* Right Section */}
       <div className="flex items-center gap-2">
+        {/* Mobile Search */}
+        <Button variant="ghost" size="icon" className="text-muted-foreground sm:hidden">
+          <Search className="w-5 h-5" />
+        </Button>
+
         {/* Theme Toggle */}
         <Button variant="ghost" size="icon" onClick={toggleTheme} className="text-muted-foreground">
           {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}

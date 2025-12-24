@@ -98,15 +98,15 @@ export default function Dashboard() {
       />
 
       {/* Welcome Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary to-primary/80 p-6 md:p-8 text-primary-foreground animate-slide-up">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-primary to-primary/80 p-4 md:p-5 text-primary-foreground animate-slide-up">
         <div className="relative z-10">
-          <h2 className="text-xl md:text-2xl font-bold mb-2">Welcome to RESL Gate Entry System</h2>
-          <p className="text-primary-foreground/80 max-w-xl">
-            Efficiently manage all your gate operations with seamless SAP integration. Track inward and outward movements in real-time.
+          <h2 className="text-lg md:text-xl font-bold mb-1">Welcome to RESL Gate Entry System</h2>
+          <p className="text-primary-foreground/80 text-sm max-w-xl">
+            Manage gate operations with seamless SAP integration.
           </p>
         </div>
-        <div className="absolute right-0 top-0 h-full w-1/3 bg-gradient-to-l from-accent/20 to-transparent" />
-        <Package className="absolute right-8 top-1/2 -translate-y-1/2 w-32 h-32 text-primary-foreground/10" />
+        <div className="absolute right-0 top-0 h-full w-1/4 bg-gradient-to-l from-accent/20 to-transparent" />
+        <Package className="absolute right-6 top-1/2 -translate-y-1/2 w-16 h-16 text-primary-foreground/10" />
       </div>
 
       {/* Stats Grid */}
