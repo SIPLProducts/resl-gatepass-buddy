@@ -93,16 +93,16 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
       <aside 
         className={`
           fixed lg:sticky inset-y-0 left-0 top-0 z-50
-          w-64 h-screen bg-sidebar flex flex-col border-r border-sidebar-border
+          w-72 h-screen bg-sidebar flex flex-col border-r border-sidebar-border
           transform transition-transform duration-300 ease-in-out
           ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
       >
         {/* Logo Section */}
-        <div className="p-6 border-b border-sidebar-border flex items-center justify-between">
+        <div className="p-5 border-b border-sidebar-border flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-sidebar-primary flex items-center justify-center">
-              <span className="text-sidebar-primary-foreground font-bold text-lg">R</span>
+            <div className="w-11 h-11 rounded-lg bg-sidebar-primary flex items-center justify-center">
+              <span className="text-sidebar-primary-foreground font-bold text-xl">R</span>
             </div>
             <div>
               <h1 className="text-sidebar-foreground font-bold text-lg">RESL</h1>
@@ -120,7 +120,7 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto scrollbar-thin scrollbar-thumb-sidebar-accent scrollbar-track-transparent">
+        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto scrollbar-thin scrollbar-thumb-sidebar-accent scrollbar-track-transparent">
           {navItems.map((item) => {
             const Icon = item.icon;
             const hasChildren = !!item.children;
