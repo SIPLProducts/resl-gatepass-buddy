@@ -7,9 +7,6 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Eye, EyeOff, LogIn, UserPlus, Loader2, ChevronLeft, ChevronRight, ArrowLeftRight } from 'lucide-react';
 import reslLogo from '@/assets/resl-logo.png';
-import gateEntry1 from '@/assets/gate-entry-1.jpg';
-import gateEntry2 from '@/assets/gate-entry-2.jpg';
-import gateEntry3 from '@/assets/gate-entry-3.jpg';
 import gateEntry4 from '@/assets/gate-entry-4.jpg';
 import gateEntry5 from '@/assets/gate-entry-5.jpg';
 import { z } from 'zod';
@@ -19,14 +16,11 @@ const authSchema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
-const backgroundImages = [gateEntry1, gateEntry2, gateEntry3, gateEntry4, gateEntry5];
+const backgroundImages = [gateEntry4, gateEntry5];
 
 const quotes = [
   { text: "Sustainability is not a destination, it's a journey of continuous improvement.", author: "RE Sustainability" },
   { text: "Every gate entry marks a step towards a greener tomorrow.", author: "RE Sustainability" },
-  { text: "Efficiency in operations, excellence in sustainability.", author: "RE Sustainability" },
-  { text: "Building sustainable futures, one transaction at a time.", author: "RE Sustainability" },
-  { text: "Where innovation meets environmental responsibility.", author: "RE Sustainability" },
 ];
 
 export default function Auth() {
@@ -252,16 +246,6 @@ export default function Auth() {
       {/* Gradient Overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/80 via-primary/60 to-accent/50" />
       
-      {/* Logo and Brand at Top */}
-      <div className="absolute top-8 left-8 z-20 flex items-center gap-4">
-        <div className="bg-white rounded-xl p-3 shadow-lg">
-          <img src={reslLogo} alt="RESL Logo" className="h-12 w-auto object-contain" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-white drop-shadow-lg">RE Sustainability</h1>
-          <p className="text-white/80 text-sm">Sustainable Solutions for Tomorrow</p>
-        </div>
-      </div>
       
       {/* Content */}
       <div className="relative z-10 text-center text-white p-12 max-w-lg">
