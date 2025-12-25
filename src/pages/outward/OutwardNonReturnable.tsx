@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Save, RotateCcw, Plus, Trash2, FileSpreadsheet } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { FormSection } from '@/components/shared/FormSection';
@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { exportToExcel, transporterOptions, packingConditionOptions } from '@/lib/exportToExcel';
 import { materialMaster, getMaterialByCode } from '@/lib/materialMaster';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ItemRow {
   materialCode: string;
@@ -22,6 +23,8 @@ const emptyItem: ItemRow = { materialCode: '', materialDescription: '', quantity
 const ITEMS_PER_PAGE = 10;
 
 export default function OutwardNonReturnable() {
+  const { webUser } = useAuth();
+  
   const [headerData, setHeaderData] = useState({
     gatePassNo: '',
     plant: '',
@@ -34,7 +37,12 @@ export default function OutwardNonReturnable() {
     transporterName: '',
     grLrNumber: '',
     remarks: '',
+    entryBy: '',
   });
+
+  useEffect(() => {
+    setHeaderData(prev => ({ ...prev, entryBy: webUser }));
+  }, [webUser]);
 
   const [items, setItems] = useState<ItemRow[]>(Array(5).fill(null).map(() => ({ ...emptyItem })));
   const [currentPage, setCurrentPage] = useState(1);
@@ -98,6 +106,7 @@ export default function OutwardNonReturnable() {
       transporterName: '',
       grLrNumber: '',
       remarks: '',
+      entryBy: webUser,
     });
     setItems(Array(5).fill(null).map(() => ({ ...emptyItem })));
     setCurrentPage(1);
@@ -144,6 +153,7 @@ export default function OutwardNonReturnable() {
           />
           <TextField label="Ref Doc Type" value={headerData.refDocType} readOnly />
           <TextField label="Gate Entry Type" value={headerData.gateEntryType} readOnly />
+          <TextField label="Entry By" value={headerData.entryBy} onChange={(value) => setHeaderData({ ...headerData, entryBy: value })} placeholder="Enter user name" />
           <TextField label="Vehicle Date" type="date" value={headerData.vehicleDate} onChange={(value) => setHeaderData({ ...headerData, vehicleDate: value })} required />
           <TextField label="Vehicle Time" type="time" value={headerData.vehicleTime} onChange={(value) => setHeaderData({ ...headerData, vehicleTime: value })} required />
         </div>

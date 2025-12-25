@@ -10,6 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface AppHeaderProps {
   sidebarTrigger?: ReactNode;
@@ -18,6 +19,7 @@ interface AppHeaderProps {
 
 export function AppHeader({ sidebarTrigger, collapseTrigger }: AppHeaderProps) {
   const navigate = useNavigate();
+  const { signOut, webUser } = useAuth();
   const [isDark, setIsDark] = useState(false);
 
   const toggleTheme = () => {
@@ -25,8 +27,9 @@ export function AppHeader({ sidebarTrigger, collapseTrigger }: AppHeaderProps) {
     document.documentElement.classList.toggle('dark');
   };
 
-  const handleLogout = () => {
-    navigate('/');
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/auth');
   };
 
   const handleProfile = () => {
@@ -71,11 +74,13 @@ export function AppHeader({ sidebarTrigger, collapseTrigger }: AppHeaderProps) {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="rounded-full h-9 w-9">
               <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center">
-                <User className="w-3.5 h-3.5 text-primary-foreground" />
+                <span className="text-xs font-bold text-primary-foreground">{webUser.charAt(0).toUpperCase()}</span>
               </div>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
+            <div className="px-2 py-1.5 text-sm font-medium text-foreground">{webUser}</div>
+            <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleProfile} className="text-sm cursor-pointer">
               <User className="w-4 h-4 mr-2" />
               Profile

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Save, RotateCcw, FileSpreadsheet, Plus, Trash2 } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { FormSection } from '@/components/shared/FormSection';
@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { exportToExcel, transporterOptions, packingConditionOptions } from '@/lib/exportToExcel';
 import { materialMaster, getMaterialByCode } from '@/lib/materialMaster';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ItemRow {
   materialCode: string;
@@ -55,6 +56,8 @@ const fetchPOData = (poNumber: string) => {
 };
 
 export default function InwardSubcontracting() {
+  const { webUser } = useAuth();
+  
   const [headerData, setHeaderData] = useState({
     gateEntryNo: '',
     plant: '',
@@ -74,8 +77,12 @@ export default function InwardSubcontracting() {
     vendorCity: '',
     vendorContact: '',
     vendorGSTNo: '',
-    inwardedBy: 'WebUser',
+    inwardedBy: '',
   });
+
+  useEffect(() => {
+    setHeaderData(prev => ({ ...prev, inwardedBy: webUser }));
+  }, [webUser]);
 
   const [items, setItems] = useState<ItemRow[]>(Array(5).fill(null).map(() => ({ ...emptyItem })));
   const [currentPage, setCurrentPage] = useState(1);
@@ -181,7 +188,7 @@ export default function InwardSubcontracting() {
       vendorCity: '',
       vendorContact: '',
       vendorGSTNo: '',
-      inwardedBy: 'WebUser',
+      inwardedBy: webUser,
     });
     setItems(Array(5).fill(null).map(() => ({ ...emptyItem })));
     setCurrentPage(1);

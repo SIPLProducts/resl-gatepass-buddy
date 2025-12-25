@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Save, RotateCcw, FileDown, FileSpreadsheet } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { FormSection } from '@/components/shared/FormSection';
@@ -7,6 +7,7 @@ import { DataGrid } from '@/components/shared/DataGrid';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { exportToExcel, transporterOptions, generateTestItems } from '@/lib/exportToExcel';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ItemRow {
   customerCode: string;
@@ -18,6 +19,8 @@ interface ItemRow {
 }
 
 export default function OutwardBillingReference() {
+  const { webUser } = useAuth();
+  
   const [headerData, setHeaderData] = useState({
     gateEntryNo: '',
     plant: '',
@@ -33,7 +36,12 @@ export default function OutwardBillingReference() {
     billingDocNo: '',
     customerCode: '',
     customerName: '',
+    entryBy: '',
   });
+
+  useEffect(() => {
+    setHeaderData(prev => ({ ...prev, entryBy: webUser }));
+  }, [webUser]);
 
   const [items, setItems] = useState<ItemRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -87,6 +95,7 @@ export default function OutwardBillingReference() {
       billingDocNo: '',
       customerCode: '',
       customerName: '',
+      entryBy: webUser,
     });
     setItems([]);
   };
@@ -173,6 +182,7 @@ export default function OutwardBillingReference() {
           <TextField label="Gate Entry No" value={headerData.gateEntryNo} placeholder="Auto-generated" readOnly />
           <TextField label="Ref Doc Type" value={headerData.refDocType} readOnly />
           <TextField label="Gate Entry Type" value={headerData.gateEntryType} readOnly />
+          <TextField label="Entry By" value={headerData.entryBy} onChange={(value) => setHeaderData({ ...headerData, entryBy: value })} placeholder="Enter user name" />
           <TextField label="Vehicle Date" type="date" value={headerData.vehicleDate} onChange={(value) => setHeaderData({ ...headerData, vehicleDate: value })} required />
           <TextField label="Vehicle Time" type="time" value={headerData.vehicleTime} onChange={(value) => setHeaderData({ ...headerData, vehicleTime: value })} required />
         </div>
