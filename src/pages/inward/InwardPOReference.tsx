@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Save, RotateCcw, FileDown, FileSpreadsheet } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { FormSection } from '@/components/shared/FormSection';
@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { exportToExcel, transporterOptions, generateTestItems, packingConditionOptions } from '@/lib/exportToExcel';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ItemRow {
   vendorCode: string;
@@ -24,6 +25,8 @@ interface ItemRow {
 }
 
 export default function InwardPOReference() {
+  const { webUser } = useAuth();
+  
   const [headerData, setHeaderData] = useState({
     gateEntryNo: '',
     plant: '',
@@ -45,8 +48,12 @@ export default function InwardPOReference() {
     vendorCity: '',
     vendorContact: '',
     vendorGSTNo: '',
-    inwardedBy: 'WebUser',
+    inwardedBy: '',
   });
+
+  useEffect(() => {
+    setHeaderData(prev => ({ ...prev, inwardedBy: webUser }));
+  }, [webUser]);
 
   const [items, setItems] = useState<ItemRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -117,7 +124,7 @@ export default function InwardPOReference() {
       vendorCity: '',
       vendorContact: '',
       vendorGSTNo: '',
-      inwardedBy: 'WebUser',
+      inwardedBy: webUser,
     });
     setItems([]);
   };
