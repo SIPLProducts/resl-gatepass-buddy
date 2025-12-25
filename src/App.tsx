@@ -24,6 +24,7 @@ import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import HelpSupport from "./pages/HelpSupport";
 import NotFound from "./pages/NotFound";
+import CastView from "./pages/CastView";
 
 const queryClient = new QueryClient();
 
@@ -38,10 +39,10 @@ const App = () => (
             <Route path="/" element={<Navigate to="/auth" replace />} />
             <Route path="/login" element={<Navigate to="/auth" replace />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/cast" element={<CastView />} />
             <Route element={<AppLayout />}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/profile" element={<Profile />} />
-              <Route path="/inward/po-reference" element={<InwardPOReference />} />
               <Route path="/inward/subcontracting" element={<InwardSubcontracting />} />
               <Route path="/inward/without-reference" element={<InwardWithoutReference />} />
               <Route path="/outward/billing-reference" element={<OutwardBillingReference />} />
