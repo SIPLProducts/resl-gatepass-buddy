@@ -242,6 +242,17 @@ export default function Auth() {
       {/* Gradient Overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/80 via-primary/60 to-accent/50" />
       
+      {/* Logo and Brand at Top */}
+      <div className="absolute top-8 left-8 z-20 flex items-center gap-4">
+        <div className="bg-white rounded-xl p-3 shadow-lg">
+          <img src={reslLogo} alt="RESL Logo" className="h-12 w-auto object-contain" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-white drop-shadow-lg">RE Sustainability</h1>
+          <p className="text-white/80 text-sm">Sustainable Solutions for Tomorrow</p>
+        </div>
+      </div>
+      
       {/* Content */}
       <div className="relative z-10 text-center text-white p-12 max-w-lg">
         <h2 className="text-3xl font-bold mb-4">Gate Entry Management System</h2>
