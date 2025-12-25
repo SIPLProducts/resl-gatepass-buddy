@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { AppSidebar, SidebarTrigger, SidebarCollapseTrigger, UserRole } from './AppSidebar';
 import { AppHeader } from './AppHeader';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,6 +11,9 @@ export function AppLayout() {
   const [currentRole, setCurrentRole] = useState<UserRole>('admin');
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const isCastMode = new URLSearchParams(location.search).get('cast') === '1';
 
   useEffect(() => {
     if (!loading && !user) {
@@ -31,6 +34,18 @@ export function AppLayout() {
 
   if (!user) {
     return null;
+  }
+
+  if (isCastMode) {
+    return (
+      <div className="min-h-screen bg-background w-full">
+        <main className="min-h-screen p-6">
+          <div className="animate-fade-in">
+            <Outlet />
+          </div>
+        </main>
+      </div>
+    );
   }
 
   return (
