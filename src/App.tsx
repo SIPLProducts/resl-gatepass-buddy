@@ -43,6 +43,7 @@ const App = () => (
             <Route element={<AppLayout />}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/inward/po-reference" element={<InwardPOReference />} />
               <Route path="/inward/subcontracting" element={<InwardSubcontracting />} />
               <Route path="/inward/without-reference" element={<InwardWithoutReference />} />
               <Route path="/outward/billing-reference" element={<OutwardBillingReference />} />
