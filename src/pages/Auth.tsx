@@ -10,6 +10,8 @@ import reslLogo from '@/assets/resl-logo.png';
 import gateEntry1 from '@/assets/gate-entry-1.jpg';
 import gateEntry2 from '@/assets/gate-entry-2.jpg';
 import gateEntry3 from '@/assets/gate-entry-3.jpg';
+import gateEntry4 from '@/assets/gate-entry-4.jpg';
+import gateEntry5 from '@/assets/gate-entry-5.jpg';
 import { z } from 'zod';
 
 const authSchema = z.object({
@@ -17,7 +19,15 @@ const authSchema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
-const backgroundImages = [gateEntry1, gateEntry2, gateEntry3];
+const backgroundImages = [gateEntry1, gateEntry2, gateEntry3, gateEntry4, gateEntry5];
+
+const quotes = [
+  { text: "Sustainability is not a destination, it's a journey of continuous improvement.", author: "RE Sustainability" },
+  { text: "Every gate entry marks a step towards a greener tomorrow.", author: "RE Sustainability" },
+  { text: "Efficiency in operations, excellence in sustainability.", author: "RE Sustainability" },
+  { text: "Building sustainable futures, one transaction at a time.", author: "RE Sustainability" },
+  { text: "Where innovation meets environmental responsibility.", author: "RE Sustainability" },
+];
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -256,9 +266,18 @@ export default function Auth() {
       {/* Content */}
       <div className="relative z-10 text-center text-white p-12 max-w-lg">
         <h2 className="text-3xl font-bold mb-4">Gate Entry Management System</h2>
-        <p className="text-white/80 text-lg mb-6">
+        <p className="text-white/80 text-lg mb-4">
           Inward & Outward Gate Operations with SAP Real-Time Integration
         </p>
+        
+        {/* Inspirational Quote */}
+        <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 mb-6 border border-white/20">
+          <p className="text-xl italic font-light leading-relaxed mb-3">
+            "{quotes[currentImageIndex].text}"
+          </p>
+          <p className="text-white/70 text-sm font-medium">— {quotes[currentImageIndex].author}</p>
+        </div>
+        
         <div className="flex flex-wrap justify-center gap-3">
           <div className="bg-white/10 backdrop-blur-sm rounded-full px-4 py-2">
             <p className="text-sm font-medium">Inward PO Reference</p>
