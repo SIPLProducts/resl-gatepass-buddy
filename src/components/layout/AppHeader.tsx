@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
+import { CastButton } from '@/components/shared/CastButton';
 
 interface AppHeaderProps {
   sidebarTrigger?: ReactNode;
@@ -63,6 +64,9 @@ export function AppHeader({ sidebarTrigger, collapseTrigger }: AppHeaderProps) {
         <Button variant="ghost" size="icon" className="text-muted-foreground sm:hidden h-9 w-9">
           <Search className="w-4 h-4" />
         </Button>
+
+        {/* Cast Button */}
+        <CastButton />
 
         {/* Theme Toggle */}
         <Button variant="ghost" size="icon" onClick={toggleTheme} className="text-muted-foreground h-9 w-9">
