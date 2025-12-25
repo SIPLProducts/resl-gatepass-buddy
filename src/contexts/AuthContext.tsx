@@ -60,7 +60,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      // In some cases the backend can respond with "session_not_found" if the session was already invalidated.
+      // We still treat it as a successful logout and clear local state.
+      const { error } = await supabase.auth.signOut();
+      if (error && !String(error.message || '').includes('session_not_found')) {
+        console.warn('signOut error:', error);
+      }
+    } finally {
+      setSession(null);
+      setUser(null);
+    }
   };
 
   // Extract username from email or use email as web user
