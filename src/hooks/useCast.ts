@@ -1,6 +1,6 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-type CastMode = 'window' | 'screen' | null;
+type CastMode = 'chromecast' | 'window' | 'screen' | null;
 
 interface CastSession {
   isConnected: boolean;
@@ -12,20 +12,129 @@ type OpenCastResult =
   | { ok: true }
   | { ok: false; reason: 'popup_blocked' | 'error' };
 
+// Extend window for Cast SDK types
+declare global {
+  interface Window {
+    __onGCastApiAvailable?: (isAvailable: boolean) => void;
+    cast?: {
+      framework: {
+        CastContext: {
+          getInstance: () => CastContext;
+        };
+        CastContextEventType: {
+          SESSION_STATE_CHANGED: string;
+        };
+        SessionState: {
+          SESSION_STARTED: string;
+          SESSION_RESUMED: string;
+          SESSION_ENDED: string;
+        };
+      };
+    };
+    chrome?: {
+      cast?: {
+        AutoJoinPolicy: { ORIGIN_SCOPED: string };
+        DefaultActionPolicy: { CREATE_SESSION: string };
+        isAvailable?: boolean;
+      };
+    };
+  }
+  
+  interface CastContext {
+    setOptions: (options: { receiverApplicationId: string; autoJoinPolicy: string }) => void;
+    requestSession: () => Promise<void>;
+    endCurrentSession: (stopCasting: boolean) => void;
+    getCurrentSession: () => CastSession | null;
+    addEventListener: (type: string, listener: (event: SessionStateEvent) => void) => void;
+    removeEventListener: (type: string, listener: (event: SessionStateEvent) => void) => void;
+  }
+  
+  interface SessionStateEvent {
+    sessionState: string;
+  }
+}
+
 export function useCast() {
   const [castSession, setCastSession] = useState<CastSession>({
     isConnected: false,
     deviceName: null,
     mode: null,
   });
+  const [isChromecastAvailable, setIsChromecastAvailable] = useState(false);
+  const [isScreenShareAvailable, setIsScreenShareAvailable] = useState(false);
 
   const castWindowRef = useRef<Window | null>(null);
   const screenStreamRef = useRef<MediaStream | null>(null);
+  const castContextRef = useRef<CastContext | null>(null);
 
-  const isScreenShareAvailable = useMemo(
-    () => typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getDisplayMedia,
-    []
-  );
+  // Initialize Cast SDK
+  useEffect(() => {
+    // Check screen share availability
+    if (typeof navigator !== 'undefined' && navigator.mediaDevices?.getDisplayMedia) {
+      setIsScreenShareAvailable(true);
+    }
+
+    // Setup Cast SDK callback
+    window.__onGCastApiAvailable = (isAvailable: boolean) => {
+      if (isAvailable && window.cast && window.chrome?.cast) {
+        try {
+          const context = window.cast.framework.CastContext.getInstance();
+          context.setOptions({
+            receiverApplicationId: 'CC1AD845', // Default Media Receiver
+            autoJoinPolicy: window.chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED,
+          });
+          
+          castContextRef.current = context;
+          setIsChromecastAvailable(true);
+
+          // Listen for session state changes
+          context.addEventListener(
+            window.cast.framework.CastContextEventType.SESSION_STATE_CHANGED,
+            (event: SessionStateEvent) => {
+              const { SessionState } = window.cast!.framework;
+              
+              if (event.sessionState === SessionState.SESSION_STARTED ||
+                  event.sessionState === SessionState.SESSION_RESUMED) {
+                setCastSession({
+                  isConnected: true,
+                  deviceName: 'Chromecast',
+                  mode: 'chromecast',
+                });
+              } else if (event.sessionState === SessionState.SESSION_ENDED) {
+                setCastSession(prev => 
+                  prev.mode === 'chromecast' 
+                    ? { isConnected: false, deviceName: null, mode: null }
+                    : prev
+                );
+              }
+            }
+          );
+        } catch (e) {
+          console.error('Failed to initialize Cast SDK:', e);
+        }
+      }
+    };
+
+    // If Cast SDK already loaded
+    if (window.chrome?.cast?.isAvailable) {
+      window.__onGCastApiAvailable(true);
+    }
+  }, []);
+
+  const startChromecast = useCallback(async (): Promise<boolean> => {
+    if (!castContextRef.current) {
+      console.warn('Chromecast not available');
+      return false;
+    }
+
+    try {
+      await castContextRef.current.requestSession();
+      return true;
+    } catch (e) {
+      console.error('Chromecast session request failed:', e);
+      return false;
+    }
+  }, []);
 
   const openCastWindow = useCallback(async (url: string): Promise<OpenCastResult> => {
     try {
@@ -47,7 +156,11 @@ export function useCast() {
         if (castWindow.closed) {
           window.clearInterval(checkWindow);
           castWindowRef.current = null;
-          setCastSession({ isConnected: false, deviceName: null, mode: null });
+          setCastSession(prev => 
+            prev.mode === 'window' 
+              ? { isConnected: false, deviceName: null, mode: null }
+              : prev
+          );
         }
       }, 800);
 
@@ -60,7 +173,7 @@ export function useCast() {
 
   const startScreenShare = useCallback(async (): Promise<MediaStream | null> => {
     if (!navigator.mediaDevices?.getDisplayMedia) {
-      console.warn('getDisplayMedia not supported in this browser');
+      console.warn('getDisplayMedia not supported');
       return null;
     }
 
@@ -73,10 +186,13 @@ export function useCast() {
       screenStreamRef.current = stream;
       setCastSession({ isConnected: true, deviceName: 'Screen Share', mode: 'screen' });
 
-      // When user stops sharing from the browser UI
       stream.getVideoTracks()[0]?.addEventListener('ended', () => {
         screenStreamRef.current = null;
-        setCastSession({ isConnected: false, deviceName: null, mode: null });
+        setCastSession(prev =>
+          prev.mode === 'screen'
+            ? { isConnected: false, deviceName: null, mode: null }
+            : prev
+        );
       });
 
       return stream;
@@ -87,22 +203,35 @@ export function useCast() {
   }, []);
 
   const stopCasting = useCallback(() => {
+    // Stop Chromecast
+    if (castContextRef.current && castSession.mode === 'chromecast') {
+      try {
+        castContextRef.current.endCurrentSession(true);
+      } catch (e) {
+        console.error('Error ending Chromecast session:', e);
+      }
+    }
+
+    // Close popup window
     if (castWindowRef.current && !castWindowRef.current.closed) {
       castWindowRef.current.close();
     }
     castWindowRef.current = null;
 
+    // Stop screen share
     if (screenStreamRef.current) {
       screenStreamRef.current.getTracks().forEach((t) => t.stop());
     }
     screenStreamRef.current = null;
 
     setCastSession({ isConnected: false, deviceName: null, mode: null });
-  }, []);
+  }, [castSession.mode]);
 
   return {
     castSession,
+    isChromecastAvailable,
     isScreenShareAvailable,
+    startChromecast,
     openCastWindow,
     startScreenShare,
     stopCasting,
