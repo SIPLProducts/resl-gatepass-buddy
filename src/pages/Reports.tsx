@@ -76,6 +76,8 @@ interface FilterState {
   salesOrgFrom: string;
   salesOrgTo: string;
   processType: 'inward' | 'outward' | 'both';
+  enteredBy: string;
+  smartSearch: string;
 }
 
 const CHART_COLORS = {
@@ -108,6 +110,8 @@ export default function Reports() {
     salesOrgFrom: '',
     salesOrgTo: '',
     processType: 'both',
+    enteredBy: '',
+    smartSearch: '',
   });
   const [results, setResults] = useState(mockData);
   const [isFilterOpen, setIsFilterOpen] = useState(true);
@@ -221,6 +225,22 @@ export default function Reports() {
   const handleSearch = () => {
     let filtered = [...mockData];
 
+    // Smart Search - searches across multiple fields
+    if (filters.smartSearch) {
+      const searchTerm = filters.smartSearch.toLowerCase();
+      filtered = filtered.filter(r => 
+        r.gateEntryNo.toLowerCase().includes(searchTerm) ||
+        r.vehicleNo.toLowerCase().includes(searchTerm) ||
+        r.driverName.toLowerCase().includes(searchTerm) ||
+        r.transporterName.toLowerCase().includes(searchTerm) ||
+        r.vendorName.toLowerCase().includes(searchTerm) ||
+        r.materialDesc.toLowerCase().includes(searchTerm) ||
+        r.poNo.toLowerCase().includes(searchTerm) ||
+        r.invoiceNo.toLowerCase().includes(searchTerm) ||
+        r.webUser.toLowerCase().includes(searchTerm)
+      );
+    }
+
     if (filters.processType === 'inward') {
       filtered = filtered.filter(r => r.type === 'IN');
     } else if (filters.processType === 'outward') {
@@ -247,6 +267,11 @@ export default function Reports() {
     }
     if (filters.gateEntryNoTo) {
       filtered = filtered.filter(r => r.gateEntryNo <= filters.gateEntryNoTo);
+    }
+
+    // Entered By filter
+    if (filters.enteredBy) {
+      filtered = filtered.filter(r => r.webUser.toLowerCase().includes(filters.enteredBy.toLowerCase()));
     }
 
     setResults(filtered);
@@ -294,6 +319,8 @@ export default function Reports() {
       salesOrgFrom: '',
       salesOrgTo: '',
       processType: 'both',
+      enteredBy: '',
+      smartSearch: '',
     });
     setResults(mockData);
   };
@@ -477,6 +504,37 @@ export default function Reports() {
                       value={filters.salesOrgTo} 
                       onChange={(e) => setFilters({...filters, salesOrgTo: e.target.value})}
                       className="h-9"
+                    />
+                  </div>
+                </div>
+
+                {/* Entered By */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Entered By</Label>
+                  <Select value={filters.enteredBy} onValueChange={(v) => setFilters({...filters, enteredBy: v})}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Select User" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="WebUser">WebUser</SelectItem>
+                      <SelectItem value="Rajesh Kumar">Rajesh Kumar</SelectItem>
+                      <SelectItem value="Priya Sharma">Priya Sharma</SelectItem>
+                      <SelectItem value="Anil Verma">Anil Verma</SelectItem>
+                      <SelectItem value="Sunita Patil">Sunita Patil</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Smart Search */}
+                <div className="space-y-2 md:col-span-2">
+                  <Label className="text-sm font-medium">Smart Search</Label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input 
+                      placeholder="Search by Gate Entry, Vehicle, Driver, Vendor, Material, PO, Invoice..." 
+                      value={filters.smartSearch} 
+                      onChange={(e) => setFilters({...filters, smartSearch: e.target.value})}
+                      className="h-9 pl-9"
                     />
                   </div>
                 </div>
