@@ -147,11 +147,20 @@ const topVendorsData = [
   { name: 'Mahindra Ltd.', entries: 12, value: '₹18.6L' },
 ];
 
+// Top users data
+const topUsersData = [
+  { name: 'WebUser', entries: 45, role: 'Admin' },
+  { name: 'Rajesh Kumar', entries: 38, role: 'Security' },
+  { name: 'Priya Sharma', entries: 32, role: 'Stores' },
+  { name: 'Anil Verma', entries: 28, role: 'Finance' },
+  { name: 'Sunita Patil', entries: 24, role: 'Viewer' },
+];
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const currentHour = new Date().getHours();
   const greeting = currentHour < 12 ? 'Good Morning' : currentHour < 17 ? 'Good Afternoon' : 'Good Evening';
-  const userName = 'Admin User';
+  const userName = 'WebUser';
   
   const [themeIndex, setThemeIndex] = useState(0);
   const [hoveredModule, setHoveredModule] = useState<string | null>(null);
@@ -472,6 +481,38 @@ export default function Dashboard() {
                 <div className="text-right">
                   <p className="text-sm font-semibold text-foreground">{vendor.entries}</p>
                   <p className="text-xs text-muted-foreground">{vendor.value}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Top 5 Users Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="enterprise-card p-6 animate-slide-up" style={{ animationDelay: '0.4s' }}>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-accent" />
+              <h3 className="font-semibold text-foreground">Top 5 Users</h3>
+            </div>
+            <span className="text-xs text-muted-foreground">By Entries</span>
+          </div>
+          <div className="space-y-3">
+            {topUsersData.map((user, idx) => (
+              <div key={user.name} className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+                <div className="flex items-center gap-3">
+                  <span className="w-6 h-6 rounded-full bg-accent/20 text-accent text-xs flex items-center justify-center font-bold">
+                    {idx + 1}
+                  </span>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{user.name}</p>
+                    <p className="text-xs text-muted-foreground">{user.role}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-bold text-accent">{user.entries}</p>
+                  <p className="text-xs text-muted-foreground">entries</p>
                 </div>
               </div>
             ))}

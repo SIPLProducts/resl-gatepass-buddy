@@ -74,7 +74,7 @@ export default function InwardSubcontracting() {
     vendorCity: '',
     vendorContact: '',
     vendorGSTNo: '',
-    inwardedBy: 'Admin User',
+    inwardedBy: 'WebUser',
   });
 
   const [items, setItems] = useState<ItemRow[]>(Array(5).fill(null).map(() => ({ ...emptyItem })));
@@ -181,7 +181,7 @@ export default function InwardSubcontracting() {
       vendorCity: '',
       vendorContact: '',
       vendorGSTNo: '',
-      inwardedBy: 'Admin User',
+      inwardedBy: 'WebUser',
     });
     setItems(Array(5).fill(null).map(() => ({ ...emptyItem })));
     setCurrentPage(1);
@@ -265,7 +265,7 @@ export default function InwardSubcontracting() {
           <TextField label="Gate Entry No" value={headerData.gateEntryNo} placeholder="Auto-generated" readOnly />
           <TextField label="Ref Doc Type" value={headerData.refDocType} readOnly />
           <TextField label="Gate Entry Type" value={headerData.gateEntryType} readOnly />
-          <TextField label="Inwarded By" value={headerData.inwardedBy} readOnly />
+          <TextField label="Inward By" value={headerData.inwardedBy} onChange={(value) => setHeaderData({ ...headerData, inwardedBy: value })} placeholder="Enter user name" />
           <TextField label="Vehicle Date" type="date" value={headerData.vehicleDate} onChange={(value) => setHeaderData({ ...headerData, vehicleDate: value })} required />
           <TextField label="Vehicle Time" type="time" value={headerData.vehicleTime} onChange={(value) => setHeaderData({ ...headerData, vehicleTime: value })} required />
         </div>
