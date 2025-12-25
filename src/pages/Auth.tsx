@@ -250,17 +250,9 @@ export default function Auth() {
       {/* Content */}
       <div className="relative z-10 text-center text-white p-12 max-w-lg">
         <h2 className="text-3xl font-bold mb-4">Gate Entry Management System</h2>
-        <p className="text-white/80 text-lg mb-4">
+        <p className="text-white/80 text-lg mb-6">
           Inward & Outward Gate Operations with SAP Real-Time Integration
         </p>
-        
-        {/* Inspirational Quote */}
-        <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 mb-6 border border-white/20">
-          <p className="text-xl italic font-light leading-relaxed mb-3">
-            "{quotes[currentImageIndex % quotes.length]?.text}"
-          </p>
-          <p className="text-white/70 text-sm font-medium">— {quotes[currentImageIndex % quotes.length]?.author}</p>
-        </div>
         
         <div className="flex flex-wrap justify-center gap-3">
           <div className="bg-white/10 backdrop-blur-sm rounded-full px-4 py-2">
