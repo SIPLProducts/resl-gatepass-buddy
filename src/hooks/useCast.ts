@@ -8,6 +8,10 @@ interface CastSession {
   mode: CastMode;
 }
 
+type OpenCastResult =
+  | { ok: true }
+  | { ok: false; reason: 'popup_blocked' | 'error' };
+
 export function useCast() {
   const [castSession, setCastSession] = useState<CastSession>({
     isConnected: false,
@@ -23,7 +27,7 @@ export function useCast() {
     []
   );
 
-  const openCastWindow = useCallback(async (url: string) => {
+  const openCastWindow = useCallback(async (url: string): Promise<OpenCastResult> => {
     try {
       const width = window.screen.availWidth;
       const height = window.screen.availHeight;
@@ -34,7 +38,7 @@ export function useCast() {
         `width=${width},height=${height},left=0,top=0,menubar=no,toolbar=no,location=no,status=no`
       );
 
-      if (!castWindow) return false;
+      if (!castWindow) return { ok: false, reason: 'popup_blocked' };
 
       castWindowRef.current = castWindow;
       setCastSession({ isConnected: true, deviceName: 'Cast Window', mode: 'window' });
@@ -47,14 +51,14 @@ export function useCast() {
         }
       }, 800);
 
-      return true;
+      return { ok: true };
     } catch (e) {
       console.error('openCastWindow failed:', e);
-      return false;
+      return { ok: false, reason: 'error' };
     }
   }, []);
 
-  const startScreenShare = useCallback(async () => {
+  const startScreenShare = useCallback(async (): Promise<MediaStream | null> => {
     if (!navigator.mediaDevices?.getDisplayMedia) {
       console.warn('getDisplayMedia not supported in this browser');
       return null;
