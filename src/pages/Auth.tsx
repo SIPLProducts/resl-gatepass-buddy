@@ -257,9 +257,9 @@ export default function Auth() {
         {/* Inspirational Quote */}
         <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 mb-6 border border-white/20">
           <p className="text-xl italic font-light leading-relaxed mb-3">
-            "{quotes[currentImageIndex].text}"
+            "{quotes[currentImageIndex % quotes.length]?.text}"
           </p>
-          <p className="text-white/70 text-sm font-medium">— {quotes[currentImageIndex].author}</p>
+          <p className="text-white/70 text-sm font-medium">— {quotes[currentImageIndex % quotes.length]?.author}</p>
         </div>
         
         <div className="flex flex-wrap justify-center gap-3">
