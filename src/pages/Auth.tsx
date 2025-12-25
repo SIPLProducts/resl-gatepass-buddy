@@ -256,17 +256,21 @@ export default function Auth() {
       {/* Content */}
       <div className="relative z-10 text-center text-white p-12 max-w-lg">
         <h2 className="text-3xl font-bold mb-4">Gate Entry Management System</h2>
-        <p className="text-white/80 text-lg">
-          Streamline your inward and outward gate operations with our comprehensive tracking solution.
+        <p className="text-white/80 text-lg mb-6">
+          Inward & Outward Gate Operations with SAP Real-Time Integration
         </p>
-        <div className="mt-8 grid grid-cols-2 gap-4">
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-            <p className="text-2xl font-bold">500+</p>
-            <p className="text-sm text-white/70">Daily Entries</p>
+        <div className="flex flex-wrap justify-center gap-3">
+          <div className="bg-white/10 backdrop-blur-sm rounded-full px-4 py-2">
+            <p className="text-sm font-medium">Inward PO Reference</p>
           </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-            <p className="text-2xl font-bold">99.9%</p>
-            <p className="text-sm text-white/70">Uptime</p>
+          <div className="bg-white/10 backdrop-blur-sm rounded-full px-4 py-2">
+            <p className="text-sm font-medium">Outward Billing</p>
+          </div>
+          <div className="bg-white/10 backdrop-blur-sm rounded-full px-4 py-2">
+            <p className="text-sm font-medium">Subcontracting</p>
+          </div>
+          <div className="bg-white/10 backdrop-blur-sm rounded-full px-4 py-2">
+            <p className="text-sm font-medium">Real-Time SAP Sync</p>
           </div>
         </div>
       </div>
