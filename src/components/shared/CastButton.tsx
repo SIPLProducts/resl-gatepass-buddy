@@ -20,11 +20,12 @@ export function CastButton() {
       if (success) {
         toast.success('Connected to external display');
       } else {
-        toast.error('Could not connect to display. Please ensure a compatible device is available.');
+        toast.error('Could not connect to display. Please allow popups for this site.');
       }
     }
   };
 
+  // Move conditional return AFTER all hooks
   if (!isCastAvailable) {
     return null;
   }
