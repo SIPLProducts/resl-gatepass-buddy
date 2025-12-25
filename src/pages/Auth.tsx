@@ -246,8 +246,8 @@ export default function Auth() {
 
   const ImagePanel = (
     <div 
-      className="hidden lg:flex flex-1 items-center justify-center bg-cover bg-center relative overflow-hidden transition-all duration-700"
-      style={{ backgroundImage: `url(${backgroundImages[currentImageIndex]})` }}
+      className="hidden lg:flex flex-1 items-center justify-center bg-cover relative overflow-hidden transition-all duration-700"
+      style={{ backgroundImage: `url(${backgroundImages[currentImageIndex]})`, backgroundPosition: '70% center' }}
     >
       {/* Gradient Overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/80 via-primary/60 to-accent/50" />
