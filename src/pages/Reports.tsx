@@ -117,6 +117,8 @@ export default function Reports() {
   const [isFilterOpen, setIsFilterOpen] = useState(true);
   const [activeView, setActiveView] = useState<'charts' | 'table'>('charts');
   const [drillDown, setDrillDown] = useState<DrillDownData | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // Apply date preset
   const applyDatePreset = (preset: typeof DATE_PRESETS[0]) => {
@@ -833,12 +835,15 @@ export default function Reports() {
                     <th className="whitespace-nowrap">Material</th>
                     <th className="whitespace-nowrap">Vendor</th>
                     <th className="whitespace-nowrap">Qty</th>
+                    <th className="whitespace-nowrap">Entered By</th>
                     <th className="whitespace-nowrap">Exit</th>
                     <th className="whitespace-nowrap">Status</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {results.map((r) => (
+                  {results
+                    .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                    .map((r) => (
                     <tr key={r.gateEntryNo} className="hover:bg-muted/50 cursor-pointer">
                       <td className="text-accent font-medium whitespace-nowrap">{r.gateEntryNo}</td>
                       <td>{r.plant}</td>
@@ -856,6 +861,7 @@ export default function Reports() {
                       <td className="max-w-[150px] truncate" title={r.materialDesc}>{r.materialDesc}</td>
                       <td className="max-w-[150px] truncate" title={r.vendorName}>{r.vendorName}</td>
                       <td>{r.quantity} {r.unit}</td>
+                      <td className="whitespace-nowrap">{r.webUser}</td>
                       <td>
                         {r.vehicleExit ? (
                           <CheckCircle className="w-4 h-4 text-success" />
@@ -877,6 +883,90 @@ export default function Reports() {
                 </tbody>
               </table>
             </div>
+            
+            {/* Pagination */}
+            {results.length > itemsPerPage && (
+              <div className="flex items-center justify-between p-4 border-t border-border bg-muted/30">
+                <div className="text-sm text-muted-foreground">
+                  Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, results.length)} of {results.length} entries
+                </div>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(1)}
+                    disabled={currentPage === 1}
+                    className="h-8 px-2"
+                  >
+                    First
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    className="h-8 px-2"
+                  >
+                    Previous
+                  </Button>
+                  
+                  {/* Page Numbers */}
+                  <div className="flex items-center gap-1 mx-2">
+                    {(() => {
+                      const totalPages = Math.ceil(results.length / itemsPerPage);
+                      const pages: (number | string)[] = [];
+                      
+                      if (totalPages <= 7) {
+                        for (let i = 1; i <= totalPages; i++) pages.push(i);
+                      } else {
+                        pages.push(1);
+                        if (currentPage > 3) pages.push('...');
+                        for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+                          pages.push(i);
+                        }
+                        if (currentPage < totalPages - 2) pages.push('...');
+                        pages.push(totalPages);
+                      }
+                      
+                      return pages.map((page, idx) => 
+                        typeof page === 'string' ? (
+                          <span key={`ellipsis-${idx}`} className="px-2 text-muted-foreground">...</span>
+                        ) : (
+                          <Button
+                            key={page}
+                            variant={currentPage === page ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setCurrentPage(page)}
+                            className="h-8 w-8 p-0"
+                          >
+                            {page}
+                          </Button>
+                        )
+                      );
+                    })()}
+                  </div>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.min(Math.ceil(results.length / itemsPerPage), prev + 1))}
+                    disabled={currentPage >= Math.ceil(results.length / itemsPerPage)}
+                    className="h-8 px-2"
+                  >
+                    Next
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(Math.ceil(results.length / itemsPerPage))}
+                    disabled={currentPage >= Math.ceil(results.length / itemsPerPage)}
+                    className="h-8 px-2"
+                  >
+                    Last
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </TabsContent>
       </Tabs>
