@@ -1,42 +1,8 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useRef } from 'react';
 
 interface CastSession {
   isConnected: boolean;
   deviceName: string | null;
-}
-
-declare global {
-  interface Navigator {
-    presentation?: {
-      defaultRequest: PresentationRequest | null;
-      receiver: unknown;
-    };
-  }
-
-  class PresentationRequest {
-    constructor(urls: string[]);
-    start(): Promise<PresentationConnection>;
-    reconnect(presentationId: string): Promise<PresentationConnection>;
-    getAvailability(): Promise<PresentationAvailability>;
-  }
-
-  interface PresentationConnection {
-    id: string;
-    url: string;
-    state: 'connecting' | 'connected' | 'closed' | 'terminated';
-    onconnect: (() => void) | null;
-    onclose: (() => void) | null;
-    onterminate: (() => void) | null;
-    onmessage: ((event: MessageEvent) => void) | null;
-    close(): void;
-    terminate(): void;
-    send(message: string | Blob | ArrayBuffer | ArrayBufferView): void;
-  }
-
-  interface PresentationAvailability {
-    value: boolean;
-    onchange: (() => void) | null;
-  }
 }
 
 export function useCast() {
@@ -44,46 +10,50 @@ export function useCast() {
     isConnected: false,
     deviceName: null,
   });
-  const [isCastAvailable, setIsCastAvailable] = useState(false);
-
-  useEffect(() => {
-    // Check if the browser supports the Presentation API
-    if ('presentation' in navigator) {
-      setIsCastAvailable(true);
-    }
-  }, []);
+  const castWindowRef = useRef<Window | null>(null);
 
   const startCasting = useCallback(async () => {
-    if (!('presentation' in navigator)) {
-      console.warn('Presentation API not supported');
-      return false;
-    }
-
     try {
-      const presentationRequest = new PresentationRequest([window.location.href]);
+      // Open the app in a new popup window for casting to external display
+      const width = window.screen.availWidth;
+      const height = window.screen.availHeight;
       
-      const connection = await presentationRequest.start();
+      const castWindow = window.open(
+        window.location.origin + '/dashboard',
+        'CastWindow',
+        `width=${width},height=${height},left=0,top=0,menubar=no,toolbar=no,location=no,status=no,fullscreen=yes`
+      );
+
+      if (castWindow) {
+        castWindowRef.current = castWindow;
+        
+        // Try to move to secondary display if available
+        castWindow.moveTo(window.screen.availWidth, 0);
+        
+        // Make it fullscreen-like
+        castWindow.resizeTo(width, height);
+        
+        setCastSession({
+          isConnected: true,
+          deviceName: 'External Window',
+        });
+
+        // Monitor if window is closed
+        const checkWindow = setInterval(() => {
+          if (castWindow.closed) {
+            clearInterval(checkWindow);
+            setCastSession({
+              isConnected: false,
+              deviceName: null,
+            });
+            castWindowRef.current = null;
+          }
+        }, 1000);
+
+        return true;
+      }
       
-      setCastSession({
-        isConnected: true,
-        deviceName: 'External Display',
-      });
-
-      connection.onclose = () => {
-        setCastSession({
-          isConnected: false,
-          deviceName: null,
-        });
-      };
-
-      connection.onterminate = () => {
-        setCastSession({
-          isConnected: false,
-          deviceName: null,
-        });
-      };
-
-      return true;
+      return false;
     } catch (error) {
       console.error('Failed to start casting:', error);
       return false;
@@ -91,6 +61,10 @@ export function useCast() {
   }, []);
 
   const stopCasting = useCallback(() => {
+    if (castWindowRef.current && !castWindowRef.current.closed) {
+      castWindowRef.current.close();
+    }
+    castWindowRef.current = null;
     setCastSession({
       isConnected: false,
       deviceName: null,
@@ -99,7 +73,7 @@ export function useCast() {
 
   return {
     castSession,
-    isCastAvailable,
+    isCastAvailable: true,
     startCasting,
     stopCasting,
   };
