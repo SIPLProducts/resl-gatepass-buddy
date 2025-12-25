@@ -16,20 +16,22 @@ export function CastButton() {
   const { castSession, openCastWindow, startScreenShare, stopCasting, isScreenShareAvailable } = useCast();
 
   const openCastView = async () => {
-    const path = `${location.pathname}${location.search || ''}`;
-    const url = `${window.location.origin}/cast?path=${encodeURIComponent(path)}`;
+    // Cast the CURRENT page in a new window by adding cast=1 to the URL.
+    const url = new URL(window.location.origin + location.pathname);
+    const params = new URLSearchParams(location.search);
+    params.set('cast', '1');
+    url.search = params.toString();
 
-    const res = await openCastWindow(url);
+    const res = await openCastWindow(url.toString());
 
     if (res.ok) {
-      toast.success('Cast display opened');
+      toast.success('Cast window opened');
       return;
     }
 
     if ('reason' in res && res.reason === 'popup_blocked') {
-      // Fallback: open in the same tab so it ALWAYS works
-      toast.error('Popup blocked. Opening cast display in this tab…');
-      window.location.assign(url);
+      toast.error('Popup blocked. Opening cast view in this tab…');
+      window.location.assign(url.toString());
       return;
     }
 
@@ -62,7 +64,7 @@ export function CastButton() {
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuItem onClick={openCastView} className="cursor-pointer">
           <MonitorSmartphone className="mr-2 h-4 w-4" />
-          Open Cast Display
+          Cast This Page
         </DropdownMenuItem>
 
         <DropdownMenuItem
