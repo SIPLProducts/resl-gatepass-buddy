@@ -45,7 +45,7 @@ export default function InwardPOReference() {
     vendorCity: '',
     vendorContact: '',
     vendorGSTNo: '',
-    inwardedBy: 'Admin User',
+    inwardedBy: 'WebUser',
   });
 
   const [items, setItems] = useState<ItemRow[]>([]);
@@ -117,7 +117,7 @@ export default function InwardPOReference() {
       vendorCity: '',
       vendorContact: '',
       vendorGSTNo: '',
-      inwardedBy: 'Admin User',
+      inwardedBy: 'WebUser',
     });
     setItems([]);
   };
@@ -257,9 +257,10 @@ export default function InwardPOReference() {
             readOnly
           />
           <TextField
-            label="Inwarded By"
+            label="Inward By"
             value={headerData.inwardedBy}
-            readOnly
+            onChange={(value) => setHeaderData({ ...headerData, inwardedBy: value })}
+            placeholder="Enter user name"
           />
           <TextField
             label="Vehicle Date"

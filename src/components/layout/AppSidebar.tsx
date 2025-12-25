@@ -66,8 +66,8 @@ const navigationItems: NavItem[] = [
   { label: 'Exit', icon: DoorOpen, path: '/vehicle-exit' },
   { label: 'Cancel', icon: XCircle, path: '/cancel' },
   { label: 'Print', icon: Printer, path: '/print' },
-  { label: 'Report', icon: BarChart3, path: '/reports' },
-  { label: 'Settings', icon: Settings, path: '/settings' },
+  { label: 'Report Analysis', icon: BarChart3, path: '/reports' },
+  { label: 'User & Role Management', icon: Settings, path: '/settings' },
   { label: 'Help & Support', icon: HelpCircle, path: '/help' },
 ];
 
