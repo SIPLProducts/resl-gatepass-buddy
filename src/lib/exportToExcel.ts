@@ -53,10 +53,12 @@ export const transporterOptions = [
 
 // Packing condition options for dropdown
 export const packingConditionOptions = [
-  { value: 'good', label: 'Good' },
-  { value: 'damaged', label: 'Damaged' },
-  { value: 'partial', label: 'Partially Damaged' },
-  { value: 'repacked', label: 'Repacked' },
+  { value: 'GOOD', label: 'GOOD' },
+  { value: 'BAD', label: 'BAD' },
+  { value: 'N/A', label: 'N/A' },
+  { value: 'DAMAGED', label: 'DAMAGED' },
+  { value: 'PARTIAL', label: 'PARTIAL' },
+  { value: 'REPACKED', label: 'REPACKED' },
 ];
 
 // Generate 35 test items for scroll testing

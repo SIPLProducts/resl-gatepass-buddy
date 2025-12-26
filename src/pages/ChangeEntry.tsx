@@ -9,49 +9,58 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { packingConditionOptions } from '@/lib/exportToExcel';
+import service from "../services/generalservice.js"
+import Swal from "sweetalert2";
 
 interface ItemRow {
-  materialCode: string;
-  materialDescription: string;
-  poQty: string;
-  poUnit: string;
-  gateEntryQty: string;
-  unit: string;
-  packingCondition: string;
+  "GENO": string,
+  "EBELN": number,
+  "ITEM": number,
+  "WTSNO": number,
+  "CHQTY": number,
+  "CHUOM": string,
+  "VGBEL": string,
+  "VGPOS": number,
+  "EXTROW": number,
+  "MATNR": number,
+  "MAKTX": string,
+  "GRWGT": number,
+  "GRDAT": string,
+  "GRTIM": string,
+  "GRUSR": string,
+  "TRWGT": number,
+  "TRDAT": string,
+  "TRTIM": string,
+  "TRUSR": string,
+  "WUNIT": string,
+  "NTWGT": number,
+  "STATUS": string,
+  "INVNO": string,
+  "INVDAT": string,
+  "CVNO": number,
+  "CVNO1": string,
+  "CVNAME": string,
+  "CVNAME1": string,
+  "CVLOC": string,
+  "TRNGRNO": string,
+  "MBLNR": string,
+  "MJAHR": number,
+  "ZEILE": number,
+  "EBELP": number,
+  "VBELN": string,
+  "POSNR": number,
+  "WEPOS": string,
+  "CHARG": string,
+  "CHK": string,
+  "ZQUANT": number,
+  "ZMEINS": string,
+  "ZPACKING": string,
+  "BLQTY": number,
+  "BLUNIT": string
+
 }
 
-const generateSampleItems = (): ItemRow[] => {
-  const materials = [
-    { code: 'MAT001', desc: 'Steel Plate 10mm', unit: 'KG' },
-    { code: 'MAT002', desc: 'Copper Wire 2.5mm', unit: 'MTR' },
-    { code: 'MAT003', desc: 'Aluminium Rod 8mm', unit: 'NOS' },
-    { code: 'MAT004', desc: 'Iron Sheet 5mm', unit: 'KG' },
-    { code: 'MAT005', desc: 'Brass Fitting 1"', unit: 'NOS' },
-    { code: 'MAT006', desc: 'PVC Pipe 2"', unit: 'MTR' },
-    { code: 'MAT007', desc: 'Rubber Gasket', unit: 'NOS' },
-    { code: 'MAT008', desc: 'Stainless Steel Bolt M10', unit: 'NOS' },
-    { code: 'MAT009', desc: 'Welding Rod 3.15mm', unit: 'KG' },
-    { code: 'MAT010', desc: 'Electric Cable 4sq', unit: 'MTR' },
-  ];
-  const conditions = ['Good', 'Damaged', 'Partial'];
-  const items: ItemRow[] = [];
-  
-  for (let i = 0; i < 48; i++) {
-    const mat = materials[i % materials.length];
-    const poQty = Math.floor(Math.random() * 500) + 50;
-    const gateQty = Math.floor(poQty * (0.8 + Math.random() * 0.2));
-    items.push({
-      materialCode: `${mat.code}-${String(i + 1).padStart(3, '0')}`,
-      materialDescription: `${mat.desc} - Batch ${i + 1}`,
-      poQty: String(poQty),
-      poUnit: mat.unit,
-      gateEntryQty: String(gateQty),
-      unit: mat.unit,
-      packingCondition: conditions[Math.floor(Math.random() * conditions.length)],
-    });
-  }
-  return items;
-};
+
 
 export default function ChangeEntry() {
   const [gateEntryNo, setGateEntryNo] = useState('');
@@ -59,60 +68,272 @@ export default function ChangeEntry() {
   const [isLoaded, setIsLoaded] = useState(false);
 
   const [headerData, setHeaderData] = useState({
-    plant: '',
-    gateEntryType: '',
-    vehicleDate: '',
-    vehicleTime: '',
-    vehicleNo: '',
-    vehicleType: '',
-    driverName: '',
-    driverContact: '',
-    transporterName: '',
-    grLrNumber: '',
-    poNumber: '',
-    vendorNumber: '',
-    vendorName: '',
-    inwardedBy: '',
+    WERKS: '',
+    DTYPE: '',
+    VHDAT_IN: '',
+    VHTIM_IN: '',
+    VHNO: '',
+    VHCL_TYPE: '',
+    DRNAM: '',
+    DRNUM: '',
+    TRANNAM: '',
+    GR_LR_NUM: '',
+    PONO: '',
+    VENDOR: '',
+    VNAME: '',
+    INWARDED_BY: '',
+    REFDOCTYP: '',
+    LEDAT: '',
+    LETIM: '',
+    TRADDR: '',
+    REMARKS: '',
+
+    "GENO": "",
+    "USR_IN": "",
+    "GRWGT": 0,
+    "TRWGT": 0,
+    "NTWGT": 0,
+    "WUNIT": "",
+    "GRUSR": "",
+    "GRDAT": "",
+    "GRTIM": "",
+    "TRUSR": "",
+    "TRDAT": "",
+    "TRTIM": "",
+    "INIWT": 0,
+    "INIDT": "",
+    "INITM": "00:00:00",
+    "INIUR": "",
+    "TOTWGT": 0,
+    "RBSTAT": "",
+    "WBOMP": "",
+    "WBCOMP": "",
+    "GEEXT": "",
+    "LEUSR": "",
+    "SGTXT": "",
+    "GECAN": "",
+    "LCDAT": "0000-00-00",
+    "LCTIM": "00:00:00",
+    "LCUSR": "",
+    "SCTXT": "",
+    "ERNAM": "",
+    "LIFNR": "",
+    "GATEPASS": "",
+    "DESTINATION": "",
+    "CAPACITY": "",
+    "WBIND": "",
+    "MIX": "",
+    "MJAHR": 0,
+    "AMOUNT": 0,
+    "ZTRID": "",
+    "ZTRIP": "",
+    "SP_DES": "",
+    "PAYMENTTERMS": "",
+    "TOT_COSUME": "",
+    "PEND_AMOUNT": "",
+    "BLNO": "",
+    "PURPOSE": "",
+    "REUSE": ""
   });
 
   const [items, setItems] = useState<ItemRow[]>([]);
 
-  const handleFetch = () => {
+  const handleFetch = async () => {
     if (!gateEntryNo) {
       toast.error('Please enter Gate Entry Number');
       return;
     }
 
-    setIsLoading(true);
-    // Simulate fetching gate entry data
-    setTimeout(() => {
-      setHeaderData({
-        plant: '1000',
-        gateEntryType: 'Inward - PO Reference',
-        vehicleDate: '2024-01-15',
-        vehicleTime: '10:30',
-        vehicleNo: 'MH-12-AB-1234',
-        vehicleType: 'truck',
-        driverName: 'Ramesh Kumar',
-        driverContact: '+91 98765 43210',
-        transporterName: 'Fast Logistics',
-        grLrNumber: 'GR-2024-001',
-        poNumber: '4500001234',
-        vendorNumber: 'V1001',
-        vendorName: 'ABC Suppliers Pvt. Ltd.',
-        inwardedBy: 'Admin User',
-      });
-      setItems(generateSampleItems());
-      setIsLoaded(true);
+    try {
+      const payload = {
+        "GET_ENTRY": gateEntryNo,
+        "CHANGE": "X",
+        "DISPLAY": ""
+      }
+      const response = await service.fetchGateEntryChange(payload);
+      console.log("response", response)
+      if (response[0]?.MSG_TYPE == "E") {
+
+        Swal.fire({
+          title: "error",
+          text: response[0].MSG,
+          icon: "error",
+          confirmButtonColor: "#3085d6",
+        });
+        setHeaderData({
+          WERKS: '',
+          DTYPE: '',
+          VHDAT_IN: '',
+          VHTIM_IN: '',
+          VHNO: '',
+          VHCL_TYPE: '',
+          DRNAM: '',
+          DRNUM: '',
+          TRANNAM: '',
+          GR_LR_NUM: '',
+          PONO: '',
+          VENDOR: '',
+          VNAME: '',
+          INWARDED_BY: '',
+          REFDOCTYP: '',
+          LEDAT: '',
+          LETIM: '',
+          TRADDR: '',
+          REMARKS: '',
+
+          "GENO": "",
+          "USR_IN": "",
+          "GRWGT": 0,
+          "TRWGT": 0,
+          "NTWGT": 0,
+          "WUNIT": "",
+          "GRUSR": "",
+          "GRDAT": "",
+          "GRTIM": "",
+          "TRUSR": "",
+          "TRDAT": "",
+          "TRTIM": "",
+          "INIWT": 0,
+          "INIDT": "",
+          "INITM": "00:00:00",
+          "INIUR": "",
+          "TOTWGT": 0,
+          "RBSTAT": "",
+          "WBOMP": "",
+          "WBCOMP": "",
+          "GEEXT": "",
+          "LEUSR": "",
+          "SGTXT": "",
+          "GECAN": "",
+          "LCDAT": "0000-00-00",
+          "LCTIM": "00:00:00",
+          "LCUSR": "",
+          "SCTXT": "",
+          "ERNAM": "",
+          "LIFNR": "",
+          "GATEPASS": "",
+          "DESTINATION": "",
+          "CAPACITY": "",
+          "WBIND": "",
+          "MIX": "",
+          "MJAHR": 0,
+          "AMOUNT": 0,
+          "ZTRID": "",
+          "ZTRIP": "",
+          "SP_DES": "",
+          "PAYMENTTERMS": "",
+          "TOT_COSUME": "",
+          "PEND_AMOUNT": "",
+          "BLNO": "",
+          "PURPOSE": "",
+          "REUSE": ""
+        });
+        setItems([]);
+
+      } else {
+        const headerResponse = response.HEADER[0]
+        const itemResponse = response.ITEM
+        console.log("headerResponse", headerResponse, "itemResponse", itemResponse)
+
+        // Simulate fetching gate entry data
+        setTimeout(() => {
+          setHeaderData({
+            GENO: headerResponse.GENO,
+            WERKS: headerResponse.WERKS,
+            DTYPE: headerResponse.DTYPE,
+            VHDAT_IN: headerResponse.VHDAT_IN,
+            VHTIM_IN: headerResponse.VHTIM_IN,
+            VHNO: headerResponse.VHNO,
+            VHCL_TYPE: headerResponse.VHCL_TYPE,
+            DRNAM: headerResponse.DRNAM,
+            DRNUM: headerResponse.DRNUM,
+            TRANNAM: headerResponse.TRANNAM,
+            GR_LR_NUM: headerResponse.GR_LR_NUM,
+            PONO: headerResponse.PONO,
+            VENDOR: headerResponse.VENDOR,
+            VNAME: headerResponse.VNAME,
+            INWARDED_BY: headerResponse.INWARDED_BY,
+            REFDOCTYP: headerResponse.REFDOCTYP,
+            LEDAT: headerResponse.LEDAT,
+            LETIM: headerResponse.LETIM,
+            TRADDR: headerResponse.TRADDR,
+            REMARKS: headerResponse.REMARKS,
+            "USR_IN": "",
+            "GRWGT": 0,
+            "TRWGT": 0,
+            "NTWGT": 0,
+            "WUNIT": "",
+            "GRUSR": "",
+            "GRDAT": "",
+            "GRTIM": "",
+            "TRUSR": "",
+            "TRDAT": "",
+            "TRTIM": "",
+            "INIWT": 0,
+            "INIDT": "",
+            "INITM": "00:00:00",
+            "INIUR": "",
+            "TOTWGT": 0,
+            "RBSTAT": "",
+            "WBOMP": "",
+            "WBCOMP": "",
+            "GEEXT": "",
+            "LEUSR": "",
+            "SGTXT": "",
+            "GECAN": "",
+            "LCDAT": "0000-00-00",
+            "LCTIM": "00:00:00",
+            "LCUSR": "",
+            "SCTXT": "",
+            "ERNAM": "",
+            "LIFNR": "",
+            "GATEPASS": "",
+            "DESTINATION": "",
+            "CAPACITY": "",
+            "WBIND": "",
+            "MIX": "",
+            "MJAHR": 0,
+            "AMOUNT": 0,
+            "ZTRID": "",
+            "ZTRIP": "",
+            "SP_DES": "",
+            "PAYMENTTERMS": "",
+            "TOT_COSUME": "",
+            "PEND_AMOUNT": "",
+            "BLNO": "",
+            "PURPOSE": "",
+            "REUSE": ""
+          });
+          const itemResponse: ItemRow[] = response.ITEM;
+          setItems(itemResponse);
+          console.log("itemResponse", itemResponse)
+          setIsLoaded(true);
+          setIsLoading(false);
+          toast.success('Data Fetched successfully');
+        }, 1000);
+      }
+
+
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load Data");
+    } finally {
       setIsLoading(false);
-      toast.success('Gate Entry loaded successfully');
-    }, 1000);
+    }
+
+
   };
 
-  const handleItemChange = (index: number, field: keyof ItemRow, value: string) => {
-    setItems(prev => prev.map((item, i) => 
-      i === index ? { ...item, [field]: value } : item
-    ));
+  const handleItemChange = (
+    index: number,
+    field: keyof ItemRow,
+    value: any
+  ) => {
+    setItems((prev) =>
+      prev.map((item, i) =>
+        i === index ? { ...item, [field]: value } : item
+      )
+    );
   };
 
   const handleDeleteRow = (index: number) => {
@@ -121,69 +342,246 @@ export default function ChangeEntry() {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     toast.success('Gate Entry updated successfully!');
+    const payload = {
+      "CREATE": "",
+      "CHANGE": "X",
+      "SEL": "",
+      "CEL": "",
+      "ICON": "",
+      HEADER: headerData,
+      ITEM: items, // 👈 FULL ORIGINAL STRUCTURE
+    };
+    console.log("payload", payload)
+    const response = await service.fetchGateEntryChange(payload);
+    console.log("response", response)
+    if (response[0]?.MSG_TYPE == "S" || response[0]?.CODE == "200") {
+
+      Swal.fire({
+        title: "success",
+        text: response[0].MSG,
+        icon: "success",
+        confirmButtonColor: "#3085d6",
+      });
+      setHeaderData({
+        WERKS: '',
+        DTYPE: '',
+        VHDAT_IN: '',
+        VHTIM_IN: '',
+        VHNO: '',
+        VHCL_TYPE: '',
+        DRNAM: '',
+        DRNUM: '',
+        TRANNAM: '',
+        GR_LR_NUM: '',
+        PONO: '',
+        VENDOR: '',
+        VNAME: '',
+        INWARDED_BY: '',
+        REFDOCTYP: '',
+        LEDAT: '',
+        LETIM: '',
+        TRADDR: '',
+        REMARKS: '',
+
+        "GENO": "",
+        "USR_IN": "",
+        "GRWGT": 0,
+        "TRWGT": 0,
+        "NTWGT": 0,
+        "WUNIT": "",
+        "GRUSR": "",
+        "GRDAT": "",
+        "GRTIM": "",
+        "TRUSR": "",
+        "TRDAT": "",
+        "TRTIM": "",
+        "INIWT": 0,
+        "INIDT": "",
+        "INITM": "00:00:00",
+        "INIUR": "",
+        "TOTWGT": 0,
+        "RBSTAT": "",
+        "WBOMP": "",
+        "WBCOMP": "",
+        "GEEXT": "",
+        "LEUSR": "",
+        "SGTXT": "",
+        "GECAN": "",
+        "LCDAT": "0000-00-00",
+        "LCTIM": "00:00:00",
+        "LCUSR": "",
+        "SCTXT": "",
+        "ERNAM": "",
+        "LIFNR": "",
+        "GATEPASS": "",
+        "DESTINATION": "",
+        "CAPACITY": "",
+        "WBIND": "",
+        "MIX": "",
+        "MJAHR": 0,
+        "AMOUNT": 0,
+        "ZTRID": "",
+        "ZTRIP": "",
+        "SP_DES": "",
+        "PAYMENTTERMS": "",
+        "TOT_COSUME": "",
+        "PEND_AMOUNT": "",
+        "BLNO": "",
+        "PURPOSE": "",
+        "REUSE": ""
+      });
+      setItems([]);
+      setIsLoading(false);
+
+    } else {
+      setIsLoading(false);
+    }
   };
 
   const handleReset = () => {
     setGateEntryNo('');
     setIsLoaded(false);
     setHeaderData({
-      plant: '',
-      gateEntryType: '',
-      vehicleDate: '',
-      vehicleTime: '',
-      vehicleNo: '',
-      vehicleType: '',
-      driverName: '',
-      driverContact: '',
-      transporterName: '',
-      grLrNumber: '',
-      poNumber: '',
-      vendorNumber: '',
-      vendorName: '',
-      inwardedBy: '',
+      WERKS: '',
+      DTYPE: '',
+      VHDAT_IN: '',
+      VHTIM_IN: '',
+      VHNO: '',
+      VHCL_TYPE: '',
+      DRNAM: '',
+      DRNUM: '',
+      TRANNAM: '',
+      GR_LR_NUM: '',
+      PONO: '',
+      VENDOR: '',
+      VNAME: '',
+      INWARDED_BY: '',
+      REFDOCTYP: '',
+      LEDAT: '',
+      LETIM: '',
+      TRADDR: '',
+      REMARKS: '',
+
+      "GENO": "",
+      "USR_IN": "",
+      "GRWGT": 0,
+      "TRWGT": 0,
+      "NTWGT": 0,
+      "WUNIT": "",
+      "GRUSR": "",
+      "GRDAT": "",
+      "GRTIM": "",
+      "TRUSR": "",
+      "TRDAT": "",
+      "TRTIM": "",
+      "INIWT": 0,
+      "INIDT": "",
+      "INITM": "00:00:00",
+      "INIUR": "",
+      "TOTWGT": 0,
+      "RBSTAT": "",
+      "WBOMP": "",
+      "WBCOMP": "",
+      "GEEXT": "",
+      "LEUSR": "",
+      "SGTXT": "",
+      "GECAN": "",
+      "LCDAT": "0000-00-00",
+      "LCTIM": "00:00:00",
+      "LCUSR": "",
+      "SCTXT": "",
+      "ERNAM": "",
+      "LIFNR": "",
+      "GATEPASS": "",
+      "DESTINATION": "",
+      "CAPACITY": "",
+      "WBIND": "",
+      "MIX": "",
+      "MJAHR": 0,
+      "AMOUNT": 0,
+      "ZTRID": "",
+      "ZTRIP": "",
+      "SP_DES": "",
+      "PAYMENTTERMS": "",
+      "TOT_COSUME": "",
+      "PEND_AMOUNT": "",
+      "BLNO": "",
+      "PURPOSE": "",
+      "REUSE": ""
     });
     setItems([]);
   };
 
   const columns = [
-    { key: 'materialCode', header: 'Material Code', width: '120px' },
-    { key: 'materialDescription', header: 'Material Description', width: '200px' },
-    { key: 'poQty', header: 'PO Qty', width: '80px' },
-    { key: 'poUnit', header: 'PO Unit', width: '80px' },
     {
-      key: 'gateEntryQty',
+      key: 'MATNR',
+      header: 'Material Code',
+      width: '120px',
+    },
+    {
+      key: 'MAKTX',
+      header: 'Material Description',
+      width: '200px',
+    },
+    {
+      key: 'CHQTY',
+      header: 'PO Qty',
+      width: '80px',
+    },
+    {
+      key: 'CHUOM',
+      header: 'PO Unit',
+      width: '80px',
+    },
+    {
+      key: 'ZQUANT',
       header: 'Gate Entry Qty',
       width: '120px',
-      render: (value: string, _row: ItemRow, index: number) => (
+      render: (value: number, row: ItemRow, index: number) => (
         <Input
           type="number"
           value={value}
-          onChange={(e) => handleItemChange(index, 'gateEntryQty', e.target.value)}
+          onChange={(e) =>
+            handleItemChange(index, 'ZQUANT', Number(e.target.value))
+          }
           className="h-8 w-full"
         />
       ),
     },
-    { key: 'unit', header: 'Unit', width: '80px' },
     {
-      key: 'packingCondition',
+      key: 'ZMEINS',
+      header: 'Unit',
+      width: '80px',
+      render: (value: string, row: ItemRow) => value || row.CHUOM,
+    },
+    {
+      key: 'ZPACKING',
       header: 'Packing Condition',
       width: '150px',
       render: (value: string, _row: ItemRow, index: number) => (
-        <Select value={value} onValueChange={(v) => handleItemChange(index, 'packingCondition', v)}>
+        <Select
+          value={value}
+          onValueChange={(v) =>
+            handleItemChange(index, 'ZPACKING', v)
+          }
+        >
           <SelectTrigger className="h-8 w-full">
             <SelectValue placeholder="Select" />
           </SelectTrigger>
           <SelectContent>
             {packingConditionOptions.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
       ),
     },
   ];
+
 
   return (
     <div className="space-y-6">
@@ -240,29 +638,46 @@ export default function ChangeEntry() {
           {/* Header Information */}
           <FormSection title="Header Information">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <TextField label="Gate Entry No" value={gateEntryNo} readOnly />
-              <SelectField
-                label="Plant"
-                value={headerData.plant}
-                onChange={(value) => setHeaderData({ ...headerData, plant: value })}
+              {/* <TextField label="Gate Entry No" value={gateEntryNo}  /> */}
+              <TextField label="Plant" value={headerData.WERKS} />
+              {/* <SelectField
+                label="WERKS"
+                value={headerData.WERKS}
+                onChange={(value) => setHeaderData({ ...headerData, WERKS: value })}
                 options={[
-                  { value: '1000', label: '1000 - Main Plant' },
+                  { value: '1000', label: '1000 - Main WERKS' },
                   { value: '2000', label: '2000 - Warehouse' },
                   { value: '3000', label: '3000 - Factory' },
                 ]}
-              />
-              <TextField label="Gate Entry Type" value={headerData.gateEntryType} readOnly />
+              /> */}
+              <TextField label="Gate Entry Type" value={headerData.DTYPE}  
+               onChange={(value) => setHeaderData({ ...headerData, DTYPE: value })}/>
               <TextField
                 label="Vehicle Date"
                 type="date"
-                value={headerData.vehicleDate}
-                onChange={(value) => setHeaderData({ ...headerData, vehicleDate: value })}
+                value={headerData.VHDAT_IN}
+                onChange={(value) => setHeaderData({ ...headerData, VHDAT_IN: value })}
               />
               <TextField
                 label="Vehicle Time"
                 type="time"
-                value={headerData.vehicleTime}
-                onChange={(value) => setHeaderData({ ...headerData, vehicleTime: value })}
+                value={headerData.VHTIM_IN}
+                onChange={(value) => setHeaderData({ ...headerData, VHTIM_IN: value })}
+              />
+              <TextField
+                label="Vehicle Out Date"
+                type="date"
+                value={headerData.LEDAT}
+              />
+              <TextField
+                label="Vehicle Out Time"
+                type="time"
+                value={headerData.LETIM}
+              />
+              <TextField
+                label="Ref Doc Type"
+                value={headerData.REFDOCTYP}
+                
               />
             </div>
           </FormSection>
@@ -272,39 +687,54 @@ export default function ChangeEntry() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <TextField
                 label="Vehicle No"
-                value={headerData.vehicleNo}
-                onChange={(value) => setHeaderData({ ...headerData, vehicleNo: value })}
+                value={headerData.VHNO}
+                onChange={(value) => setHeaderData({ ...headerData, VHNO: value })}
               />
-              <SelectField
+              <TextField
                 label="Vehicle Type"
-                value={headerData.vehicleType}
-                onChange={(value) => setHeaderData({ ...headerData, vehicleType: value })}
+                value={headerData.VHCL_TYPE}
+
+              />
+              {/* <SelectField
+                label="Vehicle Type"
+                value={headerData.VHCL_TYPE}
+                onChange={(value) => setHeaderData({ ...headerData, VHCL_TYPE: value })}
                 options={[
                   { value: 'truck', label: 'Truck' },
                   { value: 'tempo', label: 'Tempo' },
                   { value: 'container', label: 'Container' },
                   { value: 'trailer', label: 'Trailer' },
                 ]}
-              />
+              /> */}
               <TextField
                 label="Driver Name"
-                value={headerData.driverName}
-                onChange={(value) => setHeaderData({ ...headerData, driverName: value })}
+                value={headerData.DRNAM}
+                onChange={(value) => setHeaderData({ ...headerData, DRNAM: value })}
               />
               <TextField
                 label="Driver Contact"
-                value={headerData.driverContact}
-                onChange={(value) => setHeaderData({ ...headerData, driverContact: value })}
+                value={headerData.DRNUM}
+                onChange={(value) => setHeaderData({ ...headerData, DRNUM: value })}
               />
               <TextField
                 label="Transporter Name"
-                value={headerData.transporterName}
-                onChange={(value) => setHeaderData({ ...headerData, transporterName: value })}
+                value={headerData.TRANNAM}
+                onChange={(value) => setHeaderData({ ...headerData, TRANNAM: value })}
               />
               <TextField
                 label="GR/LR Number"
-                value={headerData.grLrNumber}
-                onChange={(value) => setHeaderData({ ...headerData, grLrNumber: value })}
+                value={headerData.GR_LR_NUM}
+                onChange={(value) => setHeaderData({ ...headerData, GR_LR_NUM: value })}
+              />
+              <TextField
+                label="Address"
+                value={headerData.TRADDR}
+                onChange={(value) => setHeaderData({ ...headerData, TRADDR: value })}
+              />
+              <TextField
+                label="Remarks"
+                value={headerData.REMARKS}
+                onChange={(value) => setHeaderData({ ...headerData, REMARKS: value })}
               />
             </div>
           </FormSection>
@@ -312,18 +742,18 @@ export default function ChangeEntry() {
           {/* Vendor/Reference Details */}
           <FormSection title="Reference Details">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <TextField label="PO Number" value={headerData.poNumber} readOnly />
-              <TextField label="Vendor Number" value={headerData.vendorNumber} readOnly />
-              <TextField label="Vendor Name" value={headerData.vendorName} readOnly />
-              <TextField label="Inwarded By" value={headerData.inwardedBy} readOnly />
+              <TextField label="PO Number" value={headerData.PONO}  />
+              <TextField label="Vendor Number" value={headerData.VENDOR}  />
+              <TextField label="Vendor Name" value={headerData.VNAME}  />
+              <TextField label="Inwarded By" value={headerData.INWARDED_BY}  />
             </div>
           </FormSection>
 
           {/* Item Grid */}
           <FormSection title="Item Details">
-            <DataGrid 
-              columns={columns} 
-              data={items} 
+            <DataGrid
+              columns={columns}
+              data={items}
               editable={true}
               onRowDelete={handleDeleteRow}
               minRows={1}
