@@ -350,7 +350,7 @@ export default function ChangeEntry() {
       "SEL": "",
       "CEL": "",
       "ICON": "",
-      HEADER: headerData,
+      HEADER: [headerData],
       ITEM: items, // 👈 FULL ORIGINAL STRUCTURE
     };
     console.log("payload", payload)

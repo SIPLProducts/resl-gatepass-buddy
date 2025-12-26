@@ -151,15 +151,16 @@ export default function InwardPOReference() {
       toast.error('Please enter PO Number and Plant');
       return;
     }
+  
 
     const payload = {
       "PO_GET": {
         "GENO": " ", //Gate Entry Number
         "WERKS": headerData.WERKS, //Plant       "//Mandatory
-        "VHDAT_IN": "20251225", //Vehicle IN Date    //System Generated
-        "VHTIM_IN": "013259", //Vehicle IN time        //System Generated
+        "VHDAT_IN": new Date().toISOString().split('T')[0], //Vehicle IN Date    //System Generated
+        "VHTIM_IN": new Date().toTimeString().slice(0, 5), //Vehicle IN time        //System Generated
         "USR_IN": "",
-        "VHNO": "AP234FT", //Vehicle Number          //Mandatory
+        "VHNO": "", //Vehicle Number          //Mandatory
         "GRWGT": "",
         "TRWGT": "",
         "NTWGT": "",
@@ -178,8 +179,8 @@ export default function InwardPOReference() {
         "RBSTAT": "",
         "WBOMP": "",
         "WBCOMP": "",
-        "DRNAM": "MNK", //Driver Name
-        "DRNUM": "7447284880", //Driver Number
+        "DRNAM": "", //Driver Name
+        "DRNUM": "", //Driver Number
         "TRANNAM": headerData.TRANNAM, //Transporter Name    //Mandatory
         "GEEXT": "",
         "LEDAT": "", //Out Date
@@ -199,7 +200,7 @@ export default function InwardPOReference() {
         "REFDOCTYP": "PO", //REF Doc Type      //In with reference PO, 'PO' is hardcoded, Mandatory
         "DESTINATION": "",
         "CAPACITY": "",
-        "GR_LR_NUM": "GR123", //GR/LR Num
+        "GR_LR_NUM": "", //GR/LR Num
         "WBIND": "",
         "MIX": "",
         "MJAHR": "", //Mat.Doc.Year
@@ -207,8 +208,8 @@ export default function InwardPOReference() {
         "VENDOR": "", //Vendor
         "VNAME": "",
         "AMOUNT": "", //Amount
-        "VHCL_TYPE": "HIRE", //Vehicle Type
-        "REMARKS": "CREATION", //Remarks
+        "VHCL_TYPE": "", //Vehicle Type
+        "REMARKS": "", //Remarks
         "ZTRID": "",
         "ZTRIP": "", //Trip ID
         "SP_DES": "", //SP Destination
@@ -226,7 +227,65 @@ export default function InwardPOReference() {
 
       const response = await service.fetchGateEntryChange(payload);
       console.log("response", response)
+
+      // 🔴 Collect errors
+      const errorMessages = response
+        .filter(r => r.MSG_TYPE === "E")
+        .map(r => `• ${r.MSG}`);
+
+      // 🟡 Collect warnings
+      const warningMessages = response
+        .filter(r => r.MSG_TYPE === "W")
+        .map(r => `• ${r.MSG}`);
+
+      // 🟢 Success message
+      // const successMsg = response.find(r => r.MSG_TYPE === "S");
+       const noPending = response.filter(r => r.MSG_TYPE === "S" && r.CODE == "200" && r.MSG == "No Pending Items"  );
+
+      // ❌ If errors exist → show all errors
+      if (errorMessages.length > 0) {
+        Swal.fire({
+          title: "Error",
+          html: errorMessages.join("<br>"),
+          icon: "error",
+          confirmButtonColor: "#d33",
+        });
+       setIsLoading(false);
+        return
+      }
+
+      // ⚠️ If warnings exist
+      if (warningMessages.length > 0) {
+        Swal.fire({
+          title: "Warning",
+          html: warningMessages.join("<br>"),
+          icon: "warning",
+          confirmButtonColor: "#f0ad4e",
+        });
+        setIsLoading(false);
+        return
+      }
+        if (noPending.length > 0) {
+        Swal.fire({
+          title: "Warning",
+          html: noPending[0].MSG.join("<br>"),
+          icon: "warning",
+          confirmButtonColor: "#f0ad4e",
+        });
+
+        setIsLoading(false);
+        return
+      }
+
+      // ✅ Success
       if (response) {
+        // Swal.fire({
+        //   title: "Success",
+        //   text: successMsg?.MSG,
+        //   icon: "success",
+        //   confirmButtonColor: "#3085d6",
+        // });
+        if (response) {
 
 
         const itemResponse: ItemRow[] = response;
@@ -239,6 +298,10 @@ export default function InwardPOReference() {
           toast.success('Data Fetched successfully');
         }, 1000);
       }
+
+        // ✅ Reset state after success
+      }
+      
 
     } catch (err) {
       console.error(err);
@@ -264,13 +327,24 @@ export default function InwardPOReference() {
   };
 
   const handleSave = async () => {
+    const selectedItems = items.filter(item => item.CHK === "X");
+
+  if (selectedItems.length === 0) {
+    Swal.fire({
+      title: "Validation Error",
+      text: "Please select at least one item to save.",
+      icon: "warning",
+      confirmButtonColor: "#f0ad4e",
+    });
+    return;
+  }
     const payload = {
       CREATE: "X",
       CHANGE: "",
       SEL: "",
       CEL: "",
       ICON: "",
-      HEADER: headerData,
+      HEADER: [headerData],
       ITEM: items,
     };
 
@@ -346,8 +420,8 @@ export default function InwardPOReference() {
     setHeaderData({
       WERKS: '',
       DTYPE: '',
-      VHDAT_IN: '',
-      VHTIM_IN: '',
+      "VHDAT_IN": new Date().toISOString().split('T')[0], //Vehicle IN Date    //System Generated
+      "VHTIM_IN": new Date().toTimeString().slice(0, 5), //Vehicle IN time  
       VHNO: '',
       VHCL_TYPE: '',
       DRNAM: '',
@@ -437,6 +511,20 @@ export default function InwardPOReference() {
 
   const columns = [
     {
+  key: 'CHK',
+  header: '',
+  width: '50px',
+  render: (_value: string, _row: ItemRow, index: number) => (
+    <input
+      type="checkbox"
+      checked={items[index]?.CHK === 'X'}
+      onChange={(e) =>
+        handleItemChange(index, 'CHK', e.target.checked ? 'X' : '')
+      }
+    />
+  ),
+},
+    {
       key: 'MATNR',
       header: 'Material Code',
       width: '120px',
@@ -519,7 +607,7 @@ export default function InwardPOReference() {
       <FormSection title="PO Reference">
         <div className="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
           <TextField
-            label="PO Number"
+            label="Plant"
             value={headerData.WERKS}
             onChange={(value) => setHeaderData({ ...headerData, WERKS: value })}
             placeholder="Enter PO Number"

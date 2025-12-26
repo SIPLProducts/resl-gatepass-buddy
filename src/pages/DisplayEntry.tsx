@@ -8,6 +8,10 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import service from "../services/generalservice.js"
 import Swal from "sweetalert2";
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { packingConditionOptions } from '@/lib/exportToExcel';
+
 interface ItemRow {
   "GENO": string,
   "EBELN": number,
@@ -184,15 +188,88 @@ export default function DisplayEntry() {
   const handlePrint = () => {
     toast.success('Preparing print preview...');
   };
+   const handleItemChange = (
+    index: number,
+    field: keyof ItemRow,
+    value: any
+  ) => {
+    setItems((prev) =>
+      prev.map((item, i) =>
+        i === index ? { ...item, [field]: value } : item
+      )
+    );
+  };
 
   const columns = [
-    { key: 'materialCode', header: 'Material Code', width: '120px' },
-    { key: 'materialDescription', header: 'Material Description', width: '200px' },
-    { key: 'poQty', header: 'PO Qty', width: '80px' },
-    { key: 'poUnit', header: 'PO Unit', width: '80px' },
-    { key: 'gateEntryQty', header: 'Gate Entry Qty', width: '120px' },
-    { key: 'unit', header: 'Unit', width: '80px' },
-    { key: 'packingCondition', header: 'Packing Condition', width: '150px' },
+    {
+      key: 'MATNR',
+      header: 'Material Code',
+      width: '120px',
+    },
+    {
+      key: 'MAKTX',
+      header: 'Material Description',
+      width: '200px',
+    },
+    {
+      key: 'CHQTY',
+      header: 'PO Qty',
+      width: '80px',
+    },
+    {
+      key: 'CHUOM',
+      header: 'PO Unit',
+      width: '80px',
+    },
+    {
+      key: 'ZQUANT',
+      header: 'Gate Entry Qty',
+      width: '120px',
+      render: (value: number, row: ItemRow, index: number) => (
+        <Input
+          type="number"
+          value={value ?? ''}
+          onChange={(e) => {
+            const rawValue = e.target.value;
+            const numericValue = rawValue === '' ? null : Number(rawValue);
+
+            handleItemChange(index, 'ZQUANT', numericValue);
+          }}
+          className="h-8 w-full"
+          min={0}
+        />
+      ),
+    },
+    {
+      key: 'ZMEINS',
+      header: 'Unit',
+      width: '80px',
+      render: (value: string, row: ItemRow) => value || row.CHUOM,
+    },
+    {
+      key: 'ZPACKING',
+      header: 'Packing Condition',
+      width: '150px',
+      render: (value: string, _row: ItemRow, index: number) => (
+        <Select
+          value={value}
+          onValueChange={(v) =>
+            handleItemChange(index, 'ZPACKING', v)
+          }
+        >
+          <SelectTrigger className="h-8 w-full">
+            <SelectValue placeholder="Select" />
+          </SelectTrigger>
+          <SelectContent>
+            {packingConditionOptions.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ),
+    },
   ];
 
   return (
