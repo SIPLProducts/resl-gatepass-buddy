@@ -1,9 +1,10 @@
-import { Search, Download, FileSpreadsheet, Package, Truck, Clock, XCircle, CheckCircle, Filter, ChevronDown, BarChart3, PieChart as PieChartIcon, RefreshCw, Calendar, X } from 'lucide-react';
+import { Search, Download, FileSpreadsheet, Package, Truck, Clock, XCircle, CheckCircle, Filter, ChevronDown, BarChart3, PieChart as PieChartIcon, RefreshCw, Calendar, X, Loader2 } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
 import { useState, useMemo } from 'react';
 import { toast } from 'sonner';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import service from "../services/generalservice.js";
 import { Label } from '@/components/ui/label';
 import { exportToExcel } from '@/lib/exportToExcel';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -25,6 +26,13 @@ import {
   Pie,
   Cell,
 } from 'recharts';
+
+
+
+
+
+
+
 
 // Reference Document Type mapping for full names
 const REF_DOC_TYPE_NAMES: Record<string, string> = {
@@ -49,19 +57,52 @@ const DATE_PRESETS = [
   { label: 'This Year', getValue: () => ({ from: format(startOfYear(new Date()), 'yyyy-MM-dd'), to: format(new Date(), 'yyyy-MM-dd') }) },
 ];
 
-// Mock data based on Excel structure
-const mockData = [
-  { gateEntryNo: 'A624A00001', plant: '3601', type: 'IN', vehicleDate: '2024-01-03', vehicleTime: '12:06 AM', vehicleOutDate: '', vehicleNo: '123456788', driverName: 'RAJ', transporterName: 'RAJ', refDocType: 'PO', poNo: '100109798', materialCode: '200092993', materialDesc: 'OEM 5% GST', vendorNo: '5000024', vendorName: 'Ramky Enviro Engineers Limited', quantity: 80, unit: 'SET', vehicleExit: false, cancelled: true, salesOrg: '3600', invoiceNo: '', webUser: 'WebUser' },
-  { gateEntryNo: 'A624A00002', plant: '3601', type: 'IN', vehicleDate: '2024-01-03', vehicleTime: '12:36 AM', vehicleOutDate: '', vehicleNo: '123456788', driverName: 'RAJ', transporterName: 'RAJ', refDocType: 'PO', poNo: '100109798', materialCode: '200092993', materialDesc: 'OEM 5% GST', vendorNo: '5000024', vendorName: 'Ramky Enviro Engineers Limited', quantity: 80, unit: 'SET', vehicleExit: false, cancelled: false, salesOrg: '3600', invoiceNo: 'INV-001', webUser: 'Rajesh Kumar' },
-  { gateEntryNo: 'A624A00003', plant: '3601', type: 'IN', vehicleDate: '2024-01-03', vehicleTime: '11:43 AM', vehicleOutDate: '', vehicleNo: 'AP37AZ1235', driverName: 'TEST', transporterName: 'VYSHNAVI', refDocType: 'PO', poNo: '100109799', materialCode: '200092993', materialDesc: 'OEM 5% GST', vendorNo: '5000024', vendorName: 'Ramky Enviro Engineers Limited', quantity: 800, unit: 'SET', vehicleExit: false, cancelled: false, salesOrg: '3600', invoiceNo: 'INV-002', webUser: 'Priya Sharma' },
-  { gateEntryNo: 'A624A00004', plant: '3601', type: 'IN', vehicleDate: '2024-01-15', vehicleTime: '09:30 AM', vehicleOutDate: '2024-01-15', vehicleNo: 'TS09KL4567', driverName: 'KUMAR', transporterName: 'BLUE DART', refDocType: 'SUB', poNo: '100109800', materialCode: '300045678', materialDesc: 'Spare Parts', vendorNo: '5000025', vendorName: 'Tata Motors Ltd.', quantity: 150, unit: 'NOS', vehicleExit: true, cancelled: false, salesOrg: '3600', invoiceNo: 'INV-003', webUser: 'WebUser' },
-  { gateEntryNo: 'A624B00001', plant: '3601', type: 'OUT', vehicleDate: '2024-02-01', vehicleTime: '10:00 AM', vehicleOutDate: '2024-02-01', vehicleNo: 'TS07DE3456', driverName: 'SURESH', transporterName: 'VYSHNAVI', refDocType: 'SO', poNo: '', materialCode: '200092993', materialDesc: 'OEM 5% GST', vendorNo: '1001706', vendorName: 'Tata Motors Ltd.', quantity: 50, unit: 'SET', vehicleExit: true, cancelled: false, salesOrg: '3600', invoiceNo: 'INV-004', webUser: 'Anil Verma' },
-  { gateEntryNo: 'A624B00002', plant: '3601', type: 'OUT', vehicleDate: '2024-02-02', vehicleTime: '02:30 PM', vehicleOutDate: '2024-02-02', vehicleNo: 'MH12AB1234', driverName: 'MOHAN', transporterName: 'BLUE DART', refDocType: 'SO', poNo: '', materialCode: '300045678', materialDesc: 'Spare Parts Kit', vendorNo: '1001707', vendorName: 'Mahindra Ltd.', quantity: 25, unit: 'NOS', vehicleExit: true, cancelled: false, salesOrg: '3600', invoiceNo: 'INV-005', webUser: 'WebUser' },
-  { gateEntryNo: 'A624B00003', plant: '3602', type: 'OUT', vehicleDate: '2024-02-10', vehicleTime: '11:15 AM', vehicleOutDate: '2024-02-10', vehicleNo: 'KA05MN8901', driverName: 'RAVI', transporterName: 'GATI', refDocType: 'SO', poNo: '', materialCode: '400012345', materialDesc: 'Assembly Unit', vendorNo: '5000026', vendorName: 'Bharat Forge', quantity: 75, unit: 'KG', vehicleExit: true, cancelled: false, salesOrg: '3601', invoiceNo: 'INV-006', webUser: 'Sunita Patil' },
-  { gateEntryNo: 'A624C00001', plant: '3602', type: 'IN', vehicleDate: '2024-03-15', vehicleTime: '09:15 AM', vehicleOutDate: '2024-03-15', vehicleNo: 'KA01MN5678', driverName: 'RAVI', transporterName: 'GATI', refDocType: 'SUB', poNo: '100110001', materialCode: '400012345', materialDesc: 'Sub Assembly Part', vendorNo: '5000025', vendorName: 'Bharat Forge', quantity: 100, unit: 'KG', vehicleExit: true, cancelled: false, salesOrg: '3601', invoiceNo: 'INV-007', webUser: 'WebUser' },
-  { gateEntryNo: 'A624C00002', plant: '3602', type: 'IN', vehicleDate: '2024-03-20', vehicleTime: '03:45 PM', vehicleOutDate: '', vehicleNo: 'AP09XY2345', driverName: 'KRISHNA', transporterName: 'DTDC', refDocType: 'PO', poNo: '100110002', materialCode: '500067890', materialDesc: 'Electronic Components', vendorNo: '5000027', vendorName: 'Samsung Electronics', quantity: 200, unit: 'PCS', vehicleExit: false, cancelled: false, salesOrg: '3601', invoiceNo: 'INV-008', webUser: 'Rajesh Kumar' },
-  { gateEntryNo: 'A624C00003', plant: '3602', type: 'OUT', vehicleDate: '2024-03-25', vehicleTime: '08:00 AM', vehicleOutDate: '2024-03-25', vehicleNo: 'TN10AB6789', driverName: 'MURUGAN', transporterName: 'DELHIVERY', refDocType: 'SO', poNo: '', materialCode: '600078901', materialDesc: 'Finished Goods', vendorNo: '5000028', vendorName: 'Ashok Leyland', quantity: 30, unit: 'SET', vehicleExit: true, cancelled: false, salesOrg: '3601', invoiceNo: 'INV-009', webUser: 'WebUser' },
-];
+// Transform API data to component format
+const transformApiData = (apiData: any[]) => {
+  return apiData.map(item => ({
+    gateEntryNo: item.GENO || '',
+    plant: item.WERKS || '',
+    type: item.DTYPE || '',
+    vehicleDate: item.VHDAT_IN || '',
+    vehicleTime: item.VHTIM_IN || '',
+    vehicleOutDate: item.VHDAT_OUT || '',
+    vehicleOutTime: item.VHTIM_OUT || '',
+    vehicleNo: item.VHNO || '',
+    driverName: item.DRNAM || '',
+    driverNumber: item.DRNUM || '',
+    transporterName: item.TRANNAM || '',
+    transporterAddress: item.TRADDR || '',
+    refDocType: item.REFDOCTYP || '',
+    vehicleType: item.VHCL_TYPE || '',
+    grLrNum: item.GR_LR_NUM || '',
+    inwardedBy: item.INWARDED_BY || '',
+    poNo: item.EBELN || '',
+    invoiceNo: item.INVNO || '',
+    itemNo: item.ITEM || '',
+    materialCode: item.MATNR || '',
+    materialDesc: item.MAKTX || '',
+    quantity: parseFloat(item.CHQTY) || 0,
+    unit: item.CHUOM || '',
+    vendorNo: item.CVNO || '',
+    vendorName: item.CVNAME || '',
+    vendorNo1: item.CVNO1 || '',
+    vendorName1: item.CVNAME1 || '',
+    balanceQty: parseFloat(item.BLQTY) || 0,
+    balanceUnit: item.BLUNIT || '',
+    zQuantity: parseFloat(item.ZQUANT) || 0,
+    zUnit: item.ZMEINS || '',
+    packing: item.ZPACKING || '',
+    purpose: item.PURPOSE || '',
+    remarks: item.REMARKS || '',
+    vehicleExit: item.GEEXT === 'X',
+    cancelled: item.GECAN === 'X',
+    lcDate: item.LCDAT || '',
+    mblnr: item.MBLNR1 || '',
+    blDate: item.BLDAT || '',
+    salesOrg: '',
+    webUser: item.INWARDED_BY || '',
+  }));
+};
 
 interface FilterState {
   gateEntryNoFrom: string;
@@ -93,7 +134,7 @@ const PIE_COLORS = [CHART_COLORS.accent, CHART_COLORS.info, CHART_COLORS.warning
 
 interface DrillDownData {
   title: string;
-  data: typeof mockData;
+  data: any[];
 }
 
 export default function Reports() {
@@ -113,11 +154,12 @@ export default function Reports() {
     enteredBy: '',
     smartSearch: '',
   });
-  const [results, setResults] = useState(mockData);
+  const [results, setResults] = useState<any[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(true);
   const [activeView, setActiveView] = useState<'charts' | 'table'>('charts');
   const [drillDown, setDrillDown] = useState<DrillDownData | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
   const itemsPerPage = 10;
 
   // Apply date preset
@@ -180,10 +222,10 @@ export default function Reports() {
     results.forEach(r => {
       typeCounts[r.refDocType] = (typeCounts[r.refDocType] || 0) + 1;
     });
-    return Object.entries(typeCounts).map(([code, count]) => ({ 
-      code, 
-      name: getRefDocTypeName(code), 
-      count 
+    return Object.entries(typeCounts).map(([code, count]) => ({
+      code,
+      name: getRefDocTypeName(code),
+      count
     }));
   }, [results]);
 
@@ -195,7 +237,7 @@ export default function Reports() {
   };
 
   const handleStatusDrillDown = (status: string) => {
-    let filtered: typeof mockData = [];
+    let filtered: any[] = [];
     if (status === 'Completed') {
       filtered = results.filter(r => r.vehicleExit && !r.cancelled);
     } else if (status === 'Pending') {
@@ -224,60 +266,69 @@ export default function Reports() {
     setDrillDown({ title: `Vendor: ${vendorName}`, data: filtered });
   };
 
-  const handleSearch = () => {
-    let filtered = [...mockData];
+  const handleSearch = async () => {
+    setIsLoading(true);
+    try {
+      // Build API request payload
+      const payload = {
+        GENO_FROM: filters.gateEntryNoFrom,
+        GENO_TO: filters.gateEntryNoTo,
+        DATE_FROM: filters.entryDateFrom,
+        DATE_TO: filters.entryDateTo,
+        WERKS_FROM: filters.plant,
+        WERKS_TO: filters.plantTo,
+        VEHICLE_NO: filters.vehicleNo,
+        INVNO_FROM: filters.invoiceNoFrom,
+        INVNO_TO: filters.invoiceNoTo,
+        SALES_ORG_F: filters.salesOrgFrom,
+        SALES_ORG_T: filters.salesOrgTo,
+        R1: filters.processType === 'inward' ? 'X' : '',
+        R2: filters.processType === 'outward' ? 'X' : '',
+        R3: filters.processType === 'both' ? 'X' : '',
+      };
 
-    // Smart Search - searches across multiple fields
-    if (filters.smartSearch) {
-      const searchTerm = filters.smartSearch.toLowerCase();
-      filtered = filtered.filter(r => 
-        r.gateEntryNo.toLowerCase().includes(searchTerm) ||
-        r.vehicleNo.toLowerCase().includes(searchTerm) ||
-        r.driverName.toLowerCase().includes(searchTerm) ||
-        r.transporterName.toLowerCase().includes(searchTerm) ||
-        r.vendorName.toLowerCase().includes(searchTerm) ||
-        r.materialDesc.toLowerCase().includes(searchTerm) ||
-        r.poNo.toLowerCase().includes(searchTerm) ||
-        r.invoiceNo.toLowerCase().includes(searchTerm) ||
-        r.webUser.toLowerCase().includes(searchTerm)
-      );
-    }
+      const response = await service.ReportanlaysisDataTable(payload);
+      console.log('API Response:', response);
 
-    if (filters.processType === 'inward') {
-      filtered = filtered.filter(r => r.type === 'IN');
-    } else if (filters.processType === 'outward') {
-      filtered = filtered.filter(r => r.type === 'OUT');
-    }
+      if (response && Array.isArray(response)) {
+        let transformedData = transformApiData(response);
 
-    if (filters.plant) {
-      filtered = filtered.filter(r => r.plant >= filters.plant && (!filters.plantTo || r.plant <= filters.plantTo));
-    }
+        // Apply client-side filters
+        if (filters.smartSearch) {
+          const searchTerm = filters.smartSearch.toLowerCase();
+          transformedData = transformedData.filter(r =>
+            r.gateEntryNo.toLowerCase().includes(searchTerm) ||
+            r.vehicleNo.toLowerCase().includes(searchTerm) ||
+            r.driverName.toLowerCase().includes(searchTerm) ||
+            r.transporterName.toLowerCase().includes(searchTerm) ||
+            r.vendorName.toLowerCase().includes(searchTerm) ||
+            r.materialDesc.toLowerCase().includes(searchTerm) ||
+            r.poNo.toLowerCase().includes(searchTerm) ||
+            r.invoiceNo.toLowerCase().includes(searchTerm) ||
+            r.webUser.toLowerCase().includes(searchTerm)
+          );
+        }
 
-    if (filters.vehicleNo) {
-      filtered = filtered.filter(r => r.vehicleNo.toLowerCase().includes(filters.vehicleNo.toLowerCase()));
-    }
+        if (filters.enteredBy) {
+          transformedData = transformedData.filter(r =>
+            r.webUser.toLowerCase().includes(filters.enteredBy.toLowerCase())
+          );
+        }
 
-    if (filters.entryDateFrom) {
-      filtered = filtered.filter(r => r.vehicleDate >= filters.entryDateFrom);
+        setResults(transformedData);
+        setCurrentPage(1);
+        toast.success(`Found ${transformedData.length} entries`);
+      } else {
+        setResults([]);
+        toast.error('No data found');
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      toast.error('Failed to fetch data. Please try again.');
+      setResults([]);
+    } finally {
+      setIsLoading(false);
     }
-    if (filters.entryDateTo) {
-      filtered = filtered.filter(r => r.vehicleDate <= filters.entryDateTo);
-    }
-
-    if (filters.gateEntryNoFrom) {
-      filtered = filtered.filter(r => r.gateEntryNo >= filters.gateEntryNoFrom);
-    }
-    if (filters.gateEntryNoTo) {
-      filtered = filtered.filter(r => r.gateEntryNo <= filters.gateEntryNoTo);
-    }
-
-    // Entered By filter
-    if (filters.enteredBy) {
-      filtered = filtered.filter(r => r.webUser.toLowerCase().includes(filters.enteredBy.toLowerCase()));
-    }
-
-    setResults(filtered);
-    toast.success(`Found ${filtered.length} entries`);
   };
 
   const handleExport = () => {
@@ -324,7 +375,8 @@ export default function Reports() {
       enteredBy: '',
       smartSearch: '',
     });
-    setResults(mockData);
+    setResults([]);
+    setCurrentPage(1);
   };
 
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -345,10 +397,10 @@ export default function Reports() {
 
   return (
     <div className="space-y-6">
-      <PageHeader 
-        title="Report Analysis" 
-        subtitle="Advanced analytics and reporting dashboard" 
-        breadcrumbs={[{ label: 'Report Analysis' }]} 
+      <PageHeader
+        title="Report Analysis"
+        subtitle="Advanced analytics and reporting dashboard"
+        breadcrumbs={[{ label: 'Report Analysis' }]}
       />
 
       {/* Smart Filter Panel */}
@@ -368,7 +420,7 @@ export default function Reports() {
               <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform duration-200 ${isFilterOpen ? 'rotate-180' : ''}`} />
             </div>
           </CollapsibleTrigger>
-          
+
           <CollapsibleContent>
             <div className="p-4 pt-0 space-y-4 border-t border-border">
               {/* Filter Grid - 3 columns */}
@@ -377,17 +429,17 @@ export default function Reports() {
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Gate Entry Number</Label>
                   <div className="flex items-center gap-2">
-                    <Input 
-                      placeholder="From" 
-                      value={filters.gateEntryNoFrom} 
-                      onChange={(e) => setFilters({...filters, gateEntryNoFrom: e.target.value})}
+                    <Input
+                      placeholder="From"
+                      value={filters.gateEntryNoFrom}
+                      onChange={(e) => setFilters({ ...filters, gateEntryNoFrom: e.target.value })}
                       className="h-9"
                     />
                     <span className="text-muted-foreground text-sm">→</span>
-                    <Input 
-                      placeholder="To" 
-                      value={filters.gateEntryNoTo} 
-                      onChange={(e) => setFilters({...filters, gateEntryNoTo: e.target.value})}
+                    <Input
+                      placeholder="To"
+                      value={filters.gateEntryNoTo}
+                      onChange={(e) => setFilters({ ...filters, gateEntryNoTo: e.target.value })}
                       className="h-9"
                     />
                   </div>
@@ -417,17 +469,17 @@ export default function Reports() {
                     ))}
                   </div>
                   <div className="flex items-center gap-2">
-                    <Input 
-                      type="date" 
-                      value={filters.entryDateFrom} 
-                      onChange={(e) => setFilters({...filters, entryDateFrom: e.target.value})}
+                    <Input
+                      type="date"
+                      value={filters.entryDateFrom}
+                      onChange={(e) => setFilters({ ...filters, entryDateFrom: e.target.value })}
                       className="h-9"
                     />
                     <span className="text-muted-foreground text-sm">→</span>
-                    <Input 
-                      type="date" 
-                      value={filters.entryDateTo} 
-                      onChange={(e) => setFilters({...filters, entryDateTo: e.target.value})}
+                    <Input
+                      type="date"
+                      value={filters.entryDateTo}
+                      onChange={(e) => setFilters({ ...filters, entryDateTo: e.target.value })}
                       className="h-9"
                     />
                   </div>
@@ -437,7 +489,7 @@ export default function Reports() {
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Plant</Label>
                   <div className="flex items-center gap-2">
-                    <Select value={filters.plant} onValueChange={(v) => setFilters({...filters, plant: v})}>
+                    <Select value={filters.plant} onValueChange={(v) => setFilters({ ...filters, plant: v })}>
                       <SelectTrigger className="h-9">
                         <SelectValue placeholder="From" />
                       </SelectTrigger>
@@ -447,7 +499,7 @@ export default function Reports() {
                       </SelectContent>
                     </Select>
                     <span className="text-muted-foreground text-sm">→</span>
-                    <Select value={filters.plantTo} onValueChange={(v) => setFilters({...filters, plantTo: v})}>
+                    <Select value={filters.plantTo} onValueChange={(v) => setFilters({ ...filters, plantTo: v })}>
                       <SelectTrigger className="h-9">
                         <SelectValue placeholder="To" />
                       </SelectTrigger>
@@ -462,10 +514,10 @@ export default function Reports() {
                 {/* Vehicle No */}
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Vehicle No</Label>
-                  <Input 
-                    placeholder="Enter Vehicle Number" 
-                    value={filters.vehicleNo} 
-                    onChange={(e) => setFilters({...filters, vehicleNo: e.target.value})}
+                  <Input
+                    placeholder="Enter Vehicle Number"
+                    value={filters.vehicleNo}
+                    onChange={(e) => setFilters({ ...filters, vehicleNo: e.target.value })}
                     className="h-9"
                   />
                 </div>
@@ -474,17 +526,17 @@ export default function Reports() {
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Invoice Number</Label>
                   <div className="flex items-center gap-2">
-                    <Input 
-                      placeholder="From" 
-                      value={filters.invoiceNoFrom} 
-                      onChange={(e) => setFilters({...filters, invoiceNoFrom: e.target.value})}
+                    <Input
+                      placeholder="From"
+                      value={filters.invoiceNoFrom}
+                      onChange={(e) => setFilters({ ...filters, invoiceNoFrom: e.target.value })}
                       className="h-9"
                     />
                     <span className="text-muted-foreground text-sm">→</span>
-                    <Input 
-                      placeholder="To" 
-                      value={filters.invoiceNoTo} 
-                      onChange={(e) => setFilters({...filters, invoiceNoTo: e.target.value})}
+                    <Input
+                      placeholder="To"
+                      value={filters.invoiceNoTo}
+                      onChange={(e) => setFilters({ ...filters, invoiceNoTo: e.target.value })}
                       className="h-9"
                     />
                   </div>
@@ -494,17 +546,17 @@ export default function Reports() {
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Sales Organization</Label>
                   <div className="flex items-center gap-2">
-                    <Input 
-                      placeholder="From" 
-                      value={filters.salesOrgFrom} 
-                      onChange={(e) => setFilters({...filters, salesOrgFrom: e.target.value})}
+                    <Input
+                      placeholder="From"
+                      value={filters.salesOrgFrom}
+                      onChange={(e) => setFilters({ ...filters, salesOrgFrom: e.target.value })}
                       className="h-9"
                     />
                     <span className="text-muted-foreground text-sm">→</span>
-                    <Input 
-                      placeholder="To" 
-                      value={filters.salesOrgTo} 
-                      onChange={(e) => setFilters({...filters, salesOrgTo: e.target.value})}
+                    <Input
+                      placeholder="To"
+                      value={filters.salesOrgTo}
+                      onChange={(e) => setFilters({ ...filters, salesOrgTo: e.target.value })}
                       className="h-9"
                     />
                   </div>
@@ -513,18 +565,12 @@ export default function Reports() {
                 {/* Entered By */}
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Entered By</Label>
-                  <Select value={filters.enteredBy} onValueChange={(v) => setFilters({...filters, enteredBy: v})}>
-                    <SelectTrigger className="h-9">
-                      <SelectValue placeholder="Select User" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="WebUser">WebUser</SelectItem>
-                      <SelectItem value="Rajesh Kumar">Rajesh Kumar</SelectItem>
-                      <SelectItem value="Priya Sharma">Priya Sharma</SelectItem>
-                      <SelectItem value="Anil Verma">Anil Verma</SelectItem>
-                      <SelectItem value="Sunita Patil">Sunita Patil</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Input
+                    placeholder="Enter User Name"
+                    value={filters.enteredBy}
+                    onChange={(e) => setFilters({ ...filters, enteredBy: e.target.value })}
+                    className="h-9"
+                  />
                 </div>
 
                 {/* Smart Search */}
@@ -532,10 +578,10 @@ export default function Reports() {
                   <Label className="text-sm font-medium">Smart Search</Label>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input 
-                      placeholder="Search by Gate Entry, Vehicle, Driver, Vendor, Material, PO, Invoice..." 
-                      value={filters.smartSearch} 
-                      onChange={(e) => setFilters({...filters, smartSearch: e.target.value})}
+                    <Input
+                      placeholder="Search by Gate Entry, Vehicle, Driver, Vendor, Material, PO, Invoice..."
+                      value={filters.smartSearch}
+                      onChange={(e) => setFilters({ ...filters, smartSearch: e.target.value })}
                       className="h-9 pl-9"
                     />
                   </div>
@@ -545,9 +591,9 @@ export default function Reports() {
               {/* Process Type Radio */}
               <div className="pt-2">
                 <Label className="text-sm font-medium mb-3 block">Process Type</Label>
-                <RadioGroup 
-                  value={filters.processType} 
-                  onValueChange={(v) => setFilters({...filters, processType: v as 'inward' | 'outward' | 'both'})}
+                <RadioGroup
+                  value={filters.processType}
+                  onValueChange={(v) => setFilters({ ...filters, processType: v as 'inward' | 'outward' | 'both' })}
                   className="flex flex-wrap gap-6"
                 >
                   <div className="flex items-center space-x-2">
@@ -567,15 +613,24 @@ export default function Reports() {
 
               {/* Action Buttons */}
               <div className="flex gap-3 pt-2">
-                <Button onClick={handleSearch} className="gap-2">
-                  <Search className="w-4 h-4" />
-                  Execute
+                <Button onClick={handleSearch} className="gap-2" disabled={isLoading}>
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    <>
+                      <Search className="w-4 h-4" />
+                      Execute
+                    </>
+                  )}
                 </Button>
-                <Button variant="outline" onClick={handleReset} className="gap-2">
+                <Button variant="outline" onClick={handleReset} className="gap-2" disabled={isLoading}>
                   <RefreshCw className="w-4 h-4" />
                   Reset
                 </Button>
-                <Button variant="outline" onClick={handleExport} className="gap-2 ml-auto">
+                <Button variant="outline" onClick={handleExport} className="gap-2 ml-auto" disabled={results.length === 0}>
                   <Download className="w-4 h-4" />
                   Export Excel
                 </Button>
@@ -625,349 +680,387 @@ export default function Reports() {
         </div>
 
         <TabsContent value="charts" className="space-y-6">
-          {/* Charts Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Inward vs Outward Pie Chart */}
-            <div className="enterprise-card p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <PieChartIcon className="w-5 h-5 text-accent" />
-                  <h3 className="font-semibold text-foreground">Entry Type Distribution</h3>
-                </div>
-                <span className="text-xs text-muted-foreground">Click segment to drill down</span>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center space-y-3">
+                <Loader2 className="w-8 h-8 animate-spin mx-auto text-accent" />
+                <p className="text-sm text-muted-foreground">Loading report data...</p>
               </div>
-              <ResponsiveContainer width="100%" height={280}>
-                <PieChart>
-                  <Pie
-                    data={typeChartData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
-                    paddingAngle={5}
-                    dataKey="value"
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+            </div>
+          ) : results.length === 0 ? (
+            <div className="enterprise-card p-12 text-center">
+              <FileSpreadsheet className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
+              <h3 className="text-lg font-semibold text-foreground mb-2">No Data Available</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Please select your filters and click Execute to load report data
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* Charts Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Inward vs Outward Pie Chart */}
+                <div className="enterprise-card p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <PieChartIcon className="w-5 h-5 text-accent" />
+                      <h3 className="font-semibold text-foreground">Entry Type Distribution</h3>
+                    </div>
+                    <span className="text-xs text-muted-foreground">Click segment to drill down</span>
+                  </div>
+                  <ResponsiveContainer width="100%" height={280}>
+                    <PieChart>
+                      <Pie
+                        data={typeChartData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={100}
+                        paddingAngle={5}
+                        dataKey="value"
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        {typeChartData.map((entry, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={entry.fill}
+                            onClick={() => handleTypeDrillDown(entry.name)}
+                            style={{ cursor: 'pointer' }}
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend
+                        onClick={(e) => handleTypeDrillDown(e.value as string)}
+                        wrapperStyle={{ cursor: 'pointer' }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* Status Pie Chart */}
+                <div className="enterprise-card p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <PieChartIcon className="w-5 h-5 text-accent" />
+                      <h3 className="font-semibold text-foreground">Status Distribution</h3>
+                    </div>
+                    <span className="text-xs text-muted-foreground">Click segment to drill down</span>
+                  </div>
+                  <ResponsiveContainer width="100%" height={280}>
+                    <PieChart>
+                      <Pie
+                        data={statusChartData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={100}
+                        paddingAngle={5}
+                        dataKey="value"
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        {statusChartData.map((entry, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={entry.fill}
+                            onClick={() => handleStatusDrillDown(entry.name)}
+                            style={{ cursor: 'pointer' }}
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend
+                        onClick={(e) => handleStatusDrillDown(e.value as string)}
+                        wrapperStyle={{ cursor: 'pointer' }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* Plant-wise Bar Chart */}
+                <div className="enterprise-card p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <BarChart3 className="w-5 h-5 text-accent" />
+                      <h3 className="font-semibold text-foreground">Plant-wise Entry Analysis</h3>
+                    </div>
+                    <span className="text-xs text-muted-foreground">Click bars to drill down</span>
+                  </div>
+                  <ResponsiveContainer width="100%" height={280}>
+                    <BarChart
+                      data={plantChartData}
+                      barGap={8}
+                      onClick={(state) => {
+                        if (state && state.activePayload && state.activePayload.length > 0) {
+                          const plant = state.activePayload[0].payload.plant;
+                          handlePlantDrillDown(plant);
+                        }
+                      }}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="plant" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                      <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend />
+                      <Bar dataKey="Inward" fill={CHART_COLORS.accent} radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="Outward" fill={CHART_COLORS.info} radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* Reference Document Type Bar Chart */}
+                <div className="enterprise-card p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <BarChart3 className="w-5 h-5 text-accent" />
+                      <h3 className="font-semibold text-foreground">Reference Document Type</h3>
+                    </div>
+                    <span className="text-xs text-muted-foreground">Click to drill down</span>
+                  </div>
+                  <ResponsiveContainer width="100%" height={280}>
+                    <BarChart
+                      data={refDocTypeData}
+                      layout="vertical"
+                      barSize={24}
+                      onClick={(state) => {
+                        if (state && state.activePayload && state.activePayload.length > 0) {
+                          handleRefTypeDrillDown(state.activePayload[0].payload.code);
+                        }
+                      }}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                      <YAxis type="category" dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} width={120} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Bar dataKey="count" fill={CHART_COLORS.primary} radius={[0, 4, 4, 0]} name="Count" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Top Vendors Chart - Full Width */}
+              <div className="enterprise-card p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <PieChartIcon className="w-5 h-5 text-accent" />
+                    <h3 className="font-semibold text-foreground">Top 5 Vendors by Entry Count</h3>
+                  </div>
+                  <span className="text-xs text-muted-foreground">Click to drill down</span>
+                </div>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart
+                    data={vendorChartData}
+                    layout="vertical"
+                    barSize={28}
+                    onClick={(state) => {
+                      if (state && state.activePayload && state.activePayload.length > 0) {
+                        handleVendorDrillDown(state.activePayload[0].payload.name);
+                      }
+                    }}
                     style={{ cursor: 'pointer' }}
                   >
-                    {typeChartData.map((entry, index) => (
-                      <Cell 
-                        key={`cell-${index}`} 
-                        fill={entry.fill} 
-                        onClick={() => handleTypeDrillDown(entry.name)}
-                        style={{ cursor: 'pointer' }}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend 
-                    onClick={(e) => handleTypeDrillDown(e.value as string)}
-                    wrapperStyle={{ cursor: 'pointer' }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* Status Pie Chart */}
-            <div className="enterprise-card p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <PieChartIcon className="w-5 h-5 text-accent" />
-                  <h3 className="font-semibold text-foreground">Status Distribution</h3>
-                </div>
-                <span className="text-xs text-muted-foreground">Click segment to drill down</span>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                    <YAxis type="category" dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={11} width={160} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Bar dataKey="value" radius={[0, 4, 4, 0]} name="Entries">
+                      {vendorChartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
-              <ResponsiveContainer width="100%" height={280}>
-                <PieChart>
-                  <Pie
-                    data={statusChartData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
-                    paddingAngle={5}
-                    dataKey="value"
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    {statusChartData.map((entry, index) => (
-                      <Cell 
-                        key={`cell-${index}`} 
-                        fill={entry.fill} 
-                        onClick={() => handleStatusDrillDown(entry.name)}
-                        style={{ cursor: 'pointer' }}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend 
-                    onClick={(e) => handleStatusDrillDown(e.value as string)}
-                    wrapperStyle={{ cursor: 'pointer' }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* Plant-wise Bar Chart */}
-            <div className="enterprise-card p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5 text-accent" />
-                  <h3 className="font-semibold text-foreground">Plant-wise Entry Analysis</h3>
-                </div>
-                <span className="text-xs text-muted-foreground">Click bars to drill down</span>
-              </div>
-              <ResponsiveContainer width="100%" height={280}>
-                <BarChart 
-                  data={plantChartData} 
-                  barGap={8}
-                  onClick={(state) => {
-                    if (state && state.activePayload && state.activePayload.length > 0) {
-                      const plant = state.activePayload[0].payload.plant;
-                      handlePlantDrillDown(plant);
-                    }
-                  }}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="plant" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend />
-                  <Bar dataKey="Inward" fill={CHART_COLORS.accent} radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="Outward" fill={CHART_COLORS.info} radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* Reference Document Type Bar Chart */}
-            <div className="enterprise-card p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5 text-accent" />
-                  <h3 className="font-semibold text-foreground">Reference Document Type</h3>
-                </div>
-                <span className="text-xs text-muted-foreground">Click to drill down</span>
-              </div>
-              <ResponsiveContainer width="100%" height={280}>
-                <BarChart 
-                  data={refDocTypeData} 
-                  layout="vertical" 
-                  barSize={24}
-                  onClick={(state) => {
-                    if (state && state.activePayload && state.activePayload.length > 0) {
-                      handleRefTypeDrillDown(state.activePayload[0].payload.code);
-                    }
-                  }}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                  <YAxis type="category" dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} width={120} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="count" fill={CHART_COLORS.primary} radius={[0, 4, 4, 0]} name="Count" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          {/* Top Vendors Chart - Full Width */}
-          <div className="enterprise-card p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <PieChartIcon className="w-5 h-5 text-accent" />
-                <h3 className="font-semibold text-foreground">Top 5 Vendors by Entry Count</h3>
-              </div>
-              <span className="text-xs text-muted-foreground">Click to drill down</span>
-            </div>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart 
-                data={vendorChartData} 
-                layout="vertical" 
-                barSize={28}
-                onClick={(state) => {
-                  if (state && state.activePayload && state.activePayload.length > 0) {
-                    handleVendorDrillDown(state.activePayload[0].payload.name);
-                  }
-                }}
-                style={{ cursor: 'pointer' }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                <YAxis type="category" dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={11} width={160} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="value" radius={[0, 4, 4, 0]} name="Entries">
-                  {vendorChartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+            </>
+          )}
         </TabsContent>
 
         <TabsContent value="table">
-          <div className="enterprise-card overflow-hidden">
-            {/* Table Header with Export */}
-            <div className="flex items-center justify-between p-4 border-b border-border">
-              <div className="flex items-center gap-2">
-                <FileSpreadsheet className="w-5 h-5 text-accent" />
-                <h3 className="font-semibold text-foreground">Data Table</h3>
-                <span className="text-sm text-muted-foreground">({results.length} records)</span>
+          {isLoading ? (
+            <div className="enterprise-card p-12">
+              <div className="flex items-center justify-center">
+                <div className="text-center space-y-3">
+                  <Loader2 className="w-8 h-8 animate-spin mx-auto text-accent" />
+                  <p className="text-sm text-muted-foreground">Loading data table...</p>
+                </div>
               </div>
-              <Button variant="outline" size="sm" onClick={handleExport} className="gap-2">
-                <Download className="w-4 h-4" />
-                Export to Excel
-              </Button>
             </div>
-            <div className="data-grid overflow-x-auto max-h-[500px] data-grid-scroll">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr>
-                    <th className="whitespace-nowrap">Gate Entry No</th>
-                    <th className="whitespace-nowrap">Plant</th>
-                    <th className="whitespace-nowrap">Type</th>
-                    <th className="whitespace-nowrap">Vehicle Date</th>
-                    <th className="whitespace-nowrap">Vehicle No</th>
-                    <th className="whitespace-nowrap">Driver</th>
-                    <th className="whitespace-nowrap">Transporter</th>
-                    <th className="whitespace-nowrap">Ref Type</th>
-                    <th className="whitespace-nowrap">PO No</th>
-                    <th className="whitespace-nowrap">Material</th>
-                    <th className="whitespace-nowrap">Vendor</th>
-                    <th className="whitespace-nowrap">Qty</th>
-                    <th className="whitespace-nowrap">Entered By</th>
-                    <th className="whitespace-nowrap">Exit</th>
-                    <th className="whitespace-nowrap">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {results
-                    .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-                    .map((r) => (
-                    <tr key={r.gateEntryNo} className="hover:bg-muted/50 cursor-pointer">
-                      <td className="text-accent font-medium whitespace-nowrap">{r.gateEntryNo}</td>
-                      <td>{r.plant}</td>
-                      <td>
-                        <span className={`badge-status ${r.type === 'IN' ? 'badge-success' : 'badge-info'}`}>
-                          {r.type === 'IN' ? 'Inward' : 'Outward'}
-                        </span>
-                      </td>
-                      <td className="whitespace-nowrap">{r.vehicleDate}</td>
-                      <td className="whitespace-nowrap">{r.vehicleNo}</td>
-                      <td>{r.driverName}</td>
-                      <td>{r.transporterName}</td>
-                      <td title={getRefDocTypeName(r.refDocType)}>{getRefDocTypeName(r.refDocType)}</td>
-                      <td>{r.poNo || '-'}</td>
-                      <td className="max-w-[150px] truncate" title={r.materialDesc}>{r.materialDesc}</td>
-                      <td className="max-w-[150px] truncate" title={r.vendorName}>{r.vendorName}</td>
-                      <td>{r.quantity} {r.unit}</td>
-                      <td className="whitespace-nowrap">{r.webUser}</td>
-                      <td>
-                        {r.vehicleExit ? (
-                          <CheckCircle className="w-4 h-4 text-success" />
-                        ) : (
-                          <Clock className="w-4 h-4 text-warning" />
-                        )}
-                      </td>
-                      <td>
-                        {r.cancelled ? (
-                          <span className="badge-status bg-destructive/10 text-destructive">Cancelled</span>
-                        ) : r.vehicleExit ? (
-                          <span className="badge-status badge-success">Completed</span>
-                        ) : (
-                          <span className="badge-status badge-warning">Active</span>
-                        )}
-                      </td>
+          ) : results.length === 0 ? (
+            <div className="enterprise-card p-12 text-center">
+              <FileSpreadsheet className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
+              <h3 className="text-lg font-semibold text-foreground mb-2">No Data Available</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Please select your filters and click Execute to load report data
+              </p>
+            </div>
+          ) : (
+            <div className="enterprise-card overflow-hidden">
+              {/* Table Header with Export */}
+              <div className="flex items-center justify-between p-4 border-b border-border">
+                <div className="flex items-center gap-2">
+                  <FileSpreadsheet className="w-5 h-5 text-accent" />
+                  <h3 className="font-semibold text-foreground">Data Table</h3>
+                  <span className="text-sm text-muted-foreground">({results.length} records)</span>
+                </div>
+                <Button variant="outline" size="sm" onClick={handleExport} className="gap-2">
+                  <Download className="w-4 h-4" />
+                  Export to Excel
+                </Button>
+              </div>
+              <div className="data-grid overflow-x-auto max-h-[500px] data-grid-scroll">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr>
+                      <th className="whitespace-nowrap">Gate Entry No</th>
+                      <th className="whitespace-nowrap">Plant</th>
+                      <th className="whitespace-nowrap">Type</th>
+                      <th className="whitespace-nowrap">Vehicle Date</th>
+                      <th className="whitespace-nowrap">Vehicle No</th>
+                      <th className="whitespace-nowrap">Driver</th>
+                      <th className="whitespace-nowrap">Transporter</th>
+                      <th className="whitespace-nowrap">Ref Type</th>
+                      <th className="whitespace-nowrap">PO No</th>
+                      <th className="whitespace-nowrap">Material</th>
+                      <th className="whitespace-nowrap">Vendor</th>
+                      <th className="whitespace-nowrap">Qty</th>
+                      <th className="whitespace-nowrap">Entered By</th>
+                      <th className="whitespace-nowrap">Exit</th>
+                      <th className="whitespace-nowrap">Status</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            
-            {/* Pagination */}
-            {results.length > itemsPerPage && (
-              <div className="flex items-center justify-between p-4 border-t border-border bg-muted/30">
-                <div className="text-sm text-muted-foreground">
-                  Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, results.length)} of {results.length} entries
-                </div>
-                <div className="flex items-center gap-1">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(1)}
-                    disabled={currentPage === 1}
-                    className="h-8 px-2"
-                  >
-                    First
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                    disabled={currentPage === 1}
-                    className="h-8 px-2"
-                  >
-                    Previous
-                  </Button>
-                  
-                  {/* Page Numbers */}
-                  <div className="flex items-center gap-1 mx-2">
-                    {(() => {
-                      const totalPages = Math.ceil(results.length / itemsPerPage);
-                      const pages: (number | string)[] = [];
-                      
-                      if (totalPages <= 7) {
-                        for (let i = 1; i <= totalPages; i++) pages.push(i);
-                      } else {
-                        pages.push(1);
-                        if (currentPage > 3) pages.push('...');
-                        for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
-                          pages.push(i);
-                        }
-                        if (currentPage < totalPages - 2) pages.push('...');
-                        pages.push(totalPages);
-                      }
-                      
-                      return pages.map((page, idx) => 
-                        typeof page === 'string' ? (
-                          <span key={`ellipsis-${idx}`} className="px-2 text-muted-foreground">...</span>
-                        ) : (
-                          <Button
-                            key={page}
-                            variant={currentPage === page ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => setCurrentPage(page)}
-                            className="h-8 w-8 p-0"
-                          >
-                            {page}
-                          </Button>
-                        )
-                      );
-                    })()}
-                  </div>
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(prev => Math.min(Math.ceil(results.length / itemsPerPage), prev + 1))}
-                    disabled={currentPage >= Math.ceil(results.length / itemsPerPage)}
-                    className="h-8 px-2"
-                  >
-                    Next
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(Math.ceil(results.length / itemsPerPage))}
-                    disabled={currentPage >= Math.ceil(results.length / itemsPerPage)}
-                    className="h-8 px-2"
-                  >
-                    Last
-                  </Button>
-                </div>
+                  </thead>
+                  <tbody>
+                    {results
+                      .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                      .map((r) => (
+                        <tr key={r.gateEntryNo} className="hover:bg-muted/50 cursor-pointer">
+                          <td className="text-accent font-medium whitespace-nowrap">{r.gateEntryNo}</td>
+                          <td>{r.plant}</td>
+                          <td>
+                            <span className={`badge-status ${r.type === 'IN' ? 'badge-success' : 'badge-info'}`}>
+                              {r.type === 'IN' ? 'Inward' : 'Outward'}
+                            </span>
+                          </td>
+                          <td className="whitespace-nowrap">{r.vehicleDate}</td>
+                          <td className="whitespace-nowrap">{r.vehicleNo}</td>
+                          <td>{r.driverName}</td>
+                          <td>{r.transporterName}</td>
+                          <td title={getRefDocTypeName(r.refDocType)}>{getRefDocTypeName(r.refDocType)}</td>
+                          <td>{r.poNo || '-'}</td>
+                          <td className="max-w-[150px] truncate" title={r.materialDesc}>{r.materialDesc}</td>
+                          <td className="max-w-[150px] truncate" title={r.vendorName}>{r.vendorName}</td>
+                          <td>{r.quantity} {r.unit}</td>
+                          <td className="whitespace-nowrap">{r.webUser}</td>
+                          <td>
+                            {r.vehicleExit ? (
+                              <CheckCircle className="w-4 h-4 text-success" />
+                            ) : (
+                              <Clock className="w-4 h-4 text-warning" />
+                            )}
+                          </td>
+                          <td>
+                            {r.cancelled ? (
+                              <span className="badge-status bg-destructive/10 text-destructive">Cancelled</span>
+                            ) : r.vehicleExit ? (
+                              <span className="badge-status badge-success">Completed</span>
+                            ) : (
+                              <span className="badge-status badge-warning">Active</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
               </div>
-            )}
-          </div>
+
+              {/* Pagination */}
+              {results.length > itemsPerPage && (
+                <div className="flex items-center justify-between p-4 border-t border-border bg-muted/30">
+                  <div className="text-sm text-muted-foreground">
+                    Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, results.length)} of {results.length} entries
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(1)}
+                      disabled={currentPage === 1}
+                      className="h-8 px-2"
+                    >
+                      First
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                      className="h-8 px-2"
+                    >
+                      Previous
+                    </Button>
+
+                    {/* Page Numbers */}
+                    <div className="flex items-center gap-1 mx-2">
+                      {(() => {
+                        const totalPages = Math.ceil(results.length / itemsPerPage);
+                        const pages: (number | string)[] = [];
+
+                        if (totalPages <= 7) {
+                          for (let i = 1; i <= totalPages; i++) pages.push(i);
+                        } else {
+                          pages.push(1);
+                          if (currentPage > 3) pages.push('...');
+                          for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+                            pages.push(i);
+                          }
+                          if (currentPage < totalPages - 2) pages.push('...');
+                          pages.push(totalPages);
+                        }
+
+                        return pages.map((page, idx) =>
+                          typeof page === 'string' ? (
+                            <span key={`ellipsis-${idx}`} className="px-2 text-muted-foreground">...</span>
+                          ) : (
+                            <Button
+                              key={page}
+                              variant={currentPage === page ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => setCurrentPage(page)}
+                              className="h-8 w-8 p-0"
+                            >
+                              {page}
+                            </Button>
+                          )
+                        );
+                      })()}
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.min(Math.ceil(results.length / itemsPerPage), prev + 1))}
+                      disabled={currentPage >= Math.ceil(results.length / itemsPerPage)}
+                      className="h-8 px-2"
+                    >
+                      Next
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(Math.ceil(results.length / itemsPerPage))}
+                      disabled={currentPage >= Math.ceil(results.length / itemsPerPage)}
+                      className="h-8 px-2"
+                    >
+                      Last
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
 
@@ -978,9 +1071,9 @@ export default function Reports() {
             <div className="flex items-center justify-between">
               <DialogTitle className="text-lg font-semibold">{drillDown?.title}</DialogTitle>
               <div className="flex items-center gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => {
                     if (drillDown) {
                       const columns = [

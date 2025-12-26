@@ -68,6 +68,15 @@ const backendNodejs = {
         });
         return res.json();
     },
+    ReportanlaysisDataTable: async (data) => {
+        const res = await fetch(`${BASE_URL}api/external/Gate_Entry/ReportanlaysisDataTable`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+        });
+        return res.json();
+    },
+
 
 };
 
