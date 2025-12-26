@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Save, RotateCcw, FileDown, FileSpreadsheet } from 'lucide-react';
+import { Search, Save, RotateCcw, FileDown, FileSpreadsheet,Loader2 } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { FormSection } from '@/components/shared/FormSection';
 import { TextField, SelectField } from '@/components/shared/FormField';
@@ -691,16 +691,31 @@ export default function InwardPOReference() {
               maxHeight="350px"
               itemsPerPage={10}
             />
-            <div className="flex justify-end gap-2 mt-4 pt-4 border-t">
-              <Button variant="outline" onClick={handleReset} className="gap-2">
-                <RotateCcw className="w-4 h-4" />
-                Reset
-              </Button>
-              <Button onClick={handleSave} className="bg-accent text-accent-foreground hover:bg-accent/90 gap-2">
-                <Save className="w-4 h-4" />
-                Save Entry
-              </Button>
-            </div>
+         <div className="flex justify-end gap-2 mt-4 pt-4 border-t">
+  <Button variant="outline" onClick={handleReset} className="gap-2" disabled={isLoading}>
+    <RotateCcw className="w-4 h-4" />
+    Reset
+  </Button>
+
+  <Button
+    onClick={handleSave}
+    disabled={isLoading}
+    className="bg-accent text-accent-foreground hover:bg-accent/90 gap-2"
+  >
+    {isLoading ? (
+      <>
+        <Loader2 className="w-4 h-4 animate-spin" />
+        Saving...
+      </>
+    ) : (
+      <>
+        <Save className="w-4 h-4" />
+        Save Entry
+      </>
+    )}
+  </Button>
+</div>
+
           </>
         )}
       </FormSection>
