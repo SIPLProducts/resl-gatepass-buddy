@@ -10,49 +10,131 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { exportToExcel, transporterOptions, generateTestItems, packingConditionOptions } from '@/lib/exportToExcel';
 import { useAuth } from '@/contexts/AuthContext';
+import service from "../../services/generalservice.js";
+import Swal from "sweetalert2";
 
 interface ItemRow {
-  vendorCode: string;
-  vendorName: string;
-  materialCode: string;
-  materialDescription: string;
-  poQty: string;
-  poUnit: string;
-  balanceQty: string;
-  gateEntryQty: string;
-  unit: string;
-  packingCondition: string;
+  "GENO": string,
+  "EBELN": number,
+  "ITEM": number,
+  "WTSNO": number,
+  "CHQTY": number,
+  "CHUOM": string,
+  "VGBEL": string,
+  "VGPOS": number,
+  "EXTROW": number,
+  "MATNR": number,
+  "MAKTX": string,
+  "GRWGT": number,
+  "GRDAT": string,
+  "GRTIM": string,
+  "GRUSR": string,
+  "TRWGT": number,
+  "TRDAT": string,
+  "TRTIM": string,
+  "TRUSR": string,
+  "WUNIT": string,
+  "NTWGT": number,
+  "STATUS": string,
+  "INVNO": string,
+  "INVDAT": string,
+  "CVNO": number,
+  "CVNO1": string,
+  "CVNAME": string,
+  "CVNAME1": string,
+  "CVLOC": string,
+  "TRNGRNO": string,
+  "MBLNR": string,
+  "MJAHR": number,
+  "ZEILE": number,
+  "EBELP": number,
+  "VBELN": string,
+  "POSNR": number,
+  "WEPOS": string,
+  "CHARG": string,
+  "CHK": string,
+  "ZQUANT": number,
+  "ZMEINS": string,
+  "ZPACKING": string,
+  "BLQTY": number,
+  "BLUNIT": string
+
 }
 
 export default function InwardPOReference() {
   const { webUser } = useAuth();
-  
+
   const [headerData, setHeaderData] = useState({
-    gateEntryNo: '',
-    plant: '',
-    refDocType: 'PO Reference',
-    gateEntryType: 'Inward',
-    vehicleDate: new Date().toISOString().split('T')[0],
-    vehicleTime: new Date().toTimeString().slice(0, 5),
-    vehicleNo: '',
-    vehicleType: '',
-    driverName: '',
-    driverContact: '',
-    transporterName: '',
-    grLrNumber: '',
-    remarks: '',
-    poNumber: '',
-    vendorNumber: '',
-    vendorName: '',
-    vendorAddress: '',
-    vendorCity: '',
-    vendorContact: '',
-    vendorGSTNo: '',
-    inwardedBy: '',
+    WERKS: '',
+    DTYPE: 'IN',
+    VHDAT_IN: new Date().toISOString().split('T')[0],
+    VHTIM_IN: new Date().toTimeString().slice(0, 5),
+    VHNO: '',
+    VHCL_TYPE: '',
+    DRNAM: '',
+    DRNUM: '',
+    TRANNAM: '',
+    GR_LR_NUM: '',
+    PONO: '',
+    VENDOR: '',
+    VNAME: '',
+    INWARDED_BY: '',
+    REFDOCTYP: 'PO',
+    LEDAT: '',
+    LETIM: '',
+    TRADDR: '',
+    REMARKS: '',
+
+    "GENO": "",
+    "USR_IN": "",
+    "GRWGT": 0,
+    "TRWGT": 0,
+    "NTWGT": 0,
+    "WUNIT": "",
+    "GRUSR": "",
+    "GRDAT": "",
+    "GRTIM": "",
+    "TRUSR": "",
+    "TRDAT": "",
+    "TRTIM": "",
+    "INIWT": 0,
+    "INIDT": "",
+    "INITM": "00:00:00",
+    "INIUR": "",
+    "TOTWGT": 0,
+    "RBSTAT": "",
+    "WBOMP": "",
+    "WBCOMP": "",
+    "GEEXT": "",
+    "LEUSR": "",
+    "SGTXT": "",
+    "GECAN": "",
+    "LCDAT": "0000-00-00",
+    "LCTIM": "00:00:00",
+    "LCUSR": "",
+    "SCTXT": "",
+    "ERNAM": "",
+    "LIFNR": "",
+    "GATEPASS": "",
+    "DESTINATION": "",
+    "CAPACITY": "",
+    "WBIND": "",
+    "MIX": "",
+    "MJAHR": 0,
+    "AMOUNT": 0,
+    "ZTRID": "",
+    "ZTRIP": "",
+    "SP_DES": "",
+    "PAYMENTTERMS": "",
+    "TOT_COSUME": "",
+    "PEND_AMOUNT": "",
+    "BLNO": "",
+    "PURPOSE": "",
+    "REUSE": ""
   });
 
   useEffect(() => {
-    setHeaderData(prev => ({ ...prev, inwardedBy: webUser }));
+    setHeaderData(prev => ({ ...prev, INWARDED_BY: webUser }));
   }, [webUser]);
 
   const [items, setItems] = useState<ItemRow[]>([]);
@@ -64,127 +146,360 @@ export default function InwardPOReference() {
     }
   };
 
-  const handleFetchPO = () => {
-    if (!headerData.poNumber || !headerData.plant) {
+  const handleFetchPO = async () => {
+    if (!headerData.PONO || !headerData.WERKS) {
       toast.error('Please enter PO Number and Plant');
       return;
     }
 
+    const payload = {
+      "PO_GET": {
+        "GENO": " ", //Gate Entry Number
+        "WERKS": headerData.WERKS, //Plant       "//Mandatory
+        "VHDAT_IN": "20251225", //Vehicle IN Date    //System Generated
+        "VHTIM_IN": "013259", //Vehicle IN time        //System Generated
+        "USR_IN": "",
+        "VHNO": "AP234FT", //Vehicle Number          //Mandatory
+        "GRWGT": "",
+        "TRWGT": "",
+        "NTWGT": "",
+        "WUNIT": "",
+        "GRUSR": "",
+        "GRDAT": "",
+        "GRTIM": "",
+        "TRUSR": "",
+        "TRDAT": "",
+        "TRTIM": "",
+        "INIWT": "",
+        "INIDT": "",
+        "INITM": "",
+        "INIUR": "",
+        "TOTWGT": "",
+        "RBSTAT": "",
+        "WBOMP": "",
+        "WBCOMP": "",
+        "DRNAM": "MNK", //Driver Name
+        "DRNUM": "7447284880", //Driver Number
+        "TRANNAM": headerData.TRANNAM, //Transporter Name    //Mandatory
+        "GEEXT": "",
+        "LEDAT": "", //Out Date
+        "LETIM": "", //Out Time
+        "LEUSR": "",
+        "SGTXT": "",
+        "GECAN": "",
+        "LCDAT": "",
+        "LCTIM": "",
+        "LCUSR": "",
+        "SCTXT": "",
+        "ERNAM": "",
+        "LIFNR": "",
+        "TRADDR": "", //Address
+        "DTYPE": headerData.DTYPE,               //Mandatory, Hardcoded
+        "GATEPASS": "", //GatePass Number
+        "REFDOCTYP": "PO", //REF Doc Type      //In with reference PO, 'PO' is hardcoded, Mandatory
+        "DESTINATION": "",
+        "CAPACITY": "",
+        "GR_LR_NUM": "GR123", //GR/LR Num
+        "WBIND": "",
+        "MIX": "",
+        "MJAHR": "", //Mat.Doc.Year
+        "PONO": headerData.PONO, //PO Number        //Mandatory
+        "VENDOR": "", //Vendor
+        "VNAME": "",
+        "AMOUNT": "", //Amount
+        "VHCL_TYPE": "HIRE", //Vehicle Type
+        "REMARKS": "CREATION", //Remarks
+        "ZTRID": "",
+        "ZTRIP": "", //Trip ID
+        "SP_DES": "", //SP Destination
+        "PAYMENTTERMS": "", //Payment Terms
+        "TOT_COSUME": "",
+        "PEND_AMOUNT": "",
+        "BLNO": "", //Billing Doc
+        "INWARDED_BY": "", //Inwarded by
+        "PURPOSE": "", //Purpose
+        "REUSE": ""
+      }
+    }
+
+    try {
+
+      const response = await service.fetchGateEntryChange(payload);
+      console.log("response", response)
+      if (response) {
+
+
+        const itemResponse: ItemRow[] = response;
+        console.log("itemResponse", itemResponse)
+        setItems(itemResponse);
+
+        // Simulate fetching gate entry data
+        setTimeout(() => {
+          setIsLoading(false);
+          toast.success('Data Fetched successfully');
+        }, 1000);
+      }
+
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load Data");
+    } finally {
+      setIsLoading(false);
+    }
+
     setIsLoading(true);
     // Simulate SAP fetch with 35 items
-    setTimeout(() => {
-      setHeaderData(prev => ({
-        ...prev,
-        vendorNumber: 'V1001',
-        vendorName: 'ABC Suppliers Pvt. Ltd.',
-        vendorAddress: '123, Industrial Area, Sector 5',
-        vendorCity: 'Mumbai, Maharashtra - 400001',
-        vendorContact: '+91 22 2345 6789',
-        vendorGSTNo: '27AABCU9603R1ZM',
-      }));
-      setItems(generateTestItems('inward').map(item => ({
-        ...item,
-        vendorCode: 'V1001',
-        vendorName: 'ABC Suppliers Pvt. Ltd.',
-      })) as ItemRow[]);
-      setIsLoading(false);
-      toast.success('PO data fetched successfully - 35 items loaded');
-    }, 1000);
+
+  };
+  const handleItemChange = (
+    index: number,
+    field: keyof ItemRow,
+    value: any
+  ) => {
+    setItems((prev) =>
+      prev.map((item, i) =>
+        i === index ? { ...item, [field]: value } : item
+      )
+    );
   };
 
-  const handleItemChange = (index: number, field: keyof ItemRow, value: string) => {
-    setItems(prev => prev.map((item, i) => 
-      i === index ? { ...item, [field]: value } : item
-    ));
+  const handleSave = async () => {
+    const payload = {
+      CREATE: "X",
+      CHANGE: "",
+      SEL: "",
+      CEL: "",
+      ICON: "",
+      HEADER: headerData,
+      ITEM: items,
+    };
+
+    try {
+      setIsLoading(true); // ✅ Spinner ON
+
+      const response = await service.GateEntryCreation(payload);
+      console.log("response", response);
+
+      // ✅ Ensure response is array
+      if (!Array.isArray(response) || response.length === 0) {
+        Swal.fire("Error", "Invalid response from server", "error");
+        return;
+      }
+
+      // 🔴 Collect errors
+      const errorMessages = response
+        .filter(r => r.MSG_TYPE === "E")
+        .map(r => `• ${r.MSG}`);
+
+      // 🟡 Collect warnings
+      const warningMessages = response
+        .filter(r => r.MSG_TYPE === "W")
+        .map(r => `• ${r.MSG}`);
+
+      // 🟢 Success message
+      const successMsg = response.find(r => r.MSG_TYPE === "S");
+
+      // ❌ If errors exist → show all errors
+      if (errorMessages.length > 0) {
+        Swal.fire({
+          title: "Error",
+          html: errorMessages.join("<br>"),
+          icon: "error",
+          confirmButtonColor: "#d33",
+        });
+        return;
+      }
+
+      // ⚠️ If warnings exist
+      if (warningMessages.length > 0) {
+        Swal.fire({
+          title: "Warning",
+          html: warningMessages.join("<br>"),
+          icon: "warning",
+          confirmButtonColor: "#f0ad4e",
+        });
+      }
+
+      // ✅ Success
+      if (successMsg || response[0]?.CODE === "200") {
+        Swal.fire({
+          title: "Success",
+          text: successMsg?.MSG || "Gate Entry updated successfully",
+          icon: "success",
+          confirmButtonColor: "#3085d6",
+        });
+
+        // ✅ Reset state after success
+        handleReset();
+      }
+
+    } catch (err) {
+      console.error(err);
+      Swal.fire("Error", "Failed to save Gate Entry", "error");
+    } finally {
+      setIsLoading(false); // ✅ Spinner OFF always
+    }
   };
 
-  const handleSave = () => {
-    toast.success('Gate Entry saved successfully!');
-  };
 
   const handleReset = () => {
     setHeaderData({
-      gateEntryNo: '',
-      plant: '',
-      refDocType: 'PO Reference',
-      gateEntryType: 'Inward',
-      vehicleDate: new Date().toISOString().split('T')[0],
-      vehicleTime: new Date().toTimeString().slice(0, 5),
-      vehicleNo: '',
-      vehicleType: '',
-      driverName: '',
-      driverContact: '',
-      transporterName: '',
-      grLrNumber: '',
-      remarks: '',
-      poNumber: '',
-      vendorNumber: '',
-      vendorName: '',
-      vendorAddress: '',
-      vendorCity: '',
-      vendorContact: '',
-      vendorGSTNo: '',
-      inwardedBy: webUser,
+      WERKS: '',
+      DTYPE: '',
+      VHDAT_IN: '',
+      VHTIM_IN: '',
+      VHNO: '',
+      VHCL_TYPE: '',
+      DRNAM: '',
+      DRNUM: '',
+      TRANNAM: '',
+      GR_LR_NUM: '',
+      PONO: '',
+      VENDOR: '',
+      VNAME: '',
+      INWARDED_BY: '',
+      REFDOCTYP: '',
+      LEDAT: '',
+      LETIM: '',
+      TRADDR: '',
+      REMARKS: '',
+      GENO: '',
+      USR_IN: '',
+      GRWGT: 0,
+      TRWGT: 0,
+      NTWGT: 0,
+      WUNIT: '',
+      GRUSR: '',
+      GRDAT: '',
+      GRTIM: '',
+      TRUSR: '',
+      TRDAT: '',
+      TRTIM: '',
+      INIWT: 0,
+      INIDT: '',
+      INITM: '00:00:00',
+      INIUR: '',
+      TOTWGT: 0,
+      RBSTAT: '',
+      WBOMP: '',
+      WBCOMP: '',
+      GEEXT: '',
+      LEUSR: '',
+      SGTXT: '',
+      GECAN: '',
+      LCDAT: '0000-00-00',
+      LCTIM: '00:00:00',
+      LCUSR: '',
+      SCTXT: '',
+      ERNAM: '',
+      LIFNR: '',
+      GATEPASS: '',
+      DESTINATION: '',
+      CAPACITY: '',
+      WBIND: '',
+      MIX: '',
+      MJAHR: 0,
+      AMOUNT: 0,
+      ZTRID: '',
+      ZTRIP: '',
+      SP_DES: '',
+      PAYMENTTERMS: '',
+      TOT_COSUME: '',
+      PEND_AMOUNT: '',
+      BLNO: '',
+      PURPOSE: '',
+      REUSE: ''
     });
+
     setItems([]);
   };
 
-  const handleExport = () => {
-    if (items.length === 0) {
-      toast.error('No items to export');
-      return;
-    }
-    const exportColumns = [
-      { key: 'vendorCode', header: 'Vendor Code' },
-      { key: 'vendorName', header: 'Vendor Name' },
-      { key: 'materialCode', header: 'Material Code' },
-      { key: 'materialDescription', header: 'Material Description' },
-      { key: 'poQty', header: 'PO Qty' },
-      { key: 'poUnit', header: 'PO Unit' },
-      { key: 'balanceQty', header: 'Balance Qty' },
-      { key: 'gateEntryQty', header: 'Gate Entry Qty' },
-      { key: 'unit', header: 'Unit' },
-      { key: 'packingCondition', header: 'Packing Condition' },
-    ];
-    exportToExcel(items, exportColumns, `Inward_PO_${headerData.poNumber}`);
-    toast.success('Exported to Excel successfully');
-  };
+  // const handleExport = () => {
+  //   if (items.length === 0) {
+  //     toast.error('No items to export');
+  //     return;
+  //   }
+  //   const exportColumns = [
+  //     { key: 'vendorCode', header: 'Vendor Code' },
+  //     { key: 'vendorName', header: 'Vendor Name' },
+  //     { key: 'materialCode', header: 'Material Code' },
+  //     { key: 'materialDescription', header: 'Material Description' },
+  //     { key: 'poQty', header: 'PO Qty' },
+  //     { key: 'poUnit', header: 'PO Unit' },
+  //     { key: 'balanceQty', header: 'Balance Qty' },
+  //     { key: 'gateEntryQty', header: 'Gate Entry Qty' },
+  //     { key: 'unit', header: 'Unit' },
+  //     { key: 'packingCondition', header: 'Packing Condition' },
+  //   ];
+  //   exportToExcel(items, exportColumns, `Inward_PO_${headerData.PONO}`);
+  //   toast.success('Exported to Excel successfully');
+  // };
 
   const columns = [
-    { key: 'vendorCode', header: 'Vendor Code', width: '100px' },
-    { key: 'vendorName', header: 'Vendor Name', width: '150px' },
-    { key: 'materialCode', header: 'Material Code', width: '120px' },
-    { key: 'materialDescription', header: 'Material Description', width: '200px' },
-    { key: 'poQty', header: 'PO Qty', width: '80px' },
-    { key: 'poUnit', header: 'PO Unit', width: '70px' },
-    { key: 'balanceQty', header: 'Balance Qty', width: '100px' },
     {
-      key: 'gateEntryQty',
+      key: 'MATNR',
+      header: 'Material Code',
+      width: '120px',
+    },
+    {
+      key: 'MAKTX',
+      header: 'Material Description',
+      width: '200px',
+    },
+    {
+      key: 'CHQTY',
+      header: 'PO Qty',
+      width: '80px',
+    },
+    {
+      key: 'CHUOM',
+      header: 'PO Unit',
+      width: '80px',
+    },
+    {
+      key: 'ZQUANT',
       header: 'Gate Entry Qty',
-      width: '180px',
-      render: (value: string, _row: ItemRow, index: number) => (
+      width: '120px',
+      render: (value: number, row: ItemRow, index: number) => (
         <Input
           type="number"
-          value={value}
-          onChange={(e) => handleItemChange(index, 'gateEntryQty', e.target.value)}
-          className="h-8 w-full min-w-[120px]"
-          placeholder="Enter qty"
+          value={value ?? ''}
+          onChange={(e) => {
+            const rawValue = e.target.value;
+            const numericValue = rawValue === '' ? null : Number(rawValue);
+
+            handleItemChange(index, 'ZQUANT', numericValue);
+          }}
+          className="h-8 w-full"
+          min={0}
         />
       ),
     },
-    { key: 'unit', header: 'Unit', width: '70px' },
     {
-      key: 'packingCondition',
+      key: 'ZMEINS',
+      header: 'Unit',
+      width: '80px',
+      render: (value: string, row: ItemRow) => value || row.CHUOM,
+    },
+    {
+      key: 'ZPACKING',
       header: 'Packing Condition',
       width: '150px',
       render: (value: string, _row: ItemRow, index: number) => (
-        <Select value={value} onValueChange={(val) => handleItemChange(index, 'packingCondition', val)}>
+        <Select
+          value={value}
+          onValueChange={(v) =>
+            handleItemChange(index, 'ZPACKING', v)
+          }
+        >
           <SelectTrigger className="h-8 w-full">
             <SelectValue placeholder="Select" />
           </SelectTrigger>
           <SelectContent>
-            {packingConditionOptions.map(opt => (
-              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+            {packingConditionOptions.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -203,32 +518,39 @@ export default function InwardPOReference() {
       {/* PO Reference Section */}
       <FormSection title="PO Reference">
         <div className="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
-          <SelectField
+          <TextField
+            label="PO Number"
+            value={headerData.WERKS}
+            onChange={(value) => setHeaderData({ ...headerData, WERKS: value })}
+            placeholder="Enter PO Number"
+            required
+          />
+          {/* <SelectField
             label="Plant"
             value={headerData.plant}
             onChange={(value) => setHeaderData({ ...headerData, plant: value })}
             options={[
-              { value: '1000', label: '1000 - Main Plant' },
-              { value: '2000', label: '2000 - Warehouse' },
-              { value: '3000', label: '3000 - Factory' },
+              { value: '1000', label: '1000' },
+              { value: '2000', label: '2000' },
+              { value: '3000', label: '3000' },
             ]}
             required
-          />
+          /> */}
           <TextField
             label="PO Number"
-            value={headerData.poNumber}
-            onChange={(value) => setHeaderData({ ...headerData, poNumber: value })}
+            value={headerData.PONO}
+            onChange={(value) => setHeaderData({ ...headerData, PONO: value })}
             placeholder="Enter PO Number"
             required
           />
           <TextField
             label="Vendor Number"
-            value={headerData.vendorNumber}
+            value={headerData.VENDOR}
             readOnly
           />
           <TextField
             label="Vendor Name"
-            value={headerData.vendorName}
+            value={headerData.VNAME}
             readOnly
           />
           <div className="pb-0.5">
@@ -249,38 +571,38 @@ export default function InwardPOReference() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <TextField
             label="Gate Entry No"
-            value={headerData.gateEntryNo}
+            value={headerData.GENO}
             placeholder="Auto-generated"
             readOnly
           />
           <TextField
             label="Ref Doc Type"
-            value={headerData.refDocType}
+            value={headerData.REFDOCTYP}
             readOnly
           />
           <TextField
             label="Gate Entry Type"
-            value={headerData.gateEntryType}
+            value={headerData.DTYPE}
             readOnly
           />
           <TextField
             label="Inward By"
-            value={headerData.inwardedBy}
-            onChange={(value) => setHeaderData({ ...headerData, inwardedBy: value })}
+            value={headerData.INWARDED_BY}
+            onChange={(value) => setHeaderData({ ...headerData, INWARDED_BY: value })}
             placeholder="Enter user name"
           />
           <TextField
             label="Vehicle Date"
             type="date"
-            value={headerData.vehicleDate}
-            onChange={(value) => setHeaderData({ ...headerData, vehicleDate: value })}
+            value={headerData.VHDAT_IN}
+            onChange={(value) => setHeaderData({ ...headerData, VHDAT_IN: value })}
             required
           />
           <TextField
             label="Vehicle Time"
             type="time"
-            value={headerData.vehicleTime}
-            onChange={(value) => setHeaderData({ ...headerData, vehicleTime: value })}
+            value={headerData.VHTIM_IN}
+            onChange={(value) => setHeaderData({ ...headerData, VHTIM_IN: value })}
             required
           />
         </div>
@@ -291,53 +613,52 @@ export default function InwardPOReference() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <TextField
             label="Vehicle No"
-            value={headerData.vehicleNo}
-            onChange={(value) => setHeaderData({ ...headerData, vehicleNo: value })}
+            value={headerData.VHNO}
+            onChange={(value) => setHeaderData({ ...headerData, VHNO: value })}
             placeholder="MH-12-AB-1234"
             required
           />
           <SelectField
             label="Vehicle Type"
-            value={headerData.vehicleType}
-            onChange={(value) => setHeaderData({ ...headerData, vehicleType: value })}
+            value={headerData.VHCL_TYPE}
+            onChange={(value) => setHeaderData({ ...headerData, VHCL_TYPE: value })}
             options={[
-              { value: 'truck', label: 'Truck' },
-              { value: 'tempo', label: 'Tempo' },
-              { value: 'container', label: 'Container' },
-              { value: 'trailer', label: 'Trailer' },
+              { value: 'HIRE', label: 'Hire Vehicle' },
+              { value: 'OWN', label: 'Own Vehicle' },
+
             ]}
           />
           <TextField
             label="Driver Name"
-            value={headerData.driverName}
-            onChange={(value) => setHeaderData({ ...headerData, driverName: value })}
+            value={headerData.DRNAM}
+            onChange={(value) => setHeaderData({ ...headerData, DRNAM: value })}
             placeholder="Enter driver name"
           />
           <TextField
             label="Driver Contact"
-            value={headerData.driverContact}
-            onChange={(value) => setHeaderData({ ...headerData, driverContact: value })}
+            value={headerData.DRNUM}
+            onChange={(value) => setHeaderData({ ...headerData, DRNUM: value })}
             placeholder="+91 98765 43210"
           />
           <SelectField
             label="Transporter Name"
-            value={headerData.transporterName}
-            onChange={(value) => setHeaderData({ ...headerData, transporterName: value })}
+            value={headerData.TRANNAM}
+            onChange={(value) => setHeaderData({ ...headerData, TRANNAM: value })}
             options={transporterOptions}
           />
           <TextField
             label="GR/LR Number"
-            value={headerData.grLrNumber}
-            onChange={(value) => setHeaderData({ ...headerData, grLrNumber: value })}
+            value={headerData.GR_LR_NUM}
+            onChange={(value) => setHeaderData({ ...headerData, GR_LR_NUM: value })}
             placeholder="Enter GR/LR number"
           />
           <div className="md:col-span-2">
             <TextField
               label="Remarks"
-              value={headerData.remarks}
+              value={headerData.REMARKS}
               onChange={(value) => {
                 if (value.length <= 255) {
-                  setHeaderData({ ...headerData, remarks: value });
+                  setHeaderData({ ...headerData, REMARKS: value });
                 }
               }}
               placeholder="Enter remarks (max 255 characters)"
@@ -355,20 +676,20 @@ export default function InwardPOReference() {
           </div>
         ) : (
           <>
-            <div className="flex justify-end mb-3">
+            {/* <div className="flex justify-end mb-3">
               <Button variant="outline" onClick={handleExport} className="gap-2">
                 <FileSpreadsheet className="w-4 h-4" />
                 Export to Excel
               </Button>
-            </div>
-            <DataGrid 
-              columns={columns} 
-              data={items} 
+            </div> */}
+            <DataGrid
+              columns={columns}
+              data={items}
               editable={true}
               onRowDelete={handleDeleteRow}
               minRows={1}
+              maxHeight="350px"
               itemsPerPage={10}
-              maxHeight="400px"
             />
             <div className="flex justify-end gap-2 mt-4 pt-4 border-t">
               <Button variant="outline" onClick={handleReset} className="gap-2">

@@ -39,16 +39,9 @@ export function exportToExcel<T extends Record<string, any>>(
 
 // Transporter options for dropdown
 export const transporterOptions = [
-  { value: 'bluedart', label: 'BlueDart Express' },
-  { value: 'delhivery', label: 'Delhivery Logistics' },
-  { value: 'dtdc', label: 'DTDC Courier' },
-  { value: 'fedex', label: 'FedEx India' },
-  { value: 'gati', label: 'Gati Ltd.' },
-  { value: 'safexpress', label: 'Safexpress Pvt. Ltd.' },
-  { value: 'tci', label: 'TCI Express' },
-  { value: 'vrl', label: 'VRL Logistics' },
-  { value: 'xpressbees', label: 'XpressBees' },
-  { value: 'other', label: 'Other' },
+  { value: 'SANJAY', label: 'SANJAY' },
+  { value: 'VYSHNAVI', label: 'VYSHNAVI' },
+  
 ];
 
 // Packing condition options for dropdown
@@ -56,9 +49,6 @@ export const packingConditionOptions = [
   { value: 'GOOD', label: 'GOOD' },
   { value: 'BAD', label: 'BAD' },
   { value: 'N/A', label: 'N/A' },
-  { value: 'DAMAGED', label: 'DAMAGED' },
-  { value: 'PARTIAL', label: 'PARTIAL' },
-  { value: 'REPACKED', label: 'REPACKED' },
 ];
 
 // Generate 35 test items for scroll testing

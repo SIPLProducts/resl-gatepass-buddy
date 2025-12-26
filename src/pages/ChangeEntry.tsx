@@ -542,11 +542,15 @@ export default function ChangeEntry() {
       render: (value: number, row: ItemRow, index: number) => (
         <Input
           type="number"
-          value={value}
-          onChange={(e) =>
-            handleItemChange(index, 'ZQUANT', Number(e.target.value))
-          }
+          value={value ?? ''}
+          onChange={(e) => {
+            const rawValue = e.target.value;
+            const numericValue = rawValue === '' ? null : Number(rawValue);
+
+            handleItemChange(index, 'ZQUANT', numericValue);
+          }}
           className="h-8 w-full"
+          min={0}
         />
       ),
     },
@@ -650,8 +654,8 @@ export default function ChangeEntry() {
                   { value: '3000', label: '3000 - Factory' },
                 ]}
               /> */}
-              <TextField label="Gate Entry Type" value={headerData.DTYPE}  
-               onChange={(value) => setHeaderData({ ...headerData, DTYPE: value })}/>
+              <TextField label="Gate Entry Type" value={headerData.DTYPE}
+                onChange={(value) => setHeaderData({ ...headerData, DTYPE: value })} />
               <TextField
                 label="Vehicle Date"
                 type="date"
@@ -677,7 +681,7 @@ export default function ChangeEntry() {
               <TextField
                 label="Ref Doc Type"
                 value={headerData.REFDOCTYP}
-                
+
               />
             </div>
           </FormSection>
@@ -742,10 +746,10 @@ export default function ChangeEntry() {
           {/* Vendor/Reference Details */}
           <FormSection title="Reference Details">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <TextField label="PO Number" value={headerData.PONO}  />
-              <TextField label="Vendor Number" value={headerData.VENDOR}  />
-              <TextField label="Vendor Name" value={headerData.VNAME}  />
-              <TextField label="Inwarded By" value={headerData.INWARDED_BY}  />
+              <TextField label="PO Number" value={headerData.PONO} />
+              <TextField label="Vendor Number" value={headerData.VENDOR} />
+              <TextField label="Vendor Name" value={headerData.VNAME} />
+              <TextField label="Inwarded By" value={headerData.INWARDED_BY} />
             </div>
           </FormSection>
 
