@@ -92,7 +92,31 @@ const backendNodejs = {
         return res.json();
     },
 
+    fetch_Exit_Cancel: async (data) => {
+        const res = await fetch(`${BASE_URL}api/external/Gate_Entry/fetch_Exit_Cancel`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+        });
+        return res.json();
+    },
 
+     save_Exit_Cancel: async (data) => {
+        const res = await fetch(`${BASE_URL}api/external/Gate_Entry/save_Exit_Cancel`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+        });
+        return res.json();
+    },
+      UserEdit: async (data) => {
+        const res = await fetch(`${BASE_URL}api/external/Gate_Entry/EditUser`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+        });
+        return res.json();
+    },
 
 };
 

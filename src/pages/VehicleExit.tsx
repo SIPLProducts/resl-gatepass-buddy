@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-
+import service from "../services/generalservice.js"
+import Swal from "sweetalert2";
 export default function VehicleExit() {
   const [gateEntryNo, setGateEntryNo] = useState('');
   const [isLoaded, setIsLoaded] = useState(false);
@@ -16,48 +17,176 @@ export default function VehicleExit() {
 
   // Gate Entry Header (read-only, fetched from system)
   const [headerData, setHeaderData] = useState({
-    gateEntryNumber: '',
-    plant: '',
-    checkInDate: '',
-    checkInTime: '',
-    vehicleNumber: '',
-    driver: '',
-    inwardedBy: '',
+    GENO: '',
+    WERKS: '',
+    VHDAT_IN: '',
+    VHTIM_IN: '',
+    VHNO: '',
+    DRNAM: '',
+    INWARDED_BY: '',
   });
 
   // Exit Details (editable)
   const [exitData, setExitData] = useState({
-    checkOutDate: new Date().toISOString().split('T')[0],
-    checkOutTime: new Date().toTimeString().slice(0, 5),
-    remarks: '',
+    LEDAT: new Date().toISOString().split('T')[0],
+    LETIM: new Date().toTimeString().slice(0, 5),
+    SGTXT: '',
   });
 
-  const handleFetch = () => {
+  const handleFetch = async () => {
     if (!gateEntryNo) {
       toast.error('Enter Gate Entry No');
       return;
     }
-    // Simulate fetching gate entry data (including inwardedBy)
-    setHeaderData({
-      gateEntryNumber: gateEntryNo,
-      plant: '3601',
-      checkInDate: '23.12.2025',
-      checkInTime: '22:25:10',
-      vehicleNumber: 'TS098ERT',
-      driver: 'ABC',
-      inwardedBy: 'TEST SIPL',
-    });
-    setExitConfirmed(false);
-    setIsLoaded(true);
-    toast.success('Entry loaded');
+
+    try {
+      const payload = {
+        EXIT_GE: gateEntryNo,
+        EXIT: "X",
+        CANCEL: ""
+      };
+
+      const response = await service.fetch_Exit_Cancel(payload);
+
+      if (response.length > 0) {
+
+        const sucessMessages = response
+          .filter(r => r.MSG_TYPE === "S")
+          .map(r => `• ${r.MSG}`);
+        const errorMessages = response
+          .filter(r => r.MSG_TYPE === "E")
+          .map(r => `• ${r.MSG}`);
+        if (sucessMessages.length > 0) {
+          Swal.fire({
+            title: "success",
+            html: sucessMessages.join("<br>"),
+            icon: "success",
+            confirmButtonColor: "#3085d6",
+          });
+           setHeaderData({
+            GENO: '',
+            WERKS: '',
+            VHDAT_IN: '',
+            VHTIM_IN: '',
+            VHNO: '',
+            DRNAM: '',
+            INWARDED_BY: '',
+          });
+          return
+        }
+        if (errorMessages.length > 0) {
+          Swal.fire({
+            title: "Error",
+            html: errorMessages.join("<br>"),
+            icon: "error",
+            confirmButtonColor: "#d33",
+          });
+           setHeaderData({
+            GENO: '',
+            WERKS: '',
+            VHDAT_IN: '',
+            VHTIM_IN: '',
+            VHNO: '',
+            DRNAM: '',
+            INWARDED_BY: '',
+          });
+          
+          return
+        }
+        
+      } else {
+        setHeaderData({
+          GENO: response.GENO,
+          WERKS: response.WERKS,
+          VHDAT_IN: response.VHDAT_IN,
+          VHTIM_IN: response.VHTIM_IN,
+          VHNO: response.VHNO,
+          DRNAM: response.DRNAM,
+          INWARDED_BY: response.INWARDED_BY,
+        });
+
+
+        setExitData(prev => ({
+          ...prev,
+          SGTXT: response.SGTXT || ''
+        }));
+        console.log('Header data', headerData)
+      }
+
+
+      setExitConfirmed(false);
+      setIsLoaded(true);   // ✅ keep true
+
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load Data");
+    }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+
+    console.log('Header data save', headerData)
+
+    console.log("")
     if (!exitConfirmed) {
       toast.error('Please confirm Gate Entry Exit by enabling the checkbox');
       return;
     }
-    toast.success('Vehicle exit recorded!');
+
+    try {
+      const payload = {
+        "EXIT_CANCEL": {
+          "GENO": headerData.GENO,
+          "WERKS": headerData.WERKS,
+          "VHDAT_IN": headerData.VHDAT_IN,
+          "VHTIM_IN": headerData.VHTIM_IN,
+          "VHNO": headerData.VHNO,
+          "DRNAM": headerData.DRNAM,
+          "LCDAT": "0000-00-00", //Cancel
+          "LCTIM": "00:00:00",   //cancel
+          "SCTXT": "",  //cancel
+          "LEDAT": exitData.LEDAT, //exit
+          "LETIM": exitData.LETIM,  //exit
+          "SGTXT": exitData.SGTXT, //exit
+          "INWARDED_BY": headerData.GENO, //exit
+          "GECAN": "",   //Cancel check
+          "GEEXT": "X" //exit check
+        }
+      }
+      console.log("payload", payload)
+      const response = await service.save_Exit_Cancel(payload);
+
+      console.log("response", response)
+      const errorMessages = response
+        .filter(r => r.MSG_TYPE === "E")
+        .map(r => `• ${r.MSG}`);
+      const sucessMessages = response
+        .filter(r => r.MSG_TYPE === "S")
+        .map(r => `• ${r.MSG}`);
+      if (errorMessages.length > 0) {
+        Swal.fire({
+          title: "Error",
+          html: errorMessages.join("<br>"),
+          icon: "error",
+          confirmButtonColor: "#d33",
+        });
+        return
+      }
+      if (sucessMessages.length > 0) {
+        Swal.fire({
+          title: "success",
+          html: sucessMessages.join("<br>"),
+          icon: "success",
+          confirmButtonColor: "#3085d6",
+        });
+        return
+      }
+    }
+    catch (error) {
+      console.log("error")
+    }
+
+
   };
 
   return (
@@ -92,38 +221,38 @@ export default function VehicleExit() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <TextField
                 label="Gate Entry Number"
-                value={headerData.gateEntryNumber}
-                onChange={() => {}}
+                value={headerData.GENO}
+                onChange={() => { }}
                 disabled
               />
               <TextField
                 label="Check-in Date"
-                value={headerData.checkInDate}
-                onChange={() => {}}
+                value={headerData.VHDAT_IN}
+                onChange={() => { }}
                 disabled
               />
               <TextField
                 label="Vehicle Number"
-                value={headerData.vehicleNumber}
-                onChange={() => {}}
+                value={headerData.VHNO}
+                onChange={() => { }}
                 disabled
               />
               <TextField
                 label="Plant"
-                value={headerData.plant}
-                onChange={() => {}}
+                value={headerData.WERKS}
+                onChange={() => { }}
                 disabled
               />
               <TextField
                 label="Check-in Time"
-                value={headerData.checkInTime}
-                onChange={() => {}}
+                value={headerData.VHTIM_IN}
+                onChange={() => { }}
                 disabled
               />
               <TextField
                 label="Driver"
-                value={headerData.driver}
-                onChange={() => {}}
+                value={headerData.DRNAM}
+                onChange={() => { }}
                 disabled
               />
             </div>
@@ -145,29 +274,29 @@ export default function VehicleExit() {
               <TextField
                 label="Check-out Date"
                 type="date"
-                value={exitData.checkOutDate}
-                onChange={(v) => setExitData({ ...exitData, checkOutDate: v })}
+                value={exitData.LEDAT}
+                onChange={(v) => setExitData({ ...exitData, LEDAT: v })}
                 required
               />
               <TextField
                 label="Check-out Time"
                 type="time"
-                value={exitData.checkOutTime}
-                onChange={(v) => setExitData({ ...exitData, checkOutTime: v })}
+                value={exitData.LETIM}
+                onChange={(v) => setExitData({ ...exitData, LETIM: v })}
                 required
               />
               <TextField
                 label="Inwarded By"
-                value={headerData.inwardedBy}
-                onChange={() => {}}
+                value={headerData.INWARDED_BY}
+                onChange={() => { }}
                 disabled
               />
             </div>
             <div className="mt-4">
               <Label>Remarks</Label>
               <Textarea
-                value={exitData.remarks}
-                onChange={(e) => setExitData({ ...exitData, remarks: e.target.value })}
+                value={exitData.SGTXT}
+                onChange={(e) => setExitData({ ...exitData, SGTXT: e.target.value })}
                 placeholder="Enter remarks"
                 className="mt-1.5"
               />
