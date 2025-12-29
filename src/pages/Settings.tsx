@@ -26,6 +26,8 @@ interface User {
   emailId: string;
   contactNumber: string;
   role: string;
+  password?: string;   // 👈 OPTIONAL
+
   status: 'Active' | 'Inactive';
 }
 
@@ -97,7 +99,9 @@ export default function Settings() {
     fullName: '',
     emailId: '',
     contactNumber: '',
-    role: 'Viewer',
+    password: '',
+    role: '',
+    status: 'Active' as 'Active' | 'Inactive',
   });
 
   // Role Dialog
@@ -124,8 +128,130 @@ export default function Settings() {
       emailId: '',
       contactNumber: '',
       role: '',
+      password: '',
+      status: 'Active',
     });
     setIsUserDialogOpen(true);
+  };
+
+
+
+  const handleSaveUser = async () => {
+    if (
+      !userForm.plant ||
+      !userForm.userId ||
+      !userForm.fullName ||
+      !userForm.emailId ||
+      !userForm.contactNumber ||
+      !userForm.role ||
+      !userForm.password ||
+      !userForm.status ||
+      (!editingUser && !userForm.password)
+    ) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    const [firstName, ...lastNameArr] = userForm.fullName.trim().split(" ");
+    const lastName = lastNameArr.join(" ") || "";
+
+    try {
+      // ================= EDIT USER =================
+      if (editingUser) {
+        const payload = {
+          EDIT: {
+            USER: userForm.userId,
+            FIRST_NAME: firstName,
+            LAST_NAME: lastName,
+            PLANT: userForm.plant,
+            ROLE: userForm.role,
+            EMAIL: userForm.emailId,
+            CONTACT: userForm.contactNumber,
+            PASSWORD: userForm.password,  // or empty if backend ignores
+            STATUS: userForm.status
+
+
+          },
+        };
+
+        if (userForm.password?.trim()) {
+          payload.EDIT.PASSWORD = userForm.password;
+        }
+
+        const res = await service.UserEdit(payload);
+
+        if (res?.STATUS === "TRUE") {
+          toast.success(res.MESSAGE || "User updated successfully");
+
+          // 🔥 Update UI list
+          setUsers((prev) =>
+            prev.map((u) =>
+              u.id === editingUser.id
+                ? {
+                  ...u,
+                  plant: userForm.plant,
+                  fullName: userForm.fullName,
+                  emailId: userForm.emailId,
+                  contactNumber: userForm.contactNumber,
+                  role: userForm.role,
+                }
+                : u
+            )
+          );
+
+          setIsUserDialogOpen(false);
+          setEditingUser(null);
+        } else {
+          toast.error(res?.MESSAGE || "User update failed");
+        }
+
+        return;
+      }
+
+      // ================= ADD USER =================
+      const payload = {
+        CREATE: {
+          USER: userForm.userId,
+          FIRST_NAME: firstName,
+          LAST_NAME: lastName,
+          PLANT: userForm.plant,
+          ROLE: userForm.role,
+          EMAIL: userForm.emailId,
+          CONTACT: userForm.contactNumber,
+          PASSWORD: userForm.password,
+          STATUS: userForm.status
+
+        },
+      };
+
+      const res = await service.AddUser(payload);
+
+      if (res?.STATUS === "TRUE") {
+        toast.success(res.MESSAGE || "User created successfully");
+
+        setUsers((prev) => [
+          ...prev,
+          {
+            id: userForm.userId,
+            plant: userForm.plant,
+            userId: userForm.userId,
+            fullName: userForm.fullName,
+            emailId: userForm.emailId,
+            contactNumber: userForm.contactNumber,
+            role: userForm.role,
+            status: userForm.status,
+
+          },
+        ]);
+
+        setIsUserDialogOpen(false);
+      } else {
+        toast.error(res?.MESSAGE || "User creation failed");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Server error");
+    }
   };
 
   const openEditUserDialog = (user: User) => {
@@ -137,72 +263,13 @@ export default function Settings() {
       emailId: user.emailId,
       contactNumber: user.contactNumber,
       role: user.role,
+      password: user.password,
+      status: user.status,
     });
     setIsUserDialogOpen(true);
   };
 
-  const handleSaveUser = async () => {
-    if (
-      !userForm.plant ||
-      !userForm.userId ||
-      !userForm.fullName ||
-      !userForm.emailId ||
-      !userForm.contactNumber
 
-
-    ) {
-      toast.error("Please fill in all required fields");
-      return;
-    }
-
-    // split full name
-    const [firstName, ...lastNameArr] = userForm.fullName.trim().split(" ");
-    const lastName = lastNameArr.join(" ") || "";
-
-    const payload = {
-      CREATE: {
-        USER: userForm.userId,
-        FIRST_NAME: firstName,
-        LAST_NAME: lastName,
-        PLANT: userForm.plant,
-        ROLE: userForm.role,
-        EMAIL: userForm.emailId,
-        CONTACT: userForm.contactNumber,
-        PASSWORD: "Welcome@123",
-        STATUS: "Active",
-      },
-    };
-
-    try {
-      const res = await service.AddUser(payload);
-
-      if (res?.STATUS === "TRUE") {
-        toast.success(res.MESSAGE || "User created successfully");
-
-        // UI update AFTER success
-        setUsers((prev) => [
-          ...prev,
-          {
-            id: Date.now().toString(),
-            plant: userForm.plant,
-            userId: userForm.userId,
-            fullName: userForm.fullName,
-            emailId: userForm.emailId,
-            contactNumber: userForm.contactNumber,
-            role: userForm.role,
-            status: "Active",
-          },
-        ]);
-
-        setIsUserDialogOpen(false);
-      } else {
-        toast.error(res?.MESSAGE || "User creation failed");
-      }
-    } catch (error) {
-      console.error(error);
-      toast.error("Server error while creating user");
-    }
-  };
 
   const fetchUsers = async () => {
     try {
@@ -523,8 +590,10 @@ export default function Settings() {
           <DialogHeader>
             <DialogTitle>{editingUser ? 'Edit User' : 'Add New User'}</DialogTitle>
           </DialogHeader>
-          <ScrollArea className="max-h-[60vh] pr-4">
-            <div className="space-y-4 py-4">
+          <ScrollArea className="max-h-[60vh] pr-4 overflow-y-auto">
+
+            <div className="space-y-5 py-4">
+
               <SelectField
                 label="Plant"
                 value={userForm.plant}
@@ -568,6 +637,32 @@ export default function Settings() {
                 onChange={(value) => setUserForm({ ...userForm, role: value })}
                 options={roles.map(r => ({ value: r.roleName, label: r.roleName }))}
                 placeholder="Select role"
+                required
+              />
+              <TextField
+                label="Password"
+                type="password"
+                value={userForm.password}
+                onChange={(value) =>
+                  setUserForm({ ...userForm, password: value })
+                }
+                placeholder="Enter password"
+
+              />
+              <SelectField
+                label="Status"
+                value={userForm.status}
+                onChange={(value) =>
+                  setUserForm({
+                    ...userForm,
+                    status: value as 'Active' | 'Inactive',
+                  })
+                }
+                options={[
+                  { value: '', label: 'Select Status' },
+                  { value: 'Active', label: 'Active' },
+                  { value: 'Inactive', label: 'Inactive' },
+                ]}
                 required
               />
             </div>
