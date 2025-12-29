@@ -152,85 +152,50 @@ export default function ChangeEntry() {
       }
       const response = await service.fetchGateEntryChange(payload);
       console.log("response", response)
-      if (response[0]?.MSG_TYPE == "E") {
-
-        Swal.fire({
-          title: "error",
-          text: response[0].MSG,
-          icon: "error",
-          confirmButtonColor: "#3085d6",
-        });
-        setHeaderData({
-          WERKS: '',
-          DTYPE: '',
-          VHDAT_IN: '',
-          VHTIM_IN: '',
-          VHNO: '',
-          VHCL_TYPE: '',
-          DRNAM: '',
-          DRNUM: '',
-          TRANNAM: '',
-          GR_LR_NUM: '',
-          PONO: '',
-          VENDOR: '',
-          VNAME: '',
-          INWARDED_BY: '',
-          REFDOCTYP: '',
-          LEDAT: '',
-          LETIM: '',
-          TRADDR: '',
-          REMARKS: '',
-
-          "GENO": "",
-          "USR_IN": "",
-          "GRWGT": 0,
-          "TRWGT": 0,
-          "NTWGT": 0,
-          "WUNIT": "",
-          "GRUSR": "",
-          "GRDAT": "",
-          "GRTIM": "",
-          "TRUSR": "",
-          "TRDAT": "",
-          "TRTIM": "",
-          "INIWT": 0,
-          "INIDT": "",
-          "INITM": "00:00:00",
-          "INIUR": "",
-          "TOTWGT": 0,
-          "RBSTAT": "",
-          "WBOMP": "",
-          "WBCOMP": "",
-          "GEEXT": "",
-          "LEUSR": "",
-          "SGTXT": "",
-          "GECAN": "",
-          "LCDAT": "0000-00-00",
-          "LCTIM": "00:00:00",
-          "LCUSR": "",
-          "SCTXT": "",
-          "ERNAM": "",
-          "LIFNR": "",
-          "GATEPASS": "",
-          "DESTINATION": "",
-          "CAPACITY": "",
-          "WBIND": "",
-          "MIX": "",
-          "MJAHR": 0,
-          "AMOUNT": 0,
-          "ZTRID": "",
-          "ZTRIP": "",
-          "SP_DES": "",
-          "PAYMENTTERMS": "",
-          "TOT_COSUME": "",
-          "PEND_AMOUNT": "",
-          "BLNO": "",
-          "PURPOSE": "",
-          "REUSE": ""
-        });
-        setItems([]);
-
-      } else {
+     if (response.length > 0) {
+     
+             const sucessMessages = response
+               .filter(r => r.MSG_TYPE === "S")
+               .map(r => `• ${r.MSG}`);
+             const errorMessages = response
+               .filter(r => r.MSG_TYPE === "E")
+               .map(r => `• ${r.MSG}`);
+               const warnigMessages = response
+               .filter(r => r.MSG_TYPE === "I")
+               .map(r => `• ${r.MSG}`);
+             if (sucessMessages.length > 0) {
+               Swal.fire({
+                 title: "success",
+                 html: sucessMessages.join("<br>"),
+                 icon: "success",
+                 confirmButtonColor: "#3085d6",
+               });
+               
+               return
+             }
+              if (warnigMessages.length > 0) {
+               Swal.fire({
+                 title: "success",
+                 html: warnigMessages.join("<br>"),
+                 icon: "success",
+                 confirmButtonColor: "#3085d6",
+               });
+               
+               return
+             }
+             if (errorMessages.length > 0) {
+               Swal.fire({
+                 title: "Error",
+                 html: errorMessages.join("<br>"),
+                 icon: "error",
+                 confirmButtonColor: "#d33",
+               });
+              
+     
+            
+               return
+             }
+           }else {
         const headerResponse = response.HEADER[0]
         const itemResponse = response.ITEM
         console.log("headerResponse", headerResponse, "itemResponse", itemResponse)
@@ -356,88 +321,53 @@ export default function ChangeEntry() {
     console.log("payload", payload)
     const response = await service.fetchGateEntryChange(payload);
     console.log("response", response)
-    if (response[0]?.MSG_TYPE == "S" || response[0]?.CODE == "200") {
+    // 🔴 Collect errors
+    const errorMessages = response
+      .filter(r => r.MSG_TYPE === "E")
+      .map(r => `• ${r.MSG}`);
 
+    // 🟡 Collect warnings
+    const warningMessages = response
+      .filter(r => r.MSG_TYPE === "I")
+      .map(r => `• ${r.MSG}`);
+
+    // 🟢 Success message
+    const successMsg = response.find(r => r.MSG_TYPE === "S");
+
+    // ❌ If errors exist → show all errors
+    if (errorMessages.length > 0) {
       Swal.fire({
-        title: "success",
-        text: response[0].MSG,
+        title: "Error",
+        html: errorMessages.join("<br>"),
+        icon: "error",
+        confirmButtonColor: "#d33",
+      });
+      return;
+    }
+
+    // ⚠️ If warnings exist
+    if (warningMessages.length > 0) {
+      Swal.fire({
+        title: "Warning",
+        html: warningMessages.join("<br>"),
+        icon: "warning",
+        confirmButtonColor: "#f0ad4e",
+      });
+    }
+
+    // ✅ Success
+    if (successMsg || response[0]?.CODE === "200") {
+      Swal.fire({
+        title: "Success",
+        text: successMsg?.MSG,
         icon: "success",
         confirmButtonColor: "#3085d6",
       });
-      setHeaderData({
-        WERKS: '',
-        DTYPE: '',
-        VHDAT_IN: '',
-        VHTIM_IN: '',
-        VHNO: '',
-        VHCL_TYPE: '',
-        DRNAM: '',
-        DRNUM: '',
-        TRANNAM: '',
-        GR_LR_NUM: '',
-        PONO: '',
-        VENDOR: '',
-        VNAME: '',
-        INWARDED_BY: '',
-        REFDOCTYP: '',
-        LEDAT: '',
-        LETIM: '',
-        TRADDR: '',
-        REMARKS: '',
 
-        "GENO": "",
-        "USR_IN": "",
-        "GRWGT": 0,
-        "TRWGT": 0,
-        "NTWGT": 0,
-        "WUNIT": "",
-        "GRUSR": "",
-        "GRDAT": "",
-        "GRTIM": "",
-        "TRUSR": "",
-        "TRDAT": "",
-        "TRTIM": "",
-        "INIWT": 0,
-        "INIDT": "",
-        "INITM": "00:00:00",
-        "INIUR": "",
-        "TOTWGT": 0,
-        "RBSTAT": "",
-        "WBOMP": "",
-        "WBCOMP": "",
-        "GEEXT": "",
-        "LEUSR": "",
-        "SGTXT": "",
-        "GECAN": "",
-        "LCDAT": "0000-00-00",
-        "LCTIM": "00:00:00",
-        "LCUSR": "",
-        "SCTXT": "",
-        "ERNAM": "",
-        "LIFNR": "",
-        "GATEPASS": "",
-        "DESTINATION": "",
-        "CAPACITY": "",
-        "WBIND": "",
-        "MIX": "",
-        "MJAHR": 0,
-        "AMOUNT": 0,
-        "ZTRID": "",
-        "ZTRIP": "",
-        "SP_DES": "",
-        "PAYMENTTERMS": "",
-        "TOT_COSUME": "",
-        "PEND_AMOUNT": "",
-        "BLNO": "",
-        "PURPOSE": "",
-        "REUSE": ""
-      });
-      setItems([]);
-      setIsLoading(false);
-
-    } else {
-      setIsLoading(false);
+      // ✅ Reset state after success
+      handleReset();
     }
+
   };
 
   const handleReset = () => {

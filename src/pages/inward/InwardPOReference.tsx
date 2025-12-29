@@ -68,7 +68,7 @@ export default function InwardPOReference() {
     WERKS: '',
     DTYPE: 'IN',
     VHDAT_IN: new Date().toISOString().split('T')[0],
-    VHTIM_IN: new Date().toTimeString().slice(0, 5),
+    VHTIM_IN: new Date().toTimeString().slice(0, 8),
     VHNO: '',
     VHCL_TYPE: '',
     DRNAM: '',
@@ -195,7 +195,7 @@ export default function InwardPOReference() {
         "ERNAM": "",
         "LIFNR": "",
         "TRADDR": "", //Address
-        "DTYPE": headerData.DTYPE,               //Mandatory, Hardcoded
+        "DTYPE": headerData.DTYPE || "IN",               //Mandatory, Hardcoded
         "GATEPASS": "", //GatePass Number
         "REFDOCTYP": "PO", //REF Doc Type      //In with reference PO, 'PO' is hardcoded, Mandatory
         "DESTINATION": "",
@@ -222,7 +222,8 @@ export default function InwardPOReference() {
         "REUSE": ""
       }
     }
-
+   console.log('payload',payload)
+   
     try {
 
       const response = await service.fetchGateEntryChange(payload);
@@ -235,12 +236,14 @@ export default function InwardPOReference() {
 
       // 🟡 Collect warnings
       const warningMessages = response
-        .filter(r => r.MSG_TYPE === "W")
+        .filter(r => r.MSG_TYPE === "I")
         .map(r => `• ${r.MSG}`);
 
-      // 🟢 Success message
-      // const successMsg = response.find(r => r.MSG_TYPE === "S");
-       const noPending = response.filter(r => r.MSG_TYPE === "S" && r.CODE == "200" && r.MSG == "No Pending Items"  );
+          const successWarningMessages = response
+        .filter(r => r.MSG_TYPE === "S")
+        .map(r => `• ${r.MSG}`);
+
+      
 
       // ❌ If errors exist → show all errors
       if (errorMessages.length > 0) {
@@ -265,10 +268,10 @@ export default function InwardPOReference() {
         setIsLoading(false);
         return
       }
-        if (noPending.length > 0) {
+        if (successWarningMessages.length > 0) {
         Swal.fire({
           title: "Warning",
-          html: noPending[0].MSG.join("<br>"),
+          html: successWarningMessages.join("<br>"),
           icon: "warning",
           confirmButtonColor: "#f0ad4e",
         });
@@ -347,7 +350,8 @@ export default function InwardPOReference() {
       HEADER: [headerData],
       ITEM: items,
     };
-
+ console.log("payload",payload)
+ 
     try {
       setIsLoading(true); // ✅ Spinner ON
 
@@ -367,7 +371,7 @@ export default function InwardPOReference() {
 
       // 🟡 Collect warnings
       const warningMessages = response
-        .filter(r => r.MSG_TYPE === "W")
+        .filter(r => r.MSG_TYPE === "I")
         .map(r => `• ${r.MSG}`);
 
       // 🟢 Success message
@@ -419,7 +423,7 @@ export default function InwardPOReference() {
   const handleReset = () => {
     setHeaderData({
       WERKS: '',
-      DTYPE: '',
+      DTYPE: 'IN',
       "VHDAT_IN": new Date().toISOString().split('T')[0], //Vehicle IN Date    //System Generated
       "VHTIM_IN": new Date().toTimeString().slice(0, 5), //Vehicle IN time  
       VHNO: '',
@@ -773,8 +777,8 @@ export default function InwardPOReference() {
             <DataGrid
               columns={columns}
               data={items}
-              editable={true}
-              onRowDelete={handleDeleteRow}
+              // editable={true}
+              // onRowDelete={handleDeleteRow}
               minRows={1}
               maxHeight="350px"
               itemsPerPage={10}
