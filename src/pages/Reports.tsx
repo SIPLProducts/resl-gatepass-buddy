@@ -13,6 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { format, subDays, startOfMonth, startOfYear, startOfWeek, endOfWeek } from 'date-fns';
+
+
 import {
   BarChart,
   Bar,
@@ -266,15 +268,39 @@ export default function Reports() {
     setDrillDown({ title: `Vendor: ${vendorName}`, data: filtered });
   };
 
+  // Remove empty values from payload
+  // Utility: remove empty values from payload
+  const cleanPayload = (payload: Record<string, any>) => {
+    return Object.fromEntries(
+      Object.entries(payload).filter(
+        ([_, value]) => value !== "" && value !== null && value !== undefined
+      )
+    );
+  };
+
+  // Utility: format date to YYYY-MM-DD
+  const formatDate = (date: string | Date | undefined) => {
+    if (!date) return "";
+    const d = new Date(date);
+    return d.toISOString().split("T")[0];
+  };
+
   const handleSearch = async () => {
     setIsLoading(true);
     try {
-      // Build API request payload
-      const payload = {
+      // Prepare process type flags
+      const processFlags = {
+        R1: filters.processType === "inward" ? "X" : undefined,
+        R2: filters.processType === "outward" ? "X" : undefined,
+        R3: filters.processType === "both" ? "X" : undefined,
+      };
+
+      // Build and sanitize payload
+      let payload = cleanPayload({
         GENO_FROM: filters.gateEntryNoFrom,
         GENO_TO: filters.gateEntryNoTo,
-        DATE_FROM: filters.entryDateFrom,
-        DATE_TO: filters.entryDateTo,
+        DATE_FROM: formatDate(filters.entryDateFrom),
+        DATE_TO: formatDate(filters.entryDateTo),
         WERKS_FROM: filters.plant,
         WERKS_TO: filters.plantTo,
         VEHICLE_NO: filters.vehicleNo,
@@ -282,21 +308,33 @@ export default function Reports() {
         INVNO_TO: filters.invoiceNoTo,
         SALES_ORG_F: filters.salesOrgFrom,
         SALES_ORG_T: filters.salesOrgTo,
-        R1: filters.processType === 'inward' ? 'X' : '',
-        R2: filters.processType === 'outward' ? 'X' : '',
-        R3: filters.processType === 'both' ? 'X' : '',
-      };
+        ...processFlags,
+      });
 
+      // ❗ Mandatory checks
+      if (!payload.DATE_FROM || !payload.DATE_TO) {
+        toast.error("Please select From Date and To Date");
+        setIsLoading(false);
+        return;
+      }
+
+      if (!payload.R1 && !payload.R2 && !payload.R3) {
+        toast.error("Please select Process Type");
+        setIsLoading(false);
+        return;
+      }
+
+      // Call API
       const response = await service.ReportanlaysisDataTable(payload);
-      console.log('API Response:', response);
+      console.log("API Response:", response);
 
       if (response && Array.isArray(response)) {
         let transformedData = transformApiData(response);
 
-        // Apply client-side filters
+        // Apply client-side smart search
         if (filters.smartSearch) {
           const searchTerm = filters.smartSearch.toLowerCase();
-          transformedData = transformedData.filter(r =>
+          transformedData = transformedData.filter((r) =>
             r.gateEntryNo.toLowerCase().includes(searchTerm) ||
             r.vehicleNo.toLowerCase().includes(searchTerm) ||
             r.driverName.toLowerCase().includes(searchTerm) ||
@@ -309,8 +347,9 @@ export default function Reports() {
           );
         }
 
+        // Filter by enteredBy
         if (filters.enteredBy) {
-          transformedData = transformedData.filter(r =>
+          transformedData = transformedData.filter((r) =>
             r.webUser.toLowerCase().includes(filters.enteredBy.toLowerCase())
           );
         }
@@ -320,16 +359,20 @@ export default function Reports() {
         toast.success(`Found ${transformedData.length} entries`);
       } else {
         setResults([]);
-        toast.error('No data found');
+        toast.error("No data found");
       }
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      toast.error('Failed to fetch data. Please try again.');
+    } catch (error: any) {
+      console.error("Error fetching data:", error);
+      toast.error(
+        error?.message || "Failed to fetch data. Please try again."
+      );
       setResults([]);
     } finally {
       setIsLoading(false);
     }
   };
+
+
 
   const handleExport = () => {
     const columns = [
@@ -664,7 +707,19 @@ export default function Reports() {
       </div>
 
       {/* View Toggle & Content */}
-      <Tabs value={activeView} onValueChange={(v) => setActiveView(v as 'charts' | 'table')} className="space-y-4">
+      <Tabs
+        value={activeView}
+        onValueChange={(v) => {
+          setActiveView(v as 'charts' | 'table');
+
+          // 🔥 FIX: Data table click ayithe, data lekapothe API call
+          if (v === 'table' && results.length === 0) {
+            handleSearch();
+          }
+        }}
+        className="space-y-4"
+      >
+
         <div className="flex items-center justify-between">
           <TabsList className="grid grid-cols-2 w-fit">
             <TabsTrigger value="charts" className="gap-2">

@@ -76,6 +76,22 @@ const backendNodejs = {
         });
         return res.json();
     },
+    AddUser: async (data) => {
+        const res = await fetch(`${BASE_URL}api/external/Gate_Entry/Adduser`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+        });
+        return res.json();
+    },
+    DisplayTable: async () => {
+        const res = await fetch(`${BASE_URL}api/external/Gate_Entry/DisplayTable`, {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+        });
+        return res.json();
+    },
+
 
 
 };

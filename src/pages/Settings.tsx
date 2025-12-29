@@ -13,6 +13,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
+import service from "../services/generalservice.js";
+import { useEffect } from 'react';
+
+
 
 interface User {
   id: string;
@@ -58,13 +62,8 @@ const plantOptions = [
   { value: 'P004', label: 'P004 - Bangalore Plant' },
 ];
 
-const initialUsers: User[] = [
-  { id: '1', plant: 'P001', userId: 'USR001', fullName: 'Rajesh Kumar', emailId: 'rajesh.kumar@resl.com', contactNumber: '9876543210', role: 'Admin', status: 'Active' },
-  { id: '2', plant: 'P001', userId: 'USR002', fullName: 'Priya Sharma', emailId: 'priya.sharma@resl.com', contactNumber: '9876543211', role: 'Security', status: 'Active' },
-  { id: '3', plant: 'P002', userId: 'USR003', fullName: 'Amit Patel', emailId: 'amit.patel@resl.com', contactNumber: '9876543212', role: 'Stores', status: 'Active' },
-  { id: '4', plant: 'P002', userId: 'USR004', fullName: 'Neha Singh', emailId: 'neha.singh@resl.com', contactNumber: '9876543213', role: 'Finance', status: 'Active' },
-  { id: '5', plant: 'P003', userId: 'USR005', fullName: 'Vijay Verma', emailId: 'vijay.verma@resl.com', contactNumber: '9876543214', role: 'Viewer', status: 'Inactive' },
-];
+
+
 
 const initialRoles: Role[] = [
   { id: '1', roleName: 'Admin', roleDescription: 'Full system access with all permissions. Can manage users, roles, and system settings.', permissions: allScreenPermissions.map(p => p.key) },
@@ -77,18 +76,18 @@ const initialRoles: Role[] = [
 export default function Settings() {
   const [activeTab, setActiveTab] = useState('users');
   const [userSearchQuery, setUserSearchQuery] = useState('');
-  
+
   // Users & Roles
-  const [users, setUsers] = useState<User[]>(initialUsers);
+  const [users, setUsers] = useState<User[]>([]);
   const [roles, setRoles] = useState<Role[]>(initialRoles);
 
   // Filtered users based on search
-  const filteredUsers = users.filter(user => 
+  const filteredUsers = users.filter(user =>
     user.fullName.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
     user.userId.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
     user.emailId.toLowerCase().includes(userSearchQuery.toLowerCase())
   );
-  
+
   // User Dialog
   const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -142,33 +141,100 @@ export default function Settings() {
     setIsUserDialogOpen(true);
   };
 
-  const handleSaveUser = () => {
-    if (!userForm.plant || !userForm.userId || !userForm.fullName || !userForm.emailId || !userForm.contactNumber || !userForm.role) {
-      toast.error('Please fill in all required fields');
+  const handleSaveUser = async () => {
+    if (
+      !userForm.plant ||
+      !userForm.userId ||
+      !userForm.fullName ||
+      !userForm.emailId ||
+      !userForm.contactNumber
+
+
+    ) {
+      toast.error("Please fill in all required fields");
       return;
     }
 
-    // Check for unique User ID (only for new users or if ID changed)
-    const existingUser = users.find(u => u.userId.toLowerCase() === userForm.userId.toLowerCase());
-    if (existingUser && (!editingUser || editingUser.id !== existingUser.id)) {
-      toast.error('User ID already exists. Please use a unique User ID.');
-      return;
-    }
+    // split full name
+    const [firstName, ...lastNameArr] = userForm.fullName.trim().split(" ");
+    const lastName = lastNameArr.join(" ") || "";
 
-    if (editingUser) {
-      setUsers(users.map(u => u.id === editingUser.id ? { ...u, ...userForm } : u));
-      toast.success('User updated successfully!');
-    } else {
-      const newUser: User = {
-        id: Date.now().toString(),
-        ...userForm,
-        status: 'Active',
-      };
-      setUsers([...users, newUser]);
-      toast.success('User added successfully!');
+    const payload = {
+      CREATE: {
+        USER: userForm.userId,
+        FIRST_NAME: firstName,
+        LAST_NAME: lastName,
+        PLANT: userForm.plant,
+        ROLE: userForm.role,
+        EMAIL: userForm.emailId,
+        CONTACT: userForm.contactNumber,
+        PASSWORD: "Welcome@123",
+        STATUS: "Active",
+      },
+    };
+
+    try {
+      const res = await service.AddUser(payload);
+
+      if (res?.STATUS === "TRUE") {
+        toast.success(res.MESSAGE || "User created successfully");
+
+        // UI update AFTER success
+        setUsers((prev) => [
+          ...prev,
+          {
+            id: Date.now().toString(),
+            plant: userForm.plant,
+            userId: userForm.userId,
+            fullName: userForm.fullName,
+            emailId: userForm.emailId,
+            contactNumber: userForm.contactNumber,
+            role: userForm.role,
+            status: "Active",
+          },
+        ]);
+
+        setIsUserDialogOpen(false);
+      } else {
+        toast.error(res?.MESSAGE || "User creation failed");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Server error while creating user");
     }
-    setIsUserDialogOpen(false);
   };
+
+  const fetchUsers = async () => {
+    try {
+      const res = await service.DisplayTable();
+
+      if (Array.isArray(res)) {
+        const mappedUsers: User[] = res.map((item) => ({
+          id: item.ZUSER,
+          plant: item.ZWERKS,
+          userId: item.ZUSER,
+          fullName: `${item.ZFIRST_NAME} ${item.ZLAST_NAME}`,
+          emailId: item.ZEMAIL,
+          contactNumber: item.ZCONTACT,
+          role: item.ZROLE,
+          status: item.ZSTATUS === "Inactive" ? "Inactive" : "Active",
+        }));
+
+        setUsers(mappedUsers);
+      } else {
+        toast.error("Invalid user data received");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to fetch users");
+    }
+  };
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+
+
 
   const handleDeleteUser = (id: string) => {
     setUsers(users.filter(u => u.id !== id));
@@ -176,7 +242,7 @@ export default function Settings() {
   };
 
   const handleToggleUserStatus = (id: string) => {
-    setUsers(users.map(u => 
+    setUsers(users.map(u =>
       u.id === id ? { ...u, status: u.status === 'Active' ? 'Inactive' : 'Active' } : u
     ));
   };
@@ -235,7 +301,7 @@ export default function Settings() {
   const toggleRoleFormPermission = (permKey: string) => {
     setRoleForm(prev => ({
       ...prev,
-      permissions: prev.permissions.includes(permKey) 
+      permissions: prev.permissions.includes(permKey)
         ? prev.permissions.filter(p => p !== permKey)
         : [...prev.permissions, permKey]
     }));
@@ -249,8 +315,8 @@ export default function Settings() {
   };
 
   const togglePermission = (permKey: string) => {
-    setTempPermissions(prev => 
-      prev.includes(permKey) 
+    setTempPermissions(prev =>
+      prev.includes(permKey)
         ? prev.filter(p => p !== permKey)
         : [...prev, permKey]
     );
@@ -258,8 +324,8 @@ export default function Settings() {
 
   const handleSavePermissions = () => {
     if (selectedRoleForPermissions) {
-      setRoles(roles.map(r => 
-        r.id === selectedRoleForPermissions.id 
+      setRoles(roles.map(r =>
+        r.id === selectedRoleForPermissions.id
           ? { ...r, permissions: tempPermissions }
           : r
       ));
@@ -270,12 +336,12 @@ export default function Settings() {
 
   return (
     <div className="space-y-6 max-w-7xl">
-      <PageHeader 
-        title="Settings" 
+      <PageHeader
+        title="Settings"
         subtitle="Configure users and roles"
-        breadcrumbs={[{ label: 'Settings' }]} 
+        breadcrumbs={[{ label: 'Settings' }]}
       />
-      
+
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-2 lg:w-auto lg:inline-grid max-w-md">
           <TabsTrigger value="users" className="gap-2">
@@ -290,8 +356,8 @@ export default function Settings() {
 
         {/* Users Tab */}
         <TabsContent value="users" className="space-y-6">
-          <FormSection 
-            title="User Management" 
+          <FormSection
+            title="User Management"
             actions={
               <div className="flex items-center gap-3">
                 <div className="relative">
@@ -353,17 +419,17 @@ export default function Settings() {
                         </TableCell>
                         <TableCell>
                           <div className="flex justify-center gap-1">
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
+                            <Button
+                              variant="ghost"
+                              size="icon"
                               className="h-8 w-8 hover:bg-primary/10 hover:text-primary"
                               onClick={() => openEditUserDialog(user)}
                             >
                               <Edit2 className="w-4 h-4" />
                             </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
+                            <Button
+                              variant="ghost"
+                              size="icon"
                               className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
                               onClick={() => handleDeleteUser(user.id)}
                             >
@@ -382,7 +448,7 @@ export default function Settings() {
 
         {/* Roles Tab */}
         <TabsContent value="roles" className="space-y-6">
-          <FormSection 
+          <FormSection
             title="Role Management"
             actions={
               <Button onClick={openAddRoleDialog} className="gap-2">
@@ -411,8 +477,8 @@ export default function Settings() {
                       </TableCell>
                       <TableCell className="text-muted-foreground">{role.roleDescription}</TableCell>
                       <TableCell className="text-center">
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           size="sm"
                           onClick={() => openPermissionsDialog(role)}
                           className="gap-2"
@@ -423,17 +489,17 @@ export default function Settings() {
                       </TableCell>
                       <TableCell>
                         <div className="flex justify-center gap-1">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             className="h-8 w-8 hover:bg-primary/10 hover:text-primary"
                             onClick={() => openEditRoleDialog(role)}
                           >
                             <Edit2 className="w-4 h-4" />
                           </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
                             onClick={() => handleDeleteRole(role.id)}
                             disabled={role.roleName === 'Admin'}
@@ -540,7 +606,7 @@ export default function Settings() {
                   rows={3}
                 />
               </div>
-              
+
               {/* Screen Permissions Assignment */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
@@ -554,17 +620,17 @@ export default function Settings() {
                     Select which screens this role can access
                   </p>
                   <div className="flex gap-2">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
+                    <Button
+                      type="button"
+                      variant="outline"
                       size="sm"
                       onClick={() => setRoleForm({ ...roleForm, permissions: allScreenPermissions.map(p => p.key) })}
                     >
                       Select All
                     </Button>
-                    <Button 
-                      type="button" 
-                      variant="outline" 
+                    <Button
+                      type="button"
+                      variant="outline"
                       size="sm"
                       onClick={() => setRoleForm({ ...roleForm, permissions: [] })}
                     >
@@ -576,23 +642,21 @@ export default function Settings() {
                   {allScreenPermissions.map((screen) => {
                     const isAssigned = roleForm.permissions.includes(screen.key);
                     return (
-                      <div 
+                      <div
                         key={screen.key}
                         onClick={() => toggleRoleFormPermission(screen.key)}
-                        className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all duration-200 ${
-                          isAssigned 
-                            ? 'border-primary bg-primary/5 hover:bg-primary/10' 
-                            : 'border-border hover:bg-muted/50'
-                        }`}
+                        className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all duration-200 ${isAssigned
+                          ? 'border-primary bg-primary/5 hover:bg-primary/10'
+                          : 'border-border hover:bg-muted/50'
+                          }`}
                       >
                         <span className={`text-sm font-medium ${isAssigned ? 'text-primary' : 'text-foreground'}`}>
                           {screen.label}
                         </span>
-                        <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${
-                          isAssigned 
-                            ? 'bg-primary text-primary-foreground' 
-                            : 'bg-muted text-muted-foreground'
-                        }`}>
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${isAssigned
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted text-muted-foreground'
+                          }`}>
                           {isAssigned ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
                         </div>
                       </div>
@@ -629,17 +693,17 @@ export default function Settings() {
                 </p>
                 {selectedRoleForPermissions?.roleName !== 'Admin' && (
                   <div className="flex gap-2">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
+                    <Button
+                      type="button"
+                      variant="outline"
                       size="sm"
                       onClick={() => setTempPermissions(allScreenPermissions.map(p => p.key))}
                     >
                       Select All
                     </Button>
-                    <Button 
-                      type="button" 
-                      variant="outline" 
+                    <Button
+                      type="button"
+                      variant="outline"
                       size="sm"
                       onClick={() => setTempPermissions([])}
                     >
@@ -652,23 +716,21 @@ export default function Settings() {
                 {allScreenPermissions.map((screen) => {
                   const isAssigned = tempPermissions.includes(screen.key);
                   return (
-                    <div 
+                    <div
                       key={screen.key}
                       onClick={() => selectedRoleForPermissions?.roleName !== 'Admin' && togglePermission(screen.key)}
-                      className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all duration-200 ${
-                        isAssigned 
-                          ? 'border-primary bg-primary/5 hover:bg-primary/10' 
-                          : 'border-border hover:bg-muted/50'
-                      } ${selectedRoleForPermissions?.roleName === 'Admin' ? 'opacity-60 cursor-not-allowed' : ''}`}
+                      className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all duration-200 ${isAssigned
+                        ? 'border-primary bg-primary/5 hover:bg-primary/10'
+                        : 'border-border hover:bg-muted/50'
+                        } ${selectedRoleForPermissions?.roleName === 'Admin' ? 'opacity-60 cursor-not-allowed' : ''}`}
                     >
                       <span className={`text-sm font-medium ${isAssigned ? 'text-primary' : 'text-foreground'}`}>
                         {screen.label}
                       </span>
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${
-                        isAssigned 
-                          ? 'bg-primary text-primary-foreground' 
-                          : 'bg-muted text-muted-foreground'
-                      }`}>
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${isAssigned
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted text-muted-foreground'
+                        }`}>
                         {isAssigned ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
                       </div>
                     </div>
@@ -684,8 +746,8 @@ export default function Settings() {
           </ScrollArea>
           <DialogFooter className="border-t pt-4">
             <Button variant="outline" onClick={() => setIsPermissionsDialogOpen(false)}>Cancel</Button>
-            <Button 
-              onClick={handleSavePermissions} 
+            <Button
+              onClick={handleSavePermissions}
               className="gap-2 bg-primary hover:bg-primary/90"
               disabled={selectedRoleForPermissions?.roleName === 'Admin'}
             >
