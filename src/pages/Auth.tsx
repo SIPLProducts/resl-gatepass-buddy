@@ -19,8 +19,8 @@ const authSchema = z.object({
 const backgroundImages = [gateEntry4, gateEntry5];
 
 const quotes = [
-  { text: "Sustainability is not a destination, it's a journey of continuous improvement.", author: "RE Sustainability" },
-  { text: "Every gate entry marks a step towards a greener tomorrow.", author: "RE Sustainability" },
+  { text: "Sustainability is not a destination, it's a journey of continuous improvement.", author: "Sharvi Infotech" },
+  { text: "Every gate entry marks a step towards a greener tomorrow.", author: "Sharvi Infotech" },
 ];
 
 export default function Auth() {
@@ -139,10 +139,10 @@ export default function Auth() {
         {/* Logo */}
         <div className="flex items-center gap-3 mb-8">
           <div className="bg-white rounded-xl p-2 shadow-md">
-            <img src={reslLogo} alt="RESL Logo" className="h-10 w-auto object-contain" />
+            <img src={reslLogo} alt="Sharvi Infotech Logo" className="h-10 w-auto object-contain" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-foreground">RE Sustainability</h1>
+            <h1 className="text-xl font-bold text-foreground">Sharvi Infotech</h1>
             <p className="text-xs text-muted-foreground">Gate Entry System</p>
           </div>
         </div>

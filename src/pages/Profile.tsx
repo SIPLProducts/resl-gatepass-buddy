@@ -13,7 +13,7 @@ export default function Profile() {
   const [profile, setProfile] = useState({
     firstName: 'Admin',
     lastName: 'User',
-    email: 'admin@resl.com',
+    email: 'admin@sharviinfotech.com',
     phone: '+91 98765 43210',
     designation: 'System Administrator',
     department: 'IT',
