@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { FormSection } from '@/components/shared/FormSection';
-import { Mail, Phone, MessageSquare, ChevronDown, ChevronUp, Book, FileText, Video, ExternalLink } from 'lucide-react';
+import { Mail, Phone, MessageSquare, ChevronDown, ChevronUp, Book, FileText, Video, ExternalLink, Download } from 'lucide-react';
+import { generateProductFeaturesPDF } from '@/lib/generateProductPDF';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -97,6 +98,25 @@ export default function HelpSupport() {
             Start Chat
           </Button>
         </div>
+      </div>
+
+      {/* Product Features PDF Download */}
+      <div className="enterprise-card p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-2 border-primary/20 bg-primary/5">
+        <div className="flex items-start gap-4">
+          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+            <FileText className="w-6 h-6 text-primary" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-foreground">Product Features & Functionalities</h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              Complete guide covering all modules, SAP real-time integration, reports, TV casting, and more.
+            </p>
+          </div>
+        </div>
+        <Button onClick={() => { generateProductFeaturesPDF(); toast.success('PDF downloaded successfully!'); }} className="gap-2 flex-shrink-0">
+          <Download className="w-4 h-4" />
+          Download PDF
+        </Button>
       </div>
 
       {/* Resources Section */}
