@@ -91,12 +91,6 @@ export function generateProductFeaturesPDF() {
   y += 2;
   addSubTitle('2.2 SAP Transaction Mapping (Day-to-Day Transaction Recording)');
   addBody('The system integrates with SAP for day-to-day transaction recording. Every gate entry operation is mapped to the corresponding SAP transaction, ensuring all material movements are captured in real-time within SAP.');
-  addBullet('Inward with PO Reference → SAP MIGO (Goods Receipt against PO) — auto-posted to SAP on save');
-  addBullet('Outward with Billing Reference → SAP VL01N / VF01 (Delivery & Billing document creation)');
-  addBullet('Subcontracting → SAP ME2O (Subcontracting PO monitoring & goods receipt)');
-  addBullet('Material master validation against SAP MM module (MM03)');
-  addBullet('Gate Entry Number linked to SAP Material Document for full traceability');
-  addBullet('All daily transactions available in SAP for MIS reporting & reconciliation');
   y += 2;
   addSubTitle('2.3 API Architecture');
   addBullet('RESTful API middleware connecting frontend to SAP RFC/BAPI');
