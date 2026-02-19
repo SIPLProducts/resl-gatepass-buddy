@@ -250,12 +250,12 @@ export function AppSidebar({ isOpen, onToggle, isCollapsed, onCollapse }: AppSid
                   <div className="bg-white rounded-xl p-1.5 shadow-md">
                     <img 
                       src={reslLogo} 
-                      alt="RESL Logo" 
+                      alt="Sharvi Infotech Logo" 
                       className="h-9 w-auto object-contain"
                     />
                   </div>
                   <div>
-                    <h1 className="text-sidebar-foreground font-bold text-sm leading-tight">RE Sustainability</h1>
+                    <h1 className="text-sidebar-foreground font-bold text-sm leading-tight">Sharvi Infotech</h1>
                     <p className="text-sidebar-foreground/50 text-[10px]">Gate Entry System</p>
                   </div>
                 </div>
@@ -283,7 +283,7 @@ export function AppSidebar({ isOpen, onToggle, isCollapsed, onCollapse }: AppSid
                 <div className="bg-white rounded-lg p-1 shadow-md">
                   <img 
                     src={reslLogo} 
-                    alt="RESL Logo" 
+                    alt="Sharvi Infotech Logo" 
                     className="h-8 w-auto object-contain"
                   />
                 </div>

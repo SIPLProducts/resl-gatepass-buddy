@@ -42,12 +42,12 @@ export default function Login() {
             <div className="bg-white rounded-2xl p-3 shadow-xl">
               <img 
                 src={reslLogo} 
-                alt="RESL Sustainability Logo" 
+                alt="Sharvi Infotech Logo" 
                 className="h-14 w-auto object-contain"
               />
             </div>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight">RE Sustainability</h1>
+              <h1 className="text-2xl font-bold tracking-tight">Sharvi Infotech</h1>
               <p className="text-white/80 text-sm">Gate Entry Management System</p>
             </div>
           </div>
@@ -100,12 +100,12 @@ export default function Login() {
             <div className="bg-white rounded-xl p-2 shadow-lg border">
               <img 
                 src={reslLogo} 
-                alt="RESL Sustainability Logo" 
+                alt="Sharvi Infotech Logo" 
                 className="h-12 w-auto object-contain"
               />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-foreground">RE Sustainability</h1>
+              <h1 className="text-xl font-bold text-foreground">Sharvi Infotech</h1>
               <p className="text-sm text-muted-foreground">Gate Entry System</p>
             </div>
           </div>

@@ -66,7 +66,7 @@ export function generateProductFeaturesPDF() {
   doc.setFontSize(24);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(255, 255, 255);
-  doc.text('RESL Gate Entry Management System', margin, 25);
+  doc.text('Sharvi Infotech Gate Entry Management System', margin, 25);
   doc.setFontSize(12);
   doc.setFont('helvetica', 'normal');
   doc.text('Product Features & Functionalities Guide', margin, 35);
@@ -76,7 +76,7 @@ export function generateProductFeaturesPDF() {
 
   // ===== 1. PRODUCT OVERVIEW =====
   addTitle('1. Product Overview');
-  addBody('The RESL Gate Entry Management System is an enterprise-grade, SAP-integrated web application designed to digitize and streamline the entire gate entry process for manufacturing plants and warehouses. It provides real-time material tracking, automated workflows, and seamless integration with SAP ECC/S4HANA for end-to-end visibility.');
+  addBody('The Sharvi Infotech Gate Entry Management System is an enterprise-grade, SAP-integrated web application designed to digitize and streamline the entire gate entry process for manufacturing plants and warehouses. It provides real-time material tracking, automated workflows, and seamless integration with SAP ECC/S4HANA for end-to-end visibility.');
   addSeparator();
 
   // ===== 2. SAP INTEGRATION =====
@@ -233,9 +233,9 @@ export function generateProductFeaturesPDF() {
     doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(150, 150, 150);
-    doc.text(`RESL Gate Entry System — Product Features & Functionalities  |  Page ${i} of ${pageCount}`, margin, 290);
-    doc.text('© RESL / Sharvi Infotech — Confidential', pageWidth - margin - 55, 290);
+    doc.text(`Sharvi Infotech Gate Entry System — Product Features & Functionalities  |  Page ${i} of ${pageCount}`, margin, 290);
+    doc.text('© Sharvi Infotech — Confidential', pageWidth - margin - 45, 290);
   }
 
-  doc.save('RESL_Gate_Entry_System_Features.pdf');
+  doc.save('Sharvi_Infotech_Gate_Entry_System_Features.pdf');
 }
